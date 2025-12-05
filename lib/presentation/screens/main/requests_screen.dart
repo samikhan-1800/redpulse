@@ -5,7 +5,6 @@ import '../../../core/constants/app_strings.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/request_provider.dart';
 import '../../../data/providers/location_provider.dart';
-import '../../../data/models/blood_request_model.dart';
 import '../../widgets/cards.dart';
 import '../../widgets/common_widgets.dart';
 import '../request/create_request_screen.dart';
