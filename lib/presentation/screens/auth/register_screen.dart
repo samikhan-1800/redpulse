@@ -25,7 +25,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  
+
   String? _selectedBloodGroup;
   String? _selectedGender;
   DateTime? _dateOfBirth;
@@ -99,7 +99,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    await ref.read(authNotifierProvider.notifier).signUp(
+    await ref
+        .read(authNotifierProvider.notifier)
+        .signUp(
           email: _emailController.text,
           password: _passwordController.text,
           name: _nameController.text,
@@ -133,9 +135,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final isLoading = authState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.signUp),
-      ),
+      appBar: AppBar(title: const Text(AppStrings.signUp)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24.w),
@@ -242,7 +242,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     Expanded(
                       child: CustomDropdownField<String>(
                         value: _selectedGender,
-                        items: const [AppStrings.male, AppStrings.female, AppStrings.other],
+                        items: const [
+                          AppStrings.male,
+                          AppStrings.female,
+                          AppStrings.other,
+                        ],
                         label: AppStrings.gender,
                         itemLabel: (item) => item,
                         onChanged: (value) {
@@ -250,10 +254,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             _selectedGender = value;
                           });
                         },
-                        prefixIcon: Icon(
-                          Icons.person_outline,
-                          size: 20.sp,
-                        ),
+                        prefixIcon: Icon(Icons.person_outline, size: 20.sp),
                       ),
                     ),
                   ],

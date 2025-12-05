@@ -9,10 +9,8 @@ class DonationNotifier extends StateNotifier<AsyncValue<void>> {
   final DatabaseService _databaseService;
   final String? _userId;
 
-  DonationNotifier(
-    this._databaseService,
-    this._userId,
-  ) : super(const AsyncValue.data(null));
+  DonationNotifier(this._databaseService, this._userId)
+    : super(const AsyncValue.data(null));
 
   /// Record a new donation
   Future<String?> recordDonation({
@@ -67,11 +65,11 @@ class DonationNotifier extends StateNotifier<AsyncValue<void>> {
 /// Donation notifier provider
 final donationNotifierProvider =
     StateNotifierProvider<DonationNotifier, AsyncValue<void>>((ref) {
-  return DonationNotifier(
-    ref.watch(databaseServiceProvider),
-    ref.watch(currentUserIdProvider),
-  );
-});
+      return DonationNotifier(
+        ref.watch(databaseServiceProvider),
+        ref.watch(currentUserIdProvider),
+      );
+    });
 
 /// User's donations stream provider
 final userDonationsProvider = StreamProvider<List<Donation>>((ref) {
@@ -85,7 +83,7 @@ final userDonationsProvider = StreamProvider<List<Donation>>((ref) {
 /// Donation statistics provider
 final donationStatsProvider = Provider<DonationStats>((ref) {
   final donations = ref.watch(userDonationsProvider).value ?? [];
-  
+
   return DonationStats(
     totalDonations: donations.length,
     totalUnits: donations.fold(0, (sum, d) => sum + d.units),
@@ -97,12 +95,13 @@ final donationStatsProvider = Provider<DonationStats>((ref) {
 /// Group donations by month for analytics
 Map<String, int> _groupDonationsByMonth(List<Donation> donations) {
   final Map<String, int> grouped = {};
-  
+
   for (final donation in donations) {
-    final key = '${donation.donationDate.year}-${donation.donationDate.month.toString().padLeft(2, '0')}';
+    final key =
+        '${donation.donationDate.year}-${donation.donationDate.month.toString().padLeft(2, '0')}';
     grouped[key] = (grouped[key] ?? 0) + 1;
   }
-  
+
   return grouped;
 }
 

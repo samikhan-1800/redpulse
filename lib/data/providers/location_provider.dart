@@ -43,7 +43,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
     state = state.copyWith(isLoading: true, error: null);
 
     final permission = await _locationService.checkPermission();
-    
+
     if (permission == LocationPermission.denied) {
       final requested = await _locationService.requestPermission();
       if (requested == LocationPermission.denied) {
@@ -57,7 +57,8 @@ class LocationNotifier extends StateNotifier<LocationState> {
       if (requested == LocationPermission.deniedForever) {
         state = state.copyWith(
           isLoading: false,
-          error: 'Location permission permanently denied. Please enable in settings.',
+          error:
+              'Location permission permanently denied. Please enable in settings.',
           permissionGranted: false,
         );
         return false;
@@ -67,7 +68,8 @@ class LocationNotifier extends StateNotifier<LocationState> {
     if (permission == LocationPermission.deniedForever) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Location permission permanently denied. Please enable in settings.',
+        error:
+            'Location permission permanently denied. Please enable in settings.',
         permissionGranted: false,
       );
       return false;
@@ -86,7 +88,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
       if (!hasPermission) return null;
 
       final position = await _locationService.getCurrentPosition();
-      
+
       if (position == null) {
         state = state.copyWith(
           isLoading: false,
@@ -135,8 +137,8 @@ class LocationNotifier extends StateNotifier<LocationState> {
 /// Location notifier provider
 final locationNotifierProvider =
     StateNotifierProvider<LocationNotifier, LocationState>((ref) {
-  return LocationNotifier(ref.watch(locationServiceProvider));
-});
+      return LocationNotifier(ref.watch(locationServiceProvider));
+    });
 
 /// Current position provider (convenience)
 final currentPositionProvider = Provider<Position?>((ref) {

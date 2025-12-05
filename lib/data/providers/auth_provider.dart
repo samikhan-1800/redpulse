@@ -58,13 +58,16 @@ final currentUserIdProvider = Provider<String?>((ref) {
 final currentUserProfileProvider = StreamProvider<UserModel?>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value(null);
-  
+
   final databaseService = ref.watch(databaseServiceProvider);
   return databaseService.userStream(userId);
 });
 
 /// User profile by ID provider
-final userProfileProvider = FutureProvider.family<UserModel?, String>((ref, userId) async {
+final userProfileProvider = FutureProvider.family<UserModel?, String>((
+  ref,
+  userId,
+) async {
   final databaseService = ref.read(databaseServiceProvider);
   return await databaseService.getUser(userId);
 });
@@ -88,7 +91,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _authService.signInWithEmail(email, password);
-      
+
       // Initialize notifications
       final userId = _authService.currentUser?.uid;
       if (userId != null) {
@@ -97,7 +100,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
           await _notificationService.saveToken(userId, token);
         }
       }
-      
+
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -172,10 +175,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 /// Auth notifier provider
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AsyncValue<void>>((ref) {
-  return AuthNotifier(
-    ref.watch(authServiceProvider),
-    ref.watch(databaseServiceProvider),
-    ref.watch(notificationServiceProvider),
-  );
-});
+final authNotifierProvider =
+    StateNotifierProvider<AuthNotifier, AsyncValue<void>>((ref) {
+      return AuthNotifier(
+        ref.watch(authServiceProvider),
+        ref.watch(databaseServiceProvider),
+        ref.watch(notificationServiceProvider),
+      );
+    });

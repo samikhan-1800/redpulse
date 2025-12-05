@@ -12,11 +12,8 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
   final StorageService _storageService;
   final String? _userId;
 
-  UserProfileNotifier(
-    this._databaseService,
-    this._storageService,
-    this._userId,
-  ) : super(const AsyncValue.data(null));
+  UserProfileNotifier(this._databaseService, this._storageService, this._userId)
+    : super(const AsyncValue.data(null));
 
   /// Update user profile
   Future<void> updateProfile({
@@ -86,9 +83,7 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
 
     state = const AsyncValue.loading();
     try {
-      await _databaseService.updateUser(_userId, {
-        'isAvailable': isAvailable,
-      });
+      await _databaseService.updateUser(_userId, {'isAvailable': isAvailable});
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -113,25 +108,27 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
 /// User profile notifier provider
 final userProfileNotifierProvider =
     StateNotifierProvider<UserProfileNotifier, AsyncValue<void>>((ref) {
-  return UserProfileNotifier(
-    ref.watch(databaseServiceProvider),
-    ref.watch(storageServiceProvider),
-    ref.watch(currentUserIdProvider),
-  );
-});
+      return UserProfileNotifier(
+        ref.watch(databaseServiceProvider),
+        ref.watch(storageServiceProvider),
+        ref.watch(currentUserIdProvider),
+      );
+    });
 
 /// Nearby donors provider
-final nearbyDonorsProvider = FutureProvider.family<List<UserModel>, NearbyDonorsParams>(
-  (ref, params) async {
-    final databaseService = ref.read(databaseServiceProvider);
-    return await databaseService.getNearbyDonors(
-      params.latitude,
-      params.longitude,
-      params.bloodGroup,
-      params.radiusKm,
-    );
-  },
-);
+final nearbyDonorsProvider =
+    FutureProvider.family<List<UserModel>, NearbyDonorsParams>((
+      ref,
+      params,
+    ) async {
+      final databaseService = ref.read(databaseServiceProvider);
+      return await databaseService.getNearbyDonors(
+        params.latitude,
+        params.longitude,
+        params.bloodGroup,
+        params.radiusKm,
+      );
+    });
 
 /// Parameters for nearby donors query
 class NearbyDonorsParams {

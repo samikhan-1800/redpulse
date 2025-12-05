@@ -114,10 +114,7 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
           _userId: _currentUser.profileImageUrl,
           request.requesterId: request.requesterImageUrl,
         },
-        unreadCount: {
-          _userId: 0,
-          request.requesterId: 0,
-        },
+        unreadCount: {_userId: 0, request.requesterId: 0},
         createdAt: now,
         updatedAt: now,
       );
@@ -157,9 +154,7 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
   Future<void> cancelRequest(String requestId) async {
     state = const AsyncValue.loading();
     try {
-      await _databaseService.updateRequest(requestId, {
-        'status': 'cancelled',
-      });
+      await _databaseService.updateRequest(requestId, {'status': 'cancelled'});
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -184,14 +179,14 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
 /// Blood request notifier provider
 final bloodRequestNotifierProvider =
     StateNotifierProvider<BloodRequestNotifier, AsyncValue<void>>((ref) {
-  final currentUser = ref.watch(currentUserProfileProvider).value;
-  return BloodRequestNotifier(
-    ref.watch(databaseServiceProvider),
-    ref.watch(notificationServiceProvider),
-    ref.watch(currentUserIdProvider),
-    currentUser,
-  );
-});
+      final currentUser = ref.watch(currentUserProfileProvider).value;
+      return BloodRequestNotifier(
+        ref.watch(databaseServiceProvider),
+        ref.watch(notificationServiceProvider),
+        ref.watch(currentUserIdProvider),
+        currentUser,
+      );
+    });
 
 /// User's requests stream provider
 final userRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
@@ -204,18 +199,23 @@ final userRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
 
 /// Nearby requests stream provider
 final nearbyRequestsProvider =
-    StreamProvider.family<List<BloodRequest>, NearbyRequestsParams>((ref, params) {
-  final databaseService = ref.watch(databaseServiceProvider);
-  return databaseService.nearbyRequestsStream(
-    params.latitude,
-    params.longitude,
-    params.radiusKm,
-  );
-});
+    StreamProvider.family<List<BloodRequest>, NearbyRequestsParams>((
+      ref,
+      params,
+    ) {
+      final databaseService = ref.watch(databaseServiceProvider);
+      return databaseService.nearbyRequestsStream(
+        params.latitude,
+        params.longitude,
+        params.radiusKm,
+      );
+    });
 
 /// Single request provider
-final requestDetailProvider =
-    FutureProvider.family<BloodRequest?, String>((ref, requestId) async {
+final requestDetailProvider = FutureProvider.family<BloodRequest?, String>((
+  ref,
+  requestId,
+) async {
   final databaseService = ref.read(databaseServiceProvider);
   return await databaseService.getRequest(requestId);
 });

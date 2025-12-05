@@ -65,10 +65,7 @@ class CustomTextField extends StatelessWidget {
         hintText: hint,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 16.w,
-          vertical: 16.h,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: const BorderSide(color: AppColors.divider),
@@ -185,10 +182,7 @@ class SearchTextField extends StatelessWidget {
             : null,
         filled: true,
         fillColor: AppColors.background,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 16.w,
-          vertical: 12.h,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide.none,
@@ -234,10 +228,10 @@ class CustomDropdownField<T> extends StatelessWidget {
     return DropdownButtonFormField<T>(
       value: value,
       items: items
-          .map((item) => DropdownMenuItem<T>(
-                value: item,
-                child: Text(itemLabel(item)),
-              ))
+          .map(
+            (item) =>
+                DropdownMenuItem<T>(value: item, child: Text(itemLabel(item))),
+          )
           .toList(),
       onChanged: onChanged,
       validator: validator,
@@ -245,10 +239,7 @@ class CustomDropdownField<T> extends StatelessWidget {
         labelText: label,
         hintText: hint,
         prefixIcon: prefixIcon,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 16.w,
-          vertical: 16.h,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: const BorderSide(color: AppColors.divider),

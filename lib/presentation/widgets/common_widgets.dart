@@ -9,11 +9,7 @@ class LoadingIndicator extends StatelessWidget {
   final double? size;
   final Color? color;
 
-  const LoadingIndicator({
-    super.key,
-    this.size,
-    this.color,
-  });
+  const LoadingIndicator({super.key, this.size, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -92,19 +88,12 @@ class EmptyState extends StatelessWidget {
                 color: AppColors.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 48.sp,
-                color: AppColors.primary,
-              ),
+              child: Icon(icon, size: 48.sp, color: AppColors.primary),
             ),
             SizedBox(height: 24.h),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
@@ -137,11 +126,7 @@ class ErrorState extends StatelessWidget {
   final String? message;
   final VoidCallback? onRetry;
 
-  const ErrorState({
-    super.key,
-    this.message,
-    this.onRetry,
-  });
+  const ErrorState({super.key, this.message, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -166,10 +151,7 @@ class ErrorState extends StatelessWidget {
             SizedBox(height: 24.h),
             Text(
               AppStrings.somethingWentWrong,
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             if (message != null) ...[
@@ -203,11 +185,7 @@ class ShimmerCard extends StatelessWidget {
   final double? height;
   final double? width;
 
-  const ShimmerCard({
-    super.key,
-    this.height,
-    this.width,
-  });
+  const ShimmerCard({super.key, this.height, this.width});
 
   @override
   Widget build(BuildContext context) {
@@ -232,11 +210,7 @@ class ShimmerList extends StatelessWidget {
   final int itemCount;
   final double? itemHeight;
 
-  const ShimmerList({
-    super.key,
-    this.itemCount = 5,
-    this.itemHeight,
-  });
+  const ShimmerList({super.key, this.itemCount = 5, this.itemHeight});
 
   @override
   Widget build(BuildContext context) {
@@ -271,16 +245,10 @@ class SectionHeader extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
           if (actionText != null)
-            TextButton(
-              onPressed: onActionPressed,
-              child: Text(actionText!),
-            ),
+            TextButton(onPressed: onActionPressed, child: Text(actionText!)),
         ],
       ),
     );
@@ -291,10 +259,7 @@ class SectionHeader extends StatelessWidget {
 class DividerWithText extends StatelessWidget {
   final String text;
 
-  const DividerWithText({
-    super.key,
-    required this.text,
-  });
+  const DividerWithText({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -305,10 +270,7 @@ class DividerWithText extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
             text,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: AppColors.textHint,
-            ),
+            style: TextStyle(fontSize: 12.sp, color: AppColors.textHint),
           ),
         ),
         const Expanded(child: Divider()),
@@ -349,10 +311,7 @@ class BadgeCounter extends StatelessWidget {
               color: AppColors.error,
               shape: BoxShape.circle,
             ),
-            constraints: BoxConstraints(
-              minWidth: 18.w,
-              minHeight: 18.h,
-            ),
+            constraints: BoxConstraints(minWidth: 18.w, minHeight: 18.h),
             child: Center(
               child: Text(
                 count > 99 ? '99+' : count.toString(),
@@ -402,7 +361,9 @@ class AvailabilityToggle extends StatelessWidget {
               height: 16.h,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: isAvailable ? AppColors.success : AppColors.textSecondary,
+                color: isAvailable
+                    ? AppColors.success
+                    : AppColors.textSecondary,
               ),
             )
           else
@@ -410,7 +371,9 @@ class AvailabilityToggle extends StatelessWidget {
               width: 12.w,
               height: 12.h,
               decoration: BoxDecoration(
-                color: isAvailable ? AppColors.success : AppColors.textSecondary,
+                color: isAvailable
+                    ? AppColors.success
+                    : AppColors.textSecondary,
                 shape: BoxShape.circle,
               ),
             ),

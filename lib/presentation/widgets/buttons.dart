@@ -72,10 +72,7 @@ class PrimaryButton extends StatelessWidget {
               ],
               Text(
                 text,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
               ),
             ],
           );
@@ -120,7 +117,7 @@ class CircularIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final buttonSize = size ?? 48.w;
-    
+
     return Container(
       width: buttonSize,
       height: buttonSize,
@@ -146,11 +143,7 @@ class SOSButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
 
-  const SOSButton({
-    super.key,
-    this.onPressed,
-    this.isLoading = false,
-  });
+  const SOSButton({super.key, this.onPressed, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -179,11 +172,7 @@ class SOSButton extends StatelessWidget {
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.emergency,
-                      color: Colors.white,
-                      size: 28.sp,
-                    ),
+                    Icon(Icons.emergency, color: Colors.white, size: 28.sp),
                     Text(
                       'SOS',
                       style: TextStyle(

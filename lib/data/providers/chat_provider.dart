@@ -11,11 +11,8 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
   final String? _userId;
   final UserModel? _currentUser;
 
-  ChatNotifier(
-    this._databaseService,
-    this._userId,
-    this._currentUser,
-  ) : super(const AsyncValue.data(null));
+  ChatNotifier(this._databaseService, this._userId, this._currentUser)
+    : super(const AsyncValue.data(null));
 
   /// Send a text message
   Future<void> sendMessage({
@@ -55,10 +52,7 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
       chatId: chatId,
       content: address,
       type: 'location',
-      metadata: {
-        'latitude': latitude,
-        'longitude': longitude,
-      },
+      metadata: {'latitude': latitude, 'longitude': longitude},
     );
   }
 
@@ -77,13 +71,13 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
 /// Chat notifier provider
 final chatNotifierProvider =
     StateNotifierProvider<ChatNotifier, AsyncValue<void>>((ref) {
-  final currentUser = ref.watch(currentUserProfileProvider).value;
-  return ChatNotifier(
-    ref.watch(databaseServiceProvider),
-    ref.watch(currentUserIdProvider),
-    currentUser,
-  );
-});
+      final currentUser = ref.watch(currentUserProfileProvider).value;
+      return ChatNotifier(
+        ref.watch(databaseServiceProvider),
+        ref.watch(currentUserIdProvider),
+        currentUser,
+      );
+    });
 
 /// User's chats stream provider
 final userChatsProvider = StreamProvider<List<Chat>>((ref) {
@@ -95,15 +89,19 @@ final userChatsProvider = StreamProvider<List<Chat>>((ref) {
 });
 
 /// Messages stream provider for a specific chat
-final messagesProvider =
-    StreamProvider.family<List<Message>, String>((ref, chatId) {
+final messagesProvider = StreamProvider.family<List<Message>, String>((
+  ref,
+  chatId,
+) {
   final databaseService = ref.watch(databaseServiceProvider);
   return databaseService.messagesStream(chatId);
 });
 
 /// Single chat provider
-final chatDetailProvider =
-    FutureProvider.family<Chat?, String>((ref, chatId) async {
+final chatDetailProvider = FutureProvider.family<Chat?, String>((
+  ref,
+  chatId,
+) async {
   final databaseService = ref.read(databaseServiceProvider);
   return await databaseService.getChat(chatId);
 });
@@ -112,8 +110,8 @@ final chatDetailProvider =
 final unreadMessagesCountProvider = Provider<int>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   final chats = ref.watch(userChatsProvider).value ?? [];
-  
+
   if (userId == null) return 0;
-  
+
   return chats.fold(0, (sum, chat) => sum + chat.getUnreadCount(userId));
 });

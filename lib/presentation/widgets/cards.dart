@@ -26,9 +26,7 @@ class RequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       elevation: 2,
       child: InkWell(
         onTap: onTap,
@@ -42,10 +40,7 @@ class RequestCard extends StatelessWidget {
               Row(
                 children: [
                   // Blood group badge
-                  BloodGroupBadge(
-                    bloodGroup: request.bloodGroup,
-                    size: 48,
-                  ),
+                  BloodGroupBadge(bloodGroup: request.bloodGroup, size: 48),
                   SizedBox(width: 12.w),
                   // Request info
                   Expanded(
@@ -121,10 +116,7 @@ class RequestCard extends StatelessWidget {
                   ),
                   if (distance != null) ...[
                     SizedBox(width: 12.w),
-                    _buildDetailChip(
-                      Icons.location_on,
-                      distance!.asDistance,
-                    ),
+                    _buildDetailChip(Icons.location_on, distance!.asDistance),
                   ],
                 ],
               ),
@@ -158,10 +150,7 @@ class RequestCard extends StatelessWidget {
         SizedBox(width: 4.w),
         Text(
           text,
-          style: TextStyle(
-            fontSize: 12.sp,
-            color: AppColors.textSecondary,
-          ),
+          style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
         ),
       ],
     );
@@ -174,20 +163,13 @@ class DonorCard extends StatelessWidget {
   final VoidCallback? onTap;
   final double? distance;
 
-  const DonorCard({
-    super.key,
-    required this.donor,
-    this.onTap,
-    this.distance,
-  });
+  const DonorCard({super.key, required this.donor, this.onTap, this.distance});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16.r),
@@ -281,19 +263,13 @@ class DonationCard extends StatelessWidget {
   final Donation donation;
   final VoidCallback? onTap;
 
-  const DonationCard({
-    super.key,
-    required this.donation,
-    this.onTap,
-  });
+  const DonationCard({super.key, required this.donation, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16.r),
@@ -337,10 +313,7 @@ class DonationCard extends StatelessWidget {
               ),
               // Units
               Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 12.w,
-                  vertical: 6.h,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
                   color: AppColors.success.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
@@ -367,16 +340,12 @@ class BloodGroupBadge extends StatelessWidget {
   final String bloodGroup;
   final double? size;
 
-  const BloodGroupBadge({
-    super.key,
-    required this.bloodGroup,
-    this.size,
-  });
+  const BloodGroupBadge({super.key, required this.bloodGroup, this.size});
 
   @override
   Widget build(BuildContext context) {
     final badgeSize = size ?? 40.0;
-    
+
     return Container(
       width: badgeSize.w,
       height: badgeSize.h,
@@ -406,10 +375,7 @@ class BloodGroupBadge extends StatelessWidget {
 class UrgencyBadge extends StatelessWidget {
   final String urgency;
 
-  const UrgencyBadge({
-    super.key,
-    required this.urgency,
-  });
+  const UrgencyBadge({super.key, required this.urgency});
 
   @override
   Widget build(BuildContext context) {
@@ -435,10 +401,7 @@ class UrgencyBadge extends StatelessWidget {
 class StatusBadge extends StatelessWidget {
   final String status;
 
-  const StatusBadge({
-    super.key,
-    required this.status,
-  });
+  const StatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
@@ -478,7 +441,7 @@ class UserAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatarSize = size ?? 40.0;
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -536,11 +499,9 @@ class StatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cardColor = color ?? AppColors.primary;
-    
+
     return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16.r),
@@ -555,11 +516,7 @@ class StatsCard extends StatelessWidget {
                   color: cardColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: Icon(
-                  icon,
-                  color: cardColor,
-                  size: 24.sp,
-                ),
+                child: Icon(icon, color: cardColor, size: 24.sp),
               ),
               SizedBox(height: 12.h),
               Text(

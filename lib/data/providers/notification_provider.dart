@@ -24,7 +24,7 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final String? _userId;
 
   NotificationActionsNotifier(this._databaseService, this._userId)
-      : super(const AsyncValue.data(null));
+    : super(const AsyncValue.data(null));
 
   /// Mark a notification as read
   Future<void> markAsRead(String notificationId) async {
@@ -52,8 +52,8 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
 /// Notification actions provider
 final notificationActionsProvider =
     StateNotifierProvider<NotificationActionsNotifier, AsyncValue<void>>((ref) {
-  return NotificationActionsNotifier(
-    ref.watch(databaseServiceProvider),
-    ref.watch(currentUserIdProvider),
-  );
-});
+      return NotificationActionsNotifier(
+        ref.watch(databaseServiceProvider),
+        ref.watch(currentUserIdProvider),
+      );
+    });

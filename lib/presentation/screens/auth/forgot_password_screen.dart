@@ -13,7 +13,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -29,9 +30,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _sendResetEmail() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref.read(authNotifierProvider.notifier).sendPasswordReset(
-          _emailController.text,
-        );
+    await ref
+        .read(authNotifierProvider.notifier)
+        .sendPasswordReset(_emailController.text);
 
     if (mounted) {
       final authState = ref.read(authNotifierProvider);
@@ -59,9 +60,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final isLoading = authState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.resetPassword),
-      ),
+      appBar: AppBar(title: const Text(AppStrings.resetPassword)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24.w),

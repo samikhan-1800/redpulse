@@ -36,9 +36,7 @@ class LoadingDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(
-              color: AppColors.primary,
-            ),
+            const CircularProgressIndicator(color: AppColors.primary),
             if (message != null) ...[
               SizedBox(height: 16.h),
               Text(
@@ -101,9 +99,7 @@ class ConfirmationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       title: Text(title),
       content: Text(message),
       actions: [
@@ -165,9 +161,7 @@ class SuccessDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
         padding: EdgeInsets.all(24.w),
         child: Column(
@@ -188,19 +182,13 @@ class SuccessDialog extends StatelessWidget {
             SizedBox(height: 16.h),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 8.h),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24.h),
@@ -255,9 +243,7 @@ class ErrorDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
         padding: EdgeInsets.all(24.w),
         child: Column(
@@ -269,28 +255,18 @@ class ErrorDialog extends StatelessWidget {
                 color: AppColors.error.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.error,
-                color: AppColors.error,
-                size: 48.sp,
-              ),
+              child: Icon(Icons.error, color: AppColors.error, size: 48.sp),
             ),
             SizedBox(height: 16.h),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 8.h),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24.h),
@@ -339,9 +315,7 @@ class BloodGroupSelectionDialog extends StatelessWidget {
     final bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
         padding: EdgeInsets.all(24.w),
         child: Column(
@@ -350,10 +324,7 @@ class BloodGroupSelectionDialog extends StatelessWidget {
           children: [
             Text(
               AppStrings.bloodGroup,
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.h),
             GridView.builder(
@@ -369,14 +340,16 @@ class BloodGroupSelectionDialog extends StatelessWidget {
               itemBuilder: (context, index) {
                 final group = bloodGroups[index];
                 final isSelected = selectedBloodGroup == group;
-                
+
                 return GestureDetector(
                   onTap: () => onSelect(group),
                   child: Container(
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.getBloodGroupColor(group)
-                          : AppColors.getBloodGroupColor(group).withOpacity(0.1),
+                          : AppColors.getBloodGroupColor(
+                              group,
+                            ).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
                         color: AppColors.getBloodGroupColor(group),
@@ -429,11 +402,8 @@ class CustomBottomSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => CustomBottomSheet(
-        title: title,
-        height: height,
-        child: child,
-      ),
+      builder: (_) =>
+          CustomBottomSheet(title: title, height: height, child: child),
     );
   }
 
@@ -443,9 +413,7 @@ class CustomBottomSheet extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20.r),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -466,10 +434,7 @@ class CustomBottomSheet extends StatelessWidget {
               padding: EdgeInsets.all(16.w),
               child: Text(
                 title!,
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
               ),
             ),
             const Divider(height: 1),
