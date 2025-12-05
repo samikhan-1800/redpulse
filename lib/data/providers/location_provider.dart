@@ -106,7 +106,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
         isLoading: false,
         permissionGranted: true,
       );
-      
+
       // Try to get address
       try {
         final addr = await _locationService.getAddressFromCoordinates(
@@ -117,7 +117,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
       } catch (_) {
         // Address lookup failed, but we have position
       }
-      
+
       return position;
     } catch (e) {
       state = state.copyWith(

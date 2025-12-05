@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 /// Location service for getting user location
 class LocationService {
@@ -76,6 +77,41 @@ class LocationService {
           endLongitude,
         ) /
         1000; // Convert to kilometers
+  }
+
+  /// Get address from coordinates (reverse geocoding)
+  Future<String?> getAddressFromCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(latitude, longitude);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final parts = [
+          place.subLocality,
+          place.locality,
+          place.administrativeArea,
+        ].where((p) => p != null && p.isNotEmpty);
+        return parts.join(', ');
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get coordinates from address (forward geocoding)
+  Future<Location?> getCoordinatesFromAddress(String address) async {
+    try {
+      final locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        return locations.first;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
   /// Open device location settings
