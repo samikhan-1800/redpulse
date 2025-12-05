@@ -174,6 +174,38 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
       state = AsyncValue.error(e, st);
     }
   }
+
+  /// Update request status
+  Future<void> updateStatus(
+    String requestId,
+    String status, {
+    String? acceptedById,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final updates = <String, dynamic>{
+        'status': status,
+        'updatedAt': Timestamp.now(),
+      };
+
+      if (status == 'accepted' &&
+          acceptedById != null &&
+          _currentUser != null) {
+        updates['acceptedById'] = acceptedById;
+        updates['acceptedByName'] = _currentUser.name;
+        updates['acceptedAt'] = Timestamp.now();
+      }
+
+      if (status == 'completed') {
+        updates['completedAt'] = Timestamp.now();
+      }
+
+      await _databaseService.updateRequest(requestId, updates);
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
 }
 
 /// Blood request notifier provider
