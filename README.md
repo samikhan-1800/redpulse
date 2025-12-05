@@ -1,16 +1,66 @@
-# redpulse
+🔥 RedPulse – Smart Emergency Donor Connection App
 
-A new Flutter project.
+RedPulse is an emergency assistance application that connects people in urgent need with nearby donors in real time. Built using Flutter and Firebase, RedPulse provides instant donor matching, location-based alerts, secure communication, and analytics—all designed to reduce response time and help save lives.
 
-## Getting Started
+🚨 Key Features
+🩸 Real-Time Donor Matching
 
-This project is a starting point for a Flutter application.
+Automatically finds and alerts donors based on live GPS location, blood group compatibility, and donor availability.
 
-A few resources to get you started if this is your first Flutter project:
+🗺️ Google Maps Integration
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Interactive map displaying users, donors, and emergency requests with real-time distance tracking.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+📢 Instant Notifications (FCM)
+
+Push notifications instantly alert donors of new requests and notify recipients when a donor accepts.
+
+💬 In-App Chat
+
+Secure, real-time chat between donors and recipients for fast coordination.
+
+🆘 SOS Emergency Button
+
+One-tap emergency assistance feature that broadcasts alerts to nearby donors.
+
+👥 Manual Request Feature
+
+Allows users to submit a request on behalf of someone else in need.
+
+📊 Donor Analytics Dashboard
+
+Visual statistics showing donation history, total contributions, and user impact.
+
+👤 User Profile & Availability Controls
+
+Users can manage profile info and switch their donation availability anytime.
+
+🛠️ Tech Stack
+
+Frontend: Flutter
+
+Backend: Firebase
+
+Database: Cloud Firestore
+
+Notifications: Firebase Cloud Messaging (FCM)
+
+Maps: Google Maps SDK
+
+Auth: Firebase Authentication
+
+🎨 Design
+
+Neo-Red Premium theme
+
+Emergency-focused gradients
+
+Clean UI with modern rounded cards
+
+Optimized for Android screens
+
+Professional, minimal, and intuitive user experience
+
+🎯 Objective
+
+RedPulse aims to create a fast, reliable emergency donation system by reducing delays, improving communication, and connecting people who can save lives—when every second counts.
