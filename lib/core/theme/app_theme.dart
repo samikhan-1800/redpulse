@@ -288,9 +288,7 @@ class AppTheme {
         foregroundColor: AppColors.textOnPrimary,
         elevation: 2,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: GoogleFonts.poppins(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -306,9 +304,7 @@ class AppTheme {
         foregroundColor: AppColors.primary,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         side: const BorderSide(color: AppColors.primary, width: 1.5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: GoogleFonts.poppins(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -323,9 +319,7 @@ class AppTheme {
         foregroundColor: AppColors.primaryLight,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         side: const BorderSide(color: AppColors.primaryLight, width: 1.5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: GoogleFonts.poppins(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -374,18 +368,12 @@ class AppTheme {
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppColors.error, width: 2),
       ),
-      hintStyle: GoogleFonts.poppins(
-        color: AppColors.textHint,
-        fontSize: 14,
-      ),
+      hintStyle: GoogleFonts.poppins(color: AppColors.textHint, fontSize: 14),
       labelStyle: GoogleFonts.poppins(
         color: AppColors.textSecondary,
         fontSize: 14,
       ),
-      errorStyle: GoogleFonts.poppins(
-        color: AppColors.error,
-        fontSize: 12,
-      ),
+      errorStyle: GoogleFonts.poppins(color: AppColors.error, fontSize: 12),
     );
   }
 
@@ -422,10 +410,7 @@ class AppTheme {
         color: AppColors.textSecondaryDark,
         fontSize: 14,
       ),
-      errorStyle: GoogleFonts.poppins(
-        color: AppColors.error,
-        fontSize: 12,
-      ),
+      errorStyle: GoogleFonts.poppins(color: AppColors.error, fontSize: 12),
     );
   }
 
@@ -435,9 +420,7 @@ class AppTheme {
       elevation: 2,
       color: AppColors.cardBackground,
       shadowColor: AppColors.shadow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     );
   }
@@ -447,9 +430,7 @@ class AppTheme {
       elevation: 2,
       color: AppColors.cardBackgroundDark,
       shadowColor: Colors.black26,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     );
   }
@@ -552,9 +533,7 @@ class AppTheme {
         color: AppColors.textOnPrimary,
         fontSize: 14,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       behavior: SnackBarBehavior.floating,
     );
   }
@@ -566,9 +545,7 @@ class AppTheme {
         color: AppColors.textPrimaryDark,
         fontSize: 14,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       behavior: SnackBarBehavior.floating,
     );
   }
@@ -578,9 +555,7 @@ class AppTheme {
     return DialogTheme(
       backgroundColor: AppColors.surface,
       elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       titleTextStyle: GoogleFonts.poppins(
         fontSize: 18,
         fontWeight: FontWeight.w600,
@@ -597,9 +572,7 @@ class AppTheme {
     return DialogTheme(
       backgroundColor: AppColors.surfaceDark,
       elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       titleTextStyle: GoogleFonts.poppins(
         fontSize: 18,
         fontWeight: FontWeight.w600,

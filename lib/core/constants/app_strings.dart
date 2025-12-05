@@ -119,7 +119,8 @@ class AppStrings {
   static const String noInternetConnection = 'No internet connection';
   static const String tryAgain = 'Try Again';
   static const String invalidEmail = 'Invalid email address';
-  static const String invalidPassword = 'Password must be at least 8 characters';
+  static const String invalidPassword =
+      'Password must be at least 8 characters';
   static const String passwordsDoNotMatch = 'Passwords do not match';
   static const String fieldRequired = 'This field is required';
   static const String invalidPhoneNumber = 'Invalid phone number';
@@ -135,7 +136,8 @@ class AppStrings {
   // Confirmation Strings
   static const String areYouSure = 'Are you sure?';
   static const String confirmLogout = 'Are you sure you want to logout?';
-  static const String confirmCancel = 'Are you sure you want to cancel this request?';
+  static const String confirmCancel =
+      'Are you sure you want to cancel this request?';
   static const String yes = 'Yes';
   static const String no = 'No';
   static const String ok = 'OK';

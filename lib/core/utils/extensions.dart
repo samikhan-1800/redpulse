@@ -203,16 +203,14 @@ extension ContextExtension on BuildContext {
 
   /// Navigate to page
   Future<T?> push<T>(Widget page) {
-    return Navigator.of(this).push<T>(
-      MaterialPageRoute(builder: (_) => page),
-    );
+    return Navigator.of(this).push<T>(MaterialPageRoute(builder: (_) => page));
   }
 
   /// Navigate and replace
   Future<T?> pushReplacement<T>(Widget page) {
-    return Navigator.of(this).pushReplacement<T, dynamic>(
-      MaterialPageRoute(builder: (_) => page),
-    );
+    return Navigator.of(
+      this,
+    ).pushReplacement<T, dynamic>(MaterialPageRoute(builder: (_) => page));
   }
 
   /// Navigate and remove all
