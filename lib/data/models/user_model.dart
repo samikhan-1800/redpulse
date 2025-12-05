@@ -163,8 +163,9 @@ class UserModel {
   /// Check if user can donate based on last donation date and gender
   bool get canDonate {
     if (lastDonationDate == null) return true;
-    final daysSinceLastDonation =
-        DateTime.now().difference(lastDonationDate!).inDays;
+    final daysSinceLastDonation = DateTime.now()
+        .difference(lastDonationDate!)
+        .inDays;
     // Males can donate every 90 days, females every 120 days
     final cooldownDays = gender.toLowerCase() == 'male' ? 90 : 120;
     return daysSinceLastDonation >= cooldownDays;

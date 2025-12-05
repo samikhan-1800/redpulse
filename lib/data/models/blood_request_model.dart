@@ -113,8 +113,9 @@ class BloodRequest {
       'acceptedById': acceptedById,
       'acceptedByName': acceptedByName,
       'acceptedAt': acceptedAt != null ? Timestamp.fromDate(acceptedAt!) : null,
-      'completedAt':
-          completedAt != null ? Timestamp.fromDate(completedAt!) : null,
+      'completedAt': completedAt != null
+          ? Timestamp.fromDate(completedAt!)
+          : null,
       'chatId': chatId,
     };
   }

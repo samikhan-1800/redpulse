@@ -37,9 +37,12 @@ class Chat {
       id: doc.id,
       requestId: data['requestId'] ?? '',
       participantIds: List<String>.from(data['participantIds'] ?? []),
-      participantNames: Map<String, String>.from(data['participantNames'] ?? {}),
-      participantImages:
-          Map<String, String?>.from(data['participantImages'] ?? {}),
+      participantNames: Map<String, String>.from(
+        data['participantNames'] ?? {},
+      ),
+      participantImages: Map<String, String?>.from(
+        data['participantImages'] ?? {},
+      ),
       lastMessage: data['lastMessage'],
       lastMessageTime: data['lastMessageTime'] != null
           ? (data['lastMessageTime'] as Timestamp).toDate()
@@ -60,8 +63,9 @@ class Chat {
       'participantNames': participantNames,
       'participantImages': participantImages,
       'lastMessage': lastMessage,
-      'lastMessageTime':
-          lastMessageTime != null ? Timestamp.fromDate(lastMessageTime!) : null,
+      'lastMessageTime': lastMessageTime != null
+          ? Timestamp.fromDate(lastMessageTime!)
+          : null,
       'lastMessageSenderId': lastMessageSenderId,
       'unreadCount': unreadCount,
       'createdAt': Timestamp.fromDate(createdAt),
