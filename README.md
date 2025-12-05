@@ -287,7 +287,7 @@ Using lightweight UI components for faster rendering
 
 🚀 Installation Guide
 1. Clone Repository
-git clone https://github.com/YOUR_USERNAME/RedPulse.git
+git clone https://github.com/samikhan-1800/redpulse.git
 cd RedPulse
 
 2. Install Dependencies
