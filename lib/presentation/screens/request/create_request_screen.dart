@@ -8,7 +8,6 @@ import '../../../core/utils/validators.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/location_provider.dart';
 import '../../../data/providers/request_provider.dart';
-import '../../../data/models/blood_request_model.dart';
 import '../../widgets/buttons.dart';
 import '../../widgets/text_fields.dart';
 import '../../widgets/dialogs.dart';
@@ -106,33 +105,23 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         }
       }
 
-      final now = DateTime.now();
-      final request = BloodRequest(
-        id: '',
-        requesterId: userId,
-        requesterName: user.name,
-        requesterPhone: user.phone,
-        bloodGroup: _selectedBloodGroup,
-        patientName: _patientNameController.text.trim(),
-        hospitalName: _hospitalController.text.trim(),
-        hospitalAddress: address,
-        latitude: lat,
-        longitude: lng,
-        unitsRequired: int.tryParse(_unitsController.text) ?? 1,
-        requestType: _requestType,
-        urgencyLevel: _urgencyLevel,
-        additionalNotes: _notesController.text.trim().isNotEmpty
-            ? _notesController.text.trim()
-            : null,
-        status: 'pending',
-        requiredBy: now.add(const Duration(days: 1)),
-        createdAt: now,
-        updatedAt: now,
-      );
-
       await ref
           .read(bloodRequestNotifierProvider.notifier)
-          .createRequest(request);
+          .createRequest(
+            bloodGroup: _selectedBloodGroup,
+            unitsRequired: int.tryParse(_unitsController.text) ?? 1,
+            requestType: _requestType,
+            urgencyLevel: _urgencyLevel,
+            patientName: _patientNameController.text.trim(),
+            hospitalName: _hospitalController.text.trim(),
+            hospitalAddress: address,
+            latitude: lat,
+            longitude: lng,
+            requiredBy: DateTime.now().add(const Duration(days: 1)),
+            additionalNotes: _notesController.text.trim().isNotEmpty
+                ? _notesController.text.trim()
+                : null,
+          );
 
       if (mounted) {
         final dialog = SuccessDialog(

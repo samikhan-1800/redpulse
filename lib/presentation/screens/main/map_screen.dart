@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/location_provider.dart';
@@ -11,7 +9,6 @@ import '../../../data/providers/request_provider.dart';
 import '../../../data/providers/user_provider.dart';
 import '../../../data/models/blood_request_model.dart';
 import '../../../data/models/user_model.dart';
-import '../../widgets/cards.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dialogs.dart';
 import '../request/request_detail_screen.dart';

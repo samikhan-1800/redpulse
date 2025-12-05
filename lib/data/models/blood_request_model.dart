@@ -191,6 +191,30 @@ class BloodRequest {
   /// Check if request is SOS
   bool get isSOS => requestType == 'sos';
 
+  /// Get compatible blood groups for this request
+  List<String> get compatibleBloodGroups {
+    switch (bloodGroup) {
+      case 'A+':
+        return ['A+', 'A-', 'O+', 'O-'];
+      case 'A-':
+        return ['A-', 'O-'];
+      case 'B+':
+        return ['B+', 'B-', 'O+', 'O-'];
+      case 'B-':
+        return ['B-', 'O-'];
+      case 'AB+':
+        return ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+      case 'AB-':
+        return ['A-', 'B-', 'AB-', 'O-'];
+      case 'O+':
+        return ['O+', 'O-'];
+      case 'O-':
+        return ['O-'];
+      default:
+        return [bloodGroup];
+    }
+  }
+
   @override
   String toString() {
     return 'BloodRequest(id: $id, bloodGroup: $bloodGroup, status: $status)';
