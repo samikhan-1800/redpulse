@@ -7,6 +7,7 @@ import '../../../core/utils/extensions.dart';
 import '../../../data/providers/donation_provider.dart';
 import '../../../data/models/donation_model.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/cards.dart';
 
 class DonationHistoryScreen extends ConsumerWidget {
   const DonationHistoryScreen({super.key});
@@ -81,7 +82,7 @@ class _DonationCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        donation.recipientName ?? 'Anonymous Recipient',
+                        donation.recipientName,
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.bold,
@@ -98,7 +99,9 @@ class _DonationCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                StatusBadge(status: donation.status),
+                StatusBadge(
+                  status: donation.isVerified ? 'verified' : 'pending',
+                ),
               ],
             ),
             SizedBox(height: 12.h),
@@ -113,7 +116,7 @@ class _DonationCard extends StatelessWidget {
                 SizedBox(width: 24.w),
                 _buildInfoItem(
                   Icons.water_drop_outlined,
-                  '${donation.unitsRequired} units',
+                  '${donation.units} units',
                 ),
                 SizedBox(width: 24.w),
                 _buildInfoItem(Icons.bloodtype, donation.bloodGroup),

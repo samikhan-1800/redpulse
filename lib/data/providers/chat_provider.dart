@@ -12,7 +12,7 @@ final chatMessagesProvider = StreamProvider.family<List<Message>, String>((
   chatId,
 ) {
   final databaseService = ref.watch(databaseServiceProvider);
-  return databaseService.getChatMessages(chatId);
+  return databaseService.messagesStream(chatId);
 });
 
 /// Chat notifier for managing chat operations

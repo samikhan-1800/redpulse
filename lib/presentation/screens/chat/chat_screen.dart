@@ -10,7 +10,7 @@ import '../../../data/providers/chat_provider.dart';
 import '../../../data/models/chat_model.dart';
 import '../../../data/models/message_model.dart';
 import '../../widgets/common_widgets.dart';
-import '../../widgets/text_fields.dart';
+import '../../widgets/cards.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final Chat chat;
@@ -69,7 +69,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       await ref
           .read(chatNotifierProvider.notifier)
-          .sendMessage(widget.chat.id, text);
+          .sendMessage(chatId: widget.chat.id, content: text);
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
@@ -308,7 +308,7 @@ class _MessageBubble extends StatelessWidget {
               : CrossAxisAlignment.start,
           children: [
             Text(
-              message.text,
+              message.content,
               style: TextStyle(
                 fontSize: 14.sp,
                 color: isMe ? Colors.white : AppColors.textPrimary,
