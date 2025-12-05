@@ -59,7 +59,7 @@ dependencies:
   lottie: ^3.3.1
   
   # Forms & Validation
-  flutter_form_builder: ^9.5.1
+  flutter_form_builder: ^10.2.0
   form_builder_validators: ^11.1.0
   
   # Image Picker
@@ -69,11 +69,12 @@ dependencies:
   shared_preferences: ^2.3.4
   
   # Utilities
-  intl: ^0.20.2
+  intl: any
   uuid: ^4.5.1
   timeago: ^3.7.0
   url_launcher: ^6.3.1
   permission_handler: ^11.3.1
+
 
 dev_dependencies:
   flutter_test:

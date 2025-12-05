@@ -13,7 +13,7 @@ import 'presentation/widgets/common_widgets.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -33,11 +33,7 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp();
 
-  runApp(
-    const ProviderScope(
-      child: RedPulseApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: RedPulseApp()));
 }
 
 class RedPulseApp extends ConsumerWidget {
@@ -174,4 +170,3 @@ class _SplashScreen extends StatelessWidget {
     );
   }
 }
-
