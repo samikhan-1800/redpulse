@@ -133,7 +133,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               ),
               infoWindow: InfoWindow(
                 title: donor.name,
-                snippet: '${donor.bloodGroup} - ${donor.totalDonations} donations',
+                snippet:
+                    '${donor.bloodGroup} - ${donor.totalDonations} donations',
               ),
             ),
           );
@@ -152,28 +153,37 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
     // Watch nearby requests
     final requestsAsync = locationState.position != null
-        ? ref.watch(nearbyRequestsProvider(NearbyRequestsParams(
-            latitude: locationState.position!.latitude,
-            longitude: locationState.position!.longitude,
-            radiusKm: mapFilter.radius,
-          )))
+        ? ref.watch(
+            nearbyRequestsProvider(
+              NearbyRequestsParams(
+                latitude: locationState.position!.latitude,
+                longitude: locationState.position!.longitude,
+                radiusKm: mapFilter.radius,
+              ),
+            ),
+          )
         : null;
 
     // Watch nearby donors
     final donorsAsync = locationState.position != null && currentUser != null
-        ? ref.watch(nearbyDonorsProvider(NearbyDonorsParams(
-            latitude: locationState.position!.latitude,
-            longitude: locationState.position!.longitude,
-            bloodGroup: mapFilter.bloodGroupFilter ?? currentUser.bloodGroup,
-            radiusKm: mapFilter.radius,
-          )))
+        ? ref.watch(
+            nearbyDonorsProvider(
+              NearbyDonorsParams(
+                latitude: locationState.position!.latitude,
+                longitude: locationState.position!.longitude,
+                bloodGroup:
+                    mapFilter.bloodGroupFilter ?? currentUser.bloodGroup,
+                radiusKm: mapFilter.radius,
+              ),
+            ),
+          )
         : null;
 
     // Update markers when data changes
     if (requestsAsync != null && donorsAsync != null) {
       final requests = requestsAsync.valueOrNull ?? [];
       final donors = donorsAsync.valueOrNull ?? [];
-      
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _updateMarkers(requests, donors, mapFilter);
       });
@@ -192,52 +202,51 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       body: locationState.isLoading
           ? const LoadingPage(message: 'Getting location...')
           : locationState.position == null
-              ? Center(
-                  child: EmptyState(
-                    icon: Icons.location_off,
-                    title: 'Location Required',
-                    subtitle: locationState.error ?? 'Please enable location services',
-                    buttonText: 'Enable Location',
-                    onButtonPressed: () {
-                      ref.read(locationNotifierProvider.notifier).getCurrentLocation();
-                    },
+          ? Center(
+              child: EmptyState(
+                icon: Icons.location_off,
+                title: 'Location Required',
+                subtitle:
+                    locationState.error ?? 'Please enable location services',
+                buttonText: 'Enable Location',
+                onButtonPressed: () {
+                  ref
+                      .read(locationNotifierProvider.notifier)
+                      .getCurrentLocation();
+                },
+              ),
+            )
+          : Stack(
+              children: [
+                GoogleMap(
+                  onMapCreated: _onMapCreated,
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(
+                      locationState.position!.latitude,
+                      locationState.position!.longitude,
+                    ),
+                    zoom: 14,
                   ),
-                )
-              : Stack(
-                  children: [
-                    GoogleMap(
-                      onMapCreated: _onMapCreated,
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(
-                          locationState.position!.latitude,
-                          locationState.position!.longitude,
-                        ),
-                        zoom: 14,
-                      ),
-                      markers: _markers,
-                      myLocationEnabled: true,
-                      myLocationButtonEnabled: false,
-                      zoomControlsEnabled: false,
-                      mapToolbarEnabled: false,
-                    ),
-                    // Legend
-                    Positioned(
-                      top: 16.h,
-                      left: 16.w,
-                      child: _buildLegend(),
-                    ),
-                    // Center on location button
-                    Positioned(
-                      bottom: 100.h,
-                      right: 16.w,
-                      child: FloatingActionButton.small(
-                        heroTag: 'centerLocation',
-                        onPressed: _centerOnUserLocation,
-                        child: const Icon(Icons.my_location),
-                      ),
-                    ),
-                  ],
+                  markers: _markers,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
                 ),
+                // Legend
+                Positioned(top: 16.h, left: 16.w, child: _buildLegend()),
+                // Center on location button
+                Positioned(
+                  bottom: 100.h,
+                  right: 16.w,
+                  child: FloatingActionButton.small(
+                    heroTag: 'centerLocation',
+                    onPressed: _centerOnUserLocation,
+                    child: const Icon(Icons.my_location),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -267,16 +276,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         Container(
           width: 12.w,
           height: 12.h,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         SizedBox(width: 8.w),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10.sp),
-        ),
+        Text(label, style: TextStyle(fontSize: 10.sp)),
       ],
     );
   }
@@ -305,16 +308,18 @@ class _MapFilterSheet extends ConsumerWidget {
           title: const Text(AppStrings.showDonors),
           value: filter.showDonors,
           onChanged: (value) {
-            ref.read(mapFilterProvider.notifier).state =
-                filter.copyWith(showDonors: value);
+            ref.read(mapFilterProvider.notifier).state = filter.copyWith(
+              showDonors: value,
+            );
           },
         ),
         SwitchListTile(
           title: const Text(AppStrings.showRequests),
           value: filter.showRequests,
           onChanged: (value) {
-            ref.read(mapFilterProvider.notifier).state =
-                filter.copyWith(showRequests: value);
+            ref.read(mapFilterProvider.notifier).state = filter.copyWith(
+              showRequests: value,
+            );
           },
         ),
         const Divider(),
@@ -334,8 +339,9 @@ class _MapFilterSheet extends ConsumerWidget {
                 max: 50,
                 divisions: 49,
                 onChanged: (value) {
-                  ref.read(mapFilterProvider.notifier).state =
-                      filter.copyWith(radius: value);
+                  ref.read(mapFilterProvider.notifier).state = filter.copyWith(
+                    radius: value,
+                  );
                 },
               ),
             ],

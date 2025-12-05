@@ -54,7 +54,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: RefreshIndicator(
               onRefresh: () async {
                 ref.invalidate(currentUserProfileProvider);
-                await ref.read(locationNotifierProvider.notifier).getCurrentLocation();
+                await ref
+                    .read(locationNotifierProvider.notifier)
+                    .getCurrentLocation();
               },
               child: CustomScrollView(
                 slivers: [
@@ -108,7 +110,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   isAvailable: user.isAvailable,
                                   onChanged: (value) {
                                     ref
-                                        .read(userProfileNotifierProvider.notifier)
+                                        .read(
+                                          userProfileNotifierProvider.notifier,
+                                        )
                                         .toggleAvailability(value);
                                   },
                                 ),
@@ -129,7 +133,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               Expanded(
                                 child: StatsCard(
                                   title: AppStrings.totalDonations,
-                                  value: donationStats.totalDonations.toString(),
+                                  value: donationStats.totalDonations
+                                      .toString(),
                                   icon: Icons.volunteer_activism,
                                   color: AppColors.primary,
                                 ),
@@ -161,7 +166,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   onTap: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (_) => const CreateRequestScreen(),
+                                        builder: (_) =>
+                                            const CreateRequestScreen(),
                                       ),
                                     );
                                   },
@@ -176,9 +182,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   onTap: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (_) => const CreateRequestScreen(
-                                          requestType: 'sos',
-                                        ),
+                                        builder: (_) =>
+                                            const CreateRequestScreen(
+                                              requestType: 'sos',
+                                            ),
                                       ),
                                     );
                                   },
@@ -191,7 +198,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   title: AppStrings.findDonors,
                                   color: AppColors.secondary,
                                   onTap: () {
-                                    ref.read(bottomNavIndexProvider.notifier).state = 1;
+                                    ref
+                                            .read(
+                                              bottomNavIndexProvider.notifier,
+                                            )
+                                            .state =
+                                        1;
                                   },
                                 ),
                               ),
@@ -219,7 +231,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             child: const EmptyState(
                               icon: Icons.location_off,
                               title: 'Location not available',
-                              subtitle: 'Enable location to see nearby requests',
+                              subtitle:
+                                  'Enable location to see nearby requests',
                             ),
                           ),
                         SizedBox(height: 24.h),
@@ -253,9 +266,7 @@ class _QuickActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12.r),
@@ -274,10 +285,7 @@ class _QuickActionCard extends StatelessWidget {
               SizedBox(height: 8.h),
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -294,10 +302,7 @@ class _NearbyRequestsList extends ConsumerWidget {
   final double latitude;
   final double longitude;
 
-  const _NearbyRequestsList({
-    required this.latitude,
-    required this.longitude,
-  });
+  const _NearbyRequestsList({required this.latitude, required this.longitude});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -309,10 +314,8 @@ class _NearbyRequestsList extends ConsumerWidget {
 
     return requestsAsync.when(
       loading: () => const ShimmerList(itemCount: 3),
-      error: (error, _) => Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Text('Error: $error'),
-      ),
+      error: (error, _) =>
+          Padding(padding: EdgeInsets.all(16.w), child: Text('Error: $error')),
       data: (requests) {
         if (requests.isEmpty) {
           return Padding(
