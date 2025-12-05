@@ -6,6 +6,15 @@ import '../models/user_model.dart';
 import '../models/blood_request_model.dart';
 import 'auth_provider.dart';
 
+/// Provider for chat messages stream
+final chatMessagesProvider = StreamProvider.family<List<Message>, String>((
+  ref,
+  chatId,
+) {
+  final databaseService = ref.watch(databaseServiceProvider);
+  return databaseService.getChatMessages(chatId);
+});
+
 /// Chat notifier for managing chat operations
 class ChatNotifier extends StateNotifier<AsyncValue<void>> {
   final DatabaseService _databaseService;
