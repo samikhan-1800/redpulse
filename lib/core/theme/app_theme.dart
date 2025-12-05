@@ -415,8 +415,8 @@ class AppTheme {
   }
 
   // Card Theme
-  static CardTheme get _cardTheme {
-    return CardTheme(
+  static CardThemeData get _cardTheme {
+    return CardThemeData(
       elevation: 2,
       color: AppColors.cardBackground,
       shadowColor: AppColors.shadow,
@@ -425,8 +425,8 @@ class AppTheme {
     );
   }
 
-  static CardTheme get _cardThemeDark {
-    return CardTheme(
+  static CardThemeData get _cardThemeDark {
+    return CardThemeData(
       elevation: 2,
       color: AppColors.cardBackgroundDark,
       shadowColor: Colors.black26,
@@ -551,8 +551,8 @@ class AppTheme {
   }
 
   // Dialog Theme
-  static DialogTheme get _dialogTheme {
-    return DialogTheme(
+  static DialogThemeData get _dialogTheme {
+    return DialogThemeData(
       backgroundColor: AppColors.surface,
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -568,8 +568,8 @@ class AppTheme {
     );
   }
 
-  static DialogTheme get _dialogThemeDark {
-    return DialogTheme(
+  static DialogThemeData get _dialogThemeDark {
+    return DialogThemeData(
       backgroundColor: AppColors.surfaceDark,
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

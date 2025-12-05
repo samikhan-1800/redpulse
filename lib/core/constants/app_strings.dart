@@ -3,6 +3,10 @@
 class AppStrings {
   AppStrings._();
 
+  // App Info
+  static const String appName = 'RedPulse';
+  static const String appTagline = 'Donate Blood, Save Lives';
+
   // Auth Strings
   static const String login = 'Login';
   static const String signUp = 'Sign Up';
@@ -35,6 +39,7 @@ class AppStrings {
   static const String other = 'Other';
   static const String saveProfile = 'Save Profile';
   static const String updateProfile = 'Update Profile';
+  static const String saveChanges = 'Save Changes';
 
   // Navigation Strings
   static const String home = 'Home';
@@ -66,11 +71,15 @@ class AppStrings {
   static const String requestFor = 'Request For';
   static const String patientName = 'Patient Name';
   static const String hospitalName = 'Hospital Name';
+  static const String hospitalAddress = 'Hospital Address';
   static const String unitsRequired = 'Units Required';
   static const String urgencyLevel = 'Urgency Level';
   static const String additionalNotes = 'Additional Notes';
   static const String requiredBy = 'Required By';
   static const String contactNumber = 'Contact Number';
+  static const String requestType = 'Request Type';
+  static const String useCurrentLocation = 'Use Current Location';
+  static const String call = 'Call';
 
   // Status Strings
   static const String pending = 'Pending';
