@@ -3,6 +3,7 @@ import '../services/database_service.dart';
 import '../models/chat_model.dart';
 import '../models/message_model.dart';
 import '../models/user_model.dart';
+import '../models/blood_request_model.dart';
 import 'auth_provider.dart';
 
 /// Chat notifier for managing chat operations
@@ -13,6 +14,37 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
 
   ChatNotifier(this._databaseService, this._userId, this._currentUser)
     : super(const AsyncValue.data(null));
+
+  /// Start a chat for a blood request
+  Future<Chat?> startChatForRequest(BloodRequest request) async {
+    if (_userId == null || _currentUser == null) return null;
+
+    try {
+      // Create a new chat
+      final now = DateTime.now();
+      final chat = Chat(
+        id: '',
+        requestId: request.id,
+        participantIds: [_userId, request.requesterId],
+        participantNames: {
+          _userId: _currentUser.name,
+          request.requesterId: request.requesterName,
+        },
+        participantImages: {
+          _userId: _currentUser.profileImageUrl,
+          request.requesterId: request.requesterImageUrl,
+        },
+        unreadCount: {_userId: 0, request.requesterId: 0},
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final chatId = await _databaseService.createChat(chat);
+      return chat.copyWith(id: chatId);
+    } catch (e) {
+      return null;
+    }
+  }
 
   /// Send a text message
   Future<void> sendMessage({
@@ -57,11 +89,12 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
   }
 
   /// Mark messages as read
-  Future<void> markAsRead(String chatId) async {
-    if (_userId == null) return;
+  Future<void> markAsRead(String chatId, String? userId) async {
+    final uid = userId ?? _userId;
+    if (uid == null) return;
 
     try {
-      await _databaseService.markMessagesAsRead(chatId, _userId);
+      await _databaseService.markMessagesAsRead(chatId, uid);
     } catch (e) {
       // Handle error silently
     }

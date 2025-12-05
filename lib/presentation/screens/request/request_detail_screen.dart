@@ -38,8 +38,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
       context,
       title: AppStrings.acceptRequest,
       message:
-          'Are you willing to donate blood for this request? '
-          'The requester will be notified and a chat will be started.',
+          'Are you willing to donate blood for this request? The requester will be notified and a chat will be started.',
       confirmText: 'Yes, I\'ll Donate',
     );
 
@@ -51,17 +50,15 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
       final userId = ref.read(currentUserIdProvider);
       if (userId == null) throw Exception('User not authenticated');
 
-      // Create or get existing chat
       final chat = await ref
           .read(chatNotifierProvider.notifier)
-          .createChat(widget.request);
+          .startChatForRequest(widget.request);
 
-      // Update request status if needed
       await ref
           .read(bloodRequestNotifierProvider.notifier)
-          .acceptRequest(widget.request.id, userId);
+          .updateStatus(widget.request.id, 'accepted', acceptedById: userId);
 
-      if (mounted) {
+      if (mounted && chat != null) {
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => ChatScreen(chat: chat)));
@@ -88,8 +85,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
 
   Future<void> _openMaps() async {
     final uri = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query='
-      '${widget.request.latitude},${widget.request.longitude}',
+      'https://www.google.com/maps/search/?api=1&query=${widget.request.latitude},${widget.request.longitude}',
     );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -110,7 +106,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
     try {
       await ref
           .read(bloodRequestNotifierProvider.notifier)
-          .updateRequestStatus(widget.request.id, status);
+          .updateStatus(widget.request.id, status);
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -139,20 +135,20 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
           if (isOwner && widget.request.isActive)
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'fulfilled') {
-                  _updateStatus('fulfilled');
+                if (value == 'completed') {
+                  _updateStatus('completed');
                 } else if (value == 'cancelled') {
                   _updateStatus('cancelled');
                 }
               },
               itemBuilder: (context) => [
                 const PopupMenuItem(
-                  value: 'fulfilled',
+                  value: 'completed',
                   child: Row(
                     children: [
                       Icon(Icons.check_circle, color: Colors.green),
                       SizedBox(width: 8),
-                      Text('Mark as Fulfilled'),
+                      Text('Mark as Completed'),
                     ],
                   ),
                 ),
@@ -175,7 +171,6 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Urgency banner
             if (widget.request.isSOS || widget.request.isEmergency)
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
@@ -203,7 +198,6 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                 ),
               ),
             SizedBox(height: 16.h),
-            // Blood group and status card
             Card(
               child: Padding(
                 padding: EdgeInsets.all(16.w),
@@ -243,7 +237,6 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
               ),
             ),
             SizedBox(height: 16.h),
-            // Patient info
             const SectionHeader(title: 'Patient Information'),
             Card(
               child: Column(
@@ -277,7 +270,6 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
               ),
             ),
             SizedBox(height: 16.h),
-            // Requester info
             const SectionHeader(title: 'Requester Information'),
             Card(
               child: Column(
@@ -310,16 +302,15 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                 ],
               ),
             ),
-            // Notes section
-            if (widget.request.notes != null &&
-                widget.request.notes!.isNotEmpty) ...[
+            if (widget.request.additionalNotes != null &&
+                widget.request.additionalNotes!.isNotEmpty) ...[
               SizedBox(height: 16.h),
               const SectionHeader(title: 'Additional Notes'),
               Card(
                 child: Padding(
                   padding: EdgeInsets.all(16.w),
                   child: Text(
-                    widget.request.notes!,
+                    widget.request.additionalNotes!,
                     style: TextStyle(
                       fontSize: 14.sp,
                       color: AppColors.textSecondary,
@@ -328,7 +319,6 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                 ),
               ),
             ],
-            // Compatible blood types
             SizedBox(height: 16.h),
             const SectionHeader(title: 'Compatible Blood Types'),
             Card(

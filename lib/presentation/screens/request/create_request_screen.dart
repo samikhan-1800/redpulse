@@ -8,7 +8,6 @@ import '../../../core/utils/validators.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/location_provider.dart';
 import '../../../data/providers/request_provider.dart';
-import '../../../data/providers/user_provider.dart';
 import '../../../data/models/blood_request_model.dart';
 import '../../widgets/buttons.dart';
 import '../../widgets/text_fields.dart';
@@ -16,7 +15,7 @@ import '../../widgets/dialogs.dart';
 import '../../widgets/common_widgets.dart';
 
 class CreateRequestScreen extends ConsumerStatefulWidget {
-  final String? requestType; // 'normal', 'emergency', 'sos'
+  final String? requestType;
 
   const CreateRequestScreen({super.key, this.requestType});
 
@@ -35,6 +34,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
 
   String _selectedBloodGroup = 'A+';
   String _requestType = 'normal';
+  String _urgencyLevel = 'medium';
   bool _useCurrentLocation = true;
   bool _isLoading = false;
 
@@ -43,8 +43,12 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     super.initState();
     if (widget.requestType != null) {
       _requestType = widget.requestType!;
+      if (_requestType == 'sos') {
+        _urgencyLevel = 'critical';
+      } else if (_requestType == 'emergency') {
+        _urgencyLevel = 'high';
+      }
     }
-    // Get current location
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(locationNotifierProvider.notifier).getCurrentLocation();
     });
@@ -81,16 +85,14 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         throw Exception('User not authenticated');
       }
 
-      // Get coordinates
       double lat, lng;
-      String? city;
+      String address;
 
       if (_useCurrentLocation && locationState.position != null) {
         lat = locationState.position!.latitude;
         lng = locationState.position!.longitude;
-        city = locationState.address;
+        address = locationState.address ?? _addressController.text.trim();
       } else {
-        // Geocode address
         final locationService = ref.read(locationServiceProvider);
         final coords = await locationService.getCoordinatesFromAddress(
           _addressController.text.trim(),
@@ -98,12 +100,13 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         if (coords != null) {
           lat = coords.latitude;
           lng = coords.longitude;
-          city = _addressController.text.trim();
+          address = _addressController.text.trim();
         } else {
           throw Exception('Could not find location for the given address');
         }
       }
 
+      final now = DateTime.now();
       final request = BloodRequest(
         id: '',
         requesterId: userId,
@@ -112,19 +115,19 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         bloodGroup: _selectedBloodGroup,
         patientName: _patientNameController.text.trim(),
         hospitalName: _hospitalController.text.trim(),
-        hospitalAddress: _addressController.text.trim().isNotEmpty
-            ? _addressController.text.trim()
-            : locationState.address ?? '',
+        hospitalAddress: address,
         latitude: lat,
         longitude: lng,
-        city: city ?? '',
         unitsRequired: int.tryParse(_unitsController.text) ?? 1,
         requestType: _requestType,
-        notes: _notesController.text.trim().isNotEmpty
+        urgencyLevel: _urgencyLevel,
+        additionalNotes: _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,
-        status: 'active',
-        createdAt: DateTime.now(),
+        status: 'pending',
+        requiredBy: now.add(const Duration(days: 1)),
+        createdAt: now,
+        updatedAt: now,
       );
 
       await ref
@@ -135,15 +138,16 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         final dialog = SuccessDialog(
           title: AppStrings.requestCreated,
           message:
-              'Your blood request has been created successfully. '
-              'Nearby donors will be notified.',
+              'Your blood request has been created successfully. Nearby donors will be notified.',
         );
         await showDialog(
           context: context,
           barrierDismissible: false,
           builder: (_) => dialog,
         );
-        Navigator.of(context).pop();
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -177,12 +181,11 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Urgency banner for SOS
               if (_requestType == 'sos')
                 Container(
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: AppColors.emergency.withOpacity(0.1),
+                    color: AppColors.emergency.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8.r),
                     border: Border.all(color: AppColors.emergency),
                   ),
@@ -203,8 +206,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                   ),
                 ),
               SizedBox(height: 16.h),
-              // Request type selection
-              SectionHeader(title: AppStrings.requestType),
+              const SectionHeader(title: AppStrings.requestType),
               SizedBox(height: 8.h),
               Row(
                 children: [
@@ -216,8 +218,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                 ],
               ),
               SizedBox(height: 24.h),
-              // Blood group selection
-              SectionHeader(title: AppStrings.bloodGroup),
+              const SectionHeader(title: AppStrings.bloodGroup),
               SizedBox(height: 8.h),
               Wrap(
                 spacing: 8.w,
@@ -232,7 +233,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                     },
                     selectedColor: AppColors.getBloodGroupColor(
                       group,
-                    ).withOpacity(0.2),
+                    ).withValues(alpha: 0.2),
                     checkmarkColor: AppColors.getBloodGroupColor(group),
                     labelStyle: TextStyle(
                       color: isSelected
@@ -246,28 +247,25 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                 }).toList(),
               ),
               SizedBox(height: 24.h),
-              // Patient name
               CustomTextField(
                 controller: _patientNameController,
                 label: AppStrings.patientName,
                 hint: 'Enter patient name',
-                prefixIcon: Icons.person,
+                prefixIcon: Icon(Icons.person),
                 validator: Validators.validateName,
               ),
               SizedBox(height: 16.h),
-              // Hospital name
               CustomTextField(
                 controller: _hospitalController,
                 label: AppStrings.hospitalName,
                 hint: 'Enter hospital name',
-                prefixIcon: Icons.local_hospital,
+                prefixIcon: Icon(Icons.local_hospital),
                 validator: Validators.validateRequired,
               ),
               SizedBox(height: 16.h),
-              // Location toggle
               Card(
                 child: SwitchListTile(
-                  title: const Text(AppStrings.useCurrentLocation),
+                  title: Text(AppStrings.useCurrentLocation),
                   subtitle: Text(
                     _useCurrentLocation
                         ? (locationState.address ?? 'Getting location...')
@@ -292,7 +290,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                   controller: _addressController,
                   label: AppStrings.hospitalAddress,
                   hint: 'Enter hospital address',
-                  prefixIcon: Icons.location_on,
+                  prefixIcon: Icon(Icons.location_on),
                   maxLines: 2,
                   validator: _useCurrentLocation
                       ? null
@@ -300,12 +298,11 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                 ),
               ],
               SizedBox(height: 16.h),
-              // Units required
               CustomTextField(
                 controller: _unitsController,
                 label: AppStrings.unitsRequired,
                 hint: 'Enter number of units',
-                prefixIcon: Icons.water_drop,
+                prefixIcon: Icon(Icons.water_drop),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -319,16 +316,14 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                 },
               ),
               SizedBox(height: 16.h),
-              // Notes
               CustomTextField(
                 controller: _notesController,
                 label: AppStrings.additionalNotes,
                 hint: 'Any additional information (optional)',
-                prefixIcon: Icons.note,
+                prefixIcon: Icon(Icons.note),
                 maxLines: 3,
               ),
               SizedBox(height: 32.h),
-              // Submit button
               _requestType == 'sos'
                   ? SOSButton(
                       onPressed: _isLoading ? null : _createRequest,
@@ -364,12 +359,23 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          setState(() => _requestType = type);
+          setState(() {
+            _requestType = type;
+            if (type == 'sos') {
+              _urgencyLevel = 'critical';
+            } else if (type == 'emergency') {
+              _urgencyLevel = 'high';
+            } else {
+              _urgencyLevel = 'medium';
+            }
+          });
         },
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 12.h),
           decoration: BoxDecoration(
-            color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
+            color: isSelected
+                ? color.withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8.r),
             border: Border.all(
               color: isSelected ? color : AppColors.textHint,
