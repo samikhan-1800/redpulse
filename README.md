@@ -1,334 +1,128 @@
 🔥 RedPulse – Smart Emergency Donor Connection System
 
-A real-time, location-based donor–recipient assistance platform designed to reduce emergency response time and connect people who can save lives.
-
-📌 Table of Contents
-
-Overview
-
-Core Features
-
-System Workflow
-
-Architecture
-
-Project Structure
-
-State Management
-
-Database Design
-
-Installation Guide
-
-Tech Stack
-
-API Integrations
-
-Security & Validation
-
-Performance Considerations
-
-Future Enhancements
-
-Contributors
-
-🩸 Overview
-
-RedPulse is a real-time emergency assistance application built using Flutter, Firebase, and Google Maps Platform.
-It enables users to both request blood and donate blood, delivering instant donor-recipient matching through live location tracking, push notifications, and an interactive map interface.
-
-Emergencies require speed. RedPulse aims to bridge the gap between those who need help and those willing to provide it — instantly, reliably, and intelligently.
-
-🚀 Core Features
-🧑‍🤝‍🧑 Unified User Role
-
-Users can act as both donor and recipient. A simple availability toggle switches donor mode on or off.
-
-📍 Real-Time Donor Matching
-
-Live GPS location is used to detect the closest eligible donors within a configurable radius.
-
-🩸 Create Emergency Requests
-
-Recipients can create urgent blood requests with patient data, hospital location, and required blood group.
-
-🆘 SOS Emergency Mode
-
-One-tap SOS instantly alerts all nearby available donors.
-
-👥 Manual Request Creation
-
-Users can create a request on behalf of someone else by entering their details and location.
-
-🔔 Instant Push Notifications (FCM)
-
-Donors receive immediate alerts when a request is created close to them.
-Recipients are notified when a donor accepts their request.
-
-💬 In-App Chat System
-
-Once a donor accepts a request, both parties can communicate directly inside the app.
-
-🗺️ Interactive Google Maps
-
-Live donor locations
-
-Live request locations
-
-Dynamic markers
-
-Distance calculation
-
-Hospital/patient location preview
-
-📊 Donation Analytics Dashboard
-
-Users can view:
-
-Total donations
-
-Request history
-
-Acceptance history
-
-Monthly statistics
-
-User growth patterns
-
-📂 Donation History
-
-A detailed timeline of all previous donations, requests, and interactions.
-
-🔄 System Workflow
-1. User registers/login
-
-Firebase Authentication stores user identity.
-Firestore stores profile, blood group, and location.
-
-2. User updates location
-
-Location is synced periodically or when app launches.
-
-3. If user needs blood:
-
-Creates emergency request
-
-Request stored in Firestore
-
-Notification sent to nearby donors
-
-4. Donor sees notification → opens request details
-
-Accept
-
-Decline
-
-5. If accepted:
-
-Recipient notified
-
-Chat session opens
-
-Analytics updated
-
-6. After completion:
-
-Donor’s total donations increment
-
-History recorded
-
-Request marked completed
-
-🧱 Architecture
-Clean Architecture with MVC Principles
-
-UI Layer: Widgets, Screens
-
-Controller Layer: Providers, Riverpod, State Managers
-
-Data Layer: Firebase Services, Repositories
-
-Domain Layer: Models, Entities
-
-The app is structured so that changing the database (Firestore) only requires modifying the repository files, not UI or business logic.
-
-Folder Structure Example
+A real-time, location-aware blood donation platform built with Flutter, Firebase, and Google Maps to connect donors and recipients faster.
+
+## Table of Contents
+- [Overview](#overview)
+- [Core Features](#core-features)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [State Management](#state-management)
+- [Data Model](#data-model)
+- [Firebase Setup](#firebase-setup)
+  - [Android](#android)
+  - [Web (optional)](#web-optional)
+- [Maps Setup](#maps-setup)
+- [Environment & Secrets](#environment--secrets)
+- [Run & Build](#run--build)
+- [Security Rules (Firestore)](#security-rules-firestore)
+- [Performance Notes](#performance-notes)
+- [Future Enhancements](#future-enhancements)
+- [Contributors](#contributors)
+
+## Overview
+RedPulse enables users to request blood, volunteer as donors, and coordinate via real-time location, push notifications, and in-app chat. Speed and reliability drive the experience.
+
+## Core Features
+- Unified user role: toggle donor availability on/off.
+- Emergency / SOS requests with hospital location and blood group.
+- Real-time donor matching by proximity and compatibility.
+- Push notifications (FCM) for nearby requests and acceptances.
+- In-app chat after a donor accepts a request.
+- Interactive Google Maps with donors/requests markers and distance hints.
+- Donation history and basic analytics (totals, history timeline).
+
+## Architecture
+- Clean architecture with clear layers: presentation (screens/widgets), data (services, providers), domain (models).
+- Firebase backend: Auth, Firestore, Storage, FCM.
+- Location/Maps: geolocator, geocoding, google_maps_flutter.
+- Forms/Validation: flutter_form_builder, form_builder_validators.
+
+## Project Structure
+```
 lib/
- ├─ core/
- ├─ data/
- │   ├─ models/
- │   ├─ repositories/
- │   └─ services/
- ├─ logic/
- │   ├─ providers/
- │   ├─ controllers/
- │   └─ state/
- ├─ ui/
- │   ├─ screens/
- │   ├─ widgets/
- │   ├─ components/
- │   └─ themes/
- └─ main.dart
+  core/              # theme, constants, utils
+  data/              # models, services (Firebase/DB), providers
+  presentation/      # screens, widgets, navigation
+  main.dart          # app entry, Firebase init
+android/             # Android build (place google-services.json in android/app)
+ios/                  # iOS build (place GoogleService-Info.plist in ios/Runner)
+web/                 # Web assets & manifest
+```
 
-🔧 State Management
+## State Management
+- setState for simple, local UI updates.
+- Provider for auth/user/profile basics.
+- Riverpod for streams and app-wide logic (requests, chat, notifications, location).
 
-The project uses a hybrid approach:
+## Data Model
+- users: profile, blood group, phone, location, availability, donationCount.
+- requests: requester info, bloodGroup, unitsRequired, location, status (pending/accepted/completed/cancelled), acceptedBy, timestamps, chatId.
+- chats: participants, lastMessage, unreadCount.
+- messages: chatId, senderId/name, content, type, isRead, createdAt.
+- notifications: user-targeted alerts, read state.
 
-✔ setState()
+## Firebase Setup
+### Android
+1) In Firebase console, register Android app with package name: `com.example.redpulse` (see android/app/build.gradle.kts).
+2) Download google-services.json and place it at android/app/google-services.json.
+3) Ensure Android Gradle has the Google services plugin (already added in settings.gradle.kts and android/app/build.gradle.kts).
+4) Run on device: `flutter run -d <device>`.
 
-For simple UI refresh logic (local widgets).
+### Web (optional)
+1) In Firebase console, add a Web app and copy the Web config.
+2) Update main.dart FirebaseOptions (search for YOUR_API_KEY etc.) with your real values.
 
-✔ Provider
+## Maps Setup
+- Enable these APIs in Google Cloud Console: Maps SDK for Android, Geocoding API, Places API, Directions API.
+- Add your Maps API key to Android local.properties or AndroidManifest as needed (not committed here).
 
-Used for user profile, authentication status, and location provider.
+## Environment & Secrets
+- Do not commit keys: keep google-services.json, GoogleService-Info.plist, and Maps API keys local.
+- Web Firebase config in main.dart should be real values for web builds.
 
-✔ Riverpod
-
-Used for:
-
-Requests stream
-
-Donor matching logic
-
-Chat controller
-
-Global application state
-
-This ensures scalability, separation of concerns, and performance optimization.
-
-🗄️ Database Design (Firestore)
-Collections
-users/
-   uid/
-      name
-      bloodGroup
-      phone
-      location
-      availability
-      donationCount
-      lastDonationDate
-
-requests/
-   requestId/
-      requestedBy
-      bloodGroup
-      hospitalLocation
-      description
-      status
-      acceptedBy
-
-chats/
-   chatId/
-      messages/
-         messageId/
-            senderId
-            text
-            timestamp
-
-🔌 API Integrations
-✔ Google Maps SDK
-
-Used for map rendering, markers, and camera movement.
-
-✔ Geolocation API
-
-Used for retrieving live latitude–longitude.
-
-✔ Firebase Cloud Messaging (FCM)
-
-Used for:
-
-Request alerts
-
-Acceptance alerts
-
-Chat notifications
-
-✔ Firebase Authentication
-
-Login, register, secure access.
-
-✔ Cloud Firestore
-
-All real-time data operations.
-
-🛡 Security & Validation
-🔐 Firestore Security Rules
-
-Prevent unauthorized access to user data and requests.
-
-✔ Form Validation
-
-Valid phone numbers
-
-Valid email format
-
-Required blood group
-
-Location data must be present
-
-🔄 Protected Routes
-
-Unauthenticated users cannot access dashboard or chat.
-
-⚡ Performance Considerations
-
-Minimum reads by using streams + caching
-
-Using Riverpod to avoid unnecessary widget rebuilds
-
-Lazy loading large lists (history, requests)
-
-Efficient Firestore indexing for queries
-
-Controlled polling for location updates
-
-Using lightweight UI components for faster rendering
-
-🚀 Installation Guide
-1. Clone Repository
-git clone https://github.com/samikhan-1800/redpulse.git
-cd RedPulse
-
-2. Install Dependencies
+## Run & Build
+```
 flutter pub get
+flutter run                # picks a connected device (Android preferred)
+# or choose explicitly
+flutter run -d chrome      # web (requires web Firebase config)
+flutter run -d windows     # desktop (no Firebase on Windows by default)
+```
 
-3. Add Firebase config files
+## Security Rules (Firestore)
+Start with restrictive rules and open only what you need:
+```js
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    match /requests/{id} {
+      allow create: if request.auth != null;
+      allow read: if true;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.requesterId;
+    }
+    match /chats/{chatId}/messages/{msgId} {
+      allow read, write: if request.auth != null && request.auth.uid in resource.data.participantIds;
+    }
+  }
+}
+```
 
-google-services.json → /android/app/
+## Performance Notes
+- Use Firestore streams + Riverpod to minimize rebuilds.
+- Index common Firestore queries (requests by status, by requesterId).
+- Batch updates for chat read receipts.
+- Cache location where possible and avoid excessive geocoding calls.
 
-GoogleService-Info.plist → /ios/Runner/
+## Future Enhancements
+- AI-based donor prediction/ranking.
+- Hospital dashboard portal.
+- Real-time ambulance tracking.
+- Multi-language support and full dark mode.
+- Voice-enabled emergency requests.
 
-4. Enable Google Maps API
-
-Activate:
-
-Maps SDK for Android
-
-Directions API
-
-Geocoding API
-
-Places API
-
-5. Run App
-flutter run
-
-🔮 Future Enhancements
-
-AI-based donor prediction system
-
-Hospital dashboard portal
-
-Real-time ambulance tracking
-
-Multi-language support
-
-Dark mode
-
-Voice-enabled emergency request mode
-
-👨‍💻 Contributors
-
-Sami Khan — Developer, Architect, Designer
-Project under COMSATS University Islamabad (Wah Campus)
+## Contributors
+- Sami Khan — Developer, Architect, Designer (COMSATS University Islamabad, Wah Campus)
