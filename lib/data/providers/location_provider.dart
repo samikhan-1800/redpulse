@@ -6,12 +6,14 @@ import 'auth_provider.dart';
 /// Location state
 class LocationState {
   final Position? position;
+  final String? address;
   final bool isLoading;
   final String? error;
   final bool permissionGranted;
 
   const LocationState({
     this.position,
+    this.address,
     this.isLoading = false,
     this.error,
     this.permissionGranted = false,
@@ -19,12 +21,14 @@ class LocationState {
 
   LocationState copyWith({
     Position? position,
+    String? address,
     bool? isLoading,
     String? error,
     bool? permissionGranted,
   }) {
     return LocationState(
       position: position ?? this.position,
+      address: address ?? this.address,
       isLoading: isLoading ?? this.isLoading,
       error: error,
       permissionGranted: permissionGranted ?? this.permissionGranted,
@@ -102,6 +106,18 @@ class LocationNotifier extends StateNotifier<LocationState> {
         isLoading: false,
         permissionGranted: true,
       );
+      
+      // Try to get address
+      try {
+        final addr = await _locationService.getAddressFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        state = state.copyWith(address: addr);
+      } catch (_) {
+        // Address lookup failed, but we have position
+      }
+      
       return position;
     } catch (e) {
       state = state.copyWith(
