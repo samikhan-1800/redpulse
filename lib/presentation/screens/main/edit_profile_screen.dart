@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,11 +10,9 @@ import '../../../core/utils/validators.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/user_provider.dart';
 import '../../../data/providers/location_provider.dart';
-import '../../../data/services/storage_service.dart';
 import '../../widgets/buttons.dart';
 import '../../widgets/text_fields.dart';
 import '../../widgets/common_widgets.dart';
-import '../../widgets/dialogs.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -33,6 +32,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   String _selectedGender = 'male';
   DateTime _selectedDate = DateTime.now().subtract(const Duration(days: 6570));
   String? _profileImageUrl;
+  File? _selectedImageFile;
   bool _isLoading = false;
   bool _isUploading = false;
 
@@ -97,27 +97,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     if (image == null) return;
 
-    setState(() => _isUploading = true);
-
-    try {
-      final userId = ref.read(currentUserIdProvider);
-      if (userId == null) throw Exception('User not authenticated');
-
-      final storageService = ref.read(storageServiceProvider);
-      final url = await storageService.uploadProfileImage(userId, image.path);
-
-      setState(() => _profileImageUrl = url);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error uploading image: $e')));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isUploading = false);
-      }
-    }
+    setState(() {
+      _selectedImageFile = File(image.path);
+      _profileImageUrl = image.path; // Show local preview
+    });
   }
 
   Future<void> _selectDate() async {
@@ -164,8 +147,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final locationState = ref.read(locationNotifierProvider);
-
       await ref
           .read(userProfileNotifierProvider.notifier)
           .updateProfile(
@@ -180,10 +161,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             city: _cityController.text.trim().isNotEmpty
                 ? _cityController.text.trim()
                 : null,
-            profileImageUrl: _profileImageUrl,
-            latitude: locationState.position?.latitude,
-            longitude: locationState.position?.longitude,
+            profileImage: _selectedImageFile,
           );
+
+      // Update location if available
+      final locationState = ref.read(locationNotifierProvider);
+      if (locationState.position != null) {
+        await ref
+            .read(userProfileNotifierProvider.notifier)
+            .updateLocation(
+              locationState.position!.latitude,
+              locationState.position!.longitude,
+            );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -273,7 +263,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _nameController,
                 label: AppStrings.fullName,
                 hint: 'Enter your full name',
-                prefixIcon: Icons.person,
+                prefixIcon: Icon(Icons.person, size: 20.sp),
                 validator: Validators.validateName,
               ),
               SizedBox(height: 16.h),
@@ -282,9 +272,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _phoneController,
                 label: AppStrings.phoneNumber,
                 hint: 'Enter your phone number',
-                prefixIcon: Icons.phone,
+                prefixIcon: Icon(Icons.phone, size: 20.sp),
                 keyboardType: TextInputType.phone,
-                validator: Validators.validatePhone,
+                validator: Validators.validatePhoneNumber,
               ),
               SizedBox(height: 16.h),
               // Blood group
@@ -350,7 +340,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ),
                     label: AppStrings.dateOfBirth,
                     hint: 'Select date of birth',
-                    prefixIcon: Icons.calendar_today,
+                    prefixIcon: Icon(Icons.calendar_today, size: 20.sp),
                     readOnly: true,
                   ),
                 ),
@@ -364,7 +354,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       controller: _cityController,
                       label: AppStrings.city,
                       hint: 'Enter your city',
-                      prefixIcon: Icons.location_city,
+                      prefixIcon: Icon(Icons.location_city, size: 20.sp),
                     ),
                   ),
                   SizedBox(width: 8.w),
@@ -382,7 +372,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _bioController,
                 label: AppStrings.bio,
                 hint: 'Tell something about yourself (optional)',
-                prefixIcon: Icons.info,
+                prefixIcon: Icon(Icons.info, size: 20.sp),
                 maxLines: 3,
               ),
               SizedBox(height: 32.h),
