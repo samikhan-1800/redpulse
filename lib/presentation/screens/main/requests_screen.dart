@@ -45,8 +45,21 @@ class RequestsScreen extends ConsumerWidget {
               MaterialPageRoute(builder: (_) => const CreateRequestScreen()),
             );
           },
-          icon: const Icon(Icons.add),
-          label: const Text(AppStrings.createRequest),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 3,
+          icon: const Icon(Icons.add, size: 20),
+          label: Text(
+            AppStrings.createRequest,
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
         ),
       ),
     );

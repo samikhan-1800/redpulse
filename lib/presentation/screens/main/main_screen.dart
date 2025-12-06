@@ -37,24 +37,39 @@ class MainScreen extends ConsumerWidget {
       body: IndexedStack(index: currentIndex, children: screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
+          color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 8,
-              offset: const Offset(0, -2),
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -3),
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (index) {
-            ref.read(bottomNavIndexProvider.notifier).state = index;
-          },
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textSecondary,
-          selectedFontSize: 12.sp,
-          unselectedFontSize: 12.sp,
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.h),
+            child: BottomNavigationBar(
+              currentIndex: currentIndex,
+              onTap: (index) {
+                ref.read(bottomNavIndexProvider.notifier).state = index;
+              },
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textSecondary,
+              selectedFontSize: 11.sp,
+              unselectedFontSize: 11.sp,
+              iconSize: 24.sp,
+              selectedLabelStyle: TextStyle(
+                fontWeight: FontWeight.w600,
+                height: 1.5,
+              ),
+              unselectedLabelStyle: TextStyle(
+                fontWeight: FontWeight.w500,
+                height: 1.5,
+              ),
           items: [
             const BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined),
