@@ -15,7 +15,10 @@ final notificationsProvider = StreamProvider<List<NotificationModel>>((ref) {
 
 /// Unread notifications count provider
 final unreadNotificationsCountProvider = Provider<int>((ref) {
-  final notifications = ref.watch(notificationsProvider).value ?? [];
+  // Handle errors gracefully - return 0 if query fails
+  final notificationsAsync = ref.watch(notificationsProvider);
+  final notifications =
+      notificationsAsync.whenOrNull(data: (data) => data) ?? [];
   return notifications.where((n) => !n.isRead).length;
 });
 

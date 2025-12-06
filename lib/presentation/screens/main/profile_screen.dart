@@ -14,6 +14,7 @@ import '../../widgets/dialogs.dart';
 import '../auth/login_screen.dart';
 import 'edit_profile_screen.dart';
 import 'donation_history_screen.dart';
+import '../notification/notifications_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -218,7 +219,11 @@ class ProfileScreen extends ConsumerWidget {
                         Icons.notifications_outlined,
                         AppStrings.notifications,
                         () {
-                          // TODO: Navigate to notifications settings
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const NotificationsScreen(),
+                            ),
+                          );
                         },
                       ),
                       const Divider(height: 1),

@@ -5,6 +5,7 @@ import '../services/notification_service.dart';
 import '../models/blood_request_model.dart';
 import '../models/user_model.dart';
 import '../models/chat_model.dart';
+import '../models/donation_model.dart';
 import 'auth_provider.dart';
 
 /// Blood request notifier for managing requests
@@ -198,6 +199,40 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
 
       if (status == 'completed') {
         updates['completedAt'] = Timestamp.now();
+
+        // Get the request to find donor and requester
+        final request = await _databaseService.getRequest(requestId);
+        if (request != null && request.acceptedById != null) {
+          final now = DateTime.now();
+
+          // Create donation record
+          final donation = Donation(
+            id: '',
+            donorId: request.acceptedById!,
+            donorName: request.acceptedByName ?? '',
+            recipientId: request.requesterId,
+            recipientName: request.requesterName,
+            requestId: requestId,
+            bloodGroup: request.bloodGroup,
+            units: request.unitsRequired,
+            hospitalName: request.hospitalName,
+            hospitalAddress: request.hospitalAddress,
+            donationDate: now,
+            createdAt: now,
+            isVerified: true,
+          );
+
+          await _databaseService.createDonation(donation);
+
+          // Notify donor about completion
+          await _notificationService.sendNotificationToUser(
+            userId: request.acceptedById!,
+            title: '🎉 Donation Completed!',
+            body:
+                'Thank you for saving a life! Your donation has been recorded.',
+            data: {'type': 'donation_completed', 'requestId': requestId},
+          );
+        }
       }
 
       await _databaseService.updateRequest(requestId, updates);

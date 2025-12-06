@@ -373,6 +373,28 @@ class DatabaseService implements DatabaseServiceInterface {
       message.senderId,
     );
 
+    // Get chat participants to send notification
+    final chat = await getChat(message.chatId);
+    if (chat != null) {
+      final recipientId = chat.participantIds.firstWhere(
+        (id) => id != message.senderId,
+        orElse: () => '',
+      );
+
+      if (recipientId.isNotEmpty) {
+        // Create notification for recipient
+        await _notificationsCollection.add({
+          'userId': recipientId,
+          'title': '💬 New Message',
+          'body': '${message.senderName}: ${message.content}',
+          'data': {'type': 'message', 'chatId': message.chatId},
+          'isRead': false,
+          'createdAt': Timestamp.now(),
+          'type': 'message',
+        });
+      }
+    }
+
     return docRef.id;
   }
 

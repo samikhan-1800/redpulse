@@ -8,6 +8,7 @@ import '../../../data/providers/user_provider.dart';
 import '../../../data/providers/request_provider.dart';
 import '../../../data/providers/donation_provider.dart';
 import '../../../data/providers/location_provider.dart';
+import '../../../data/providers/notification_provider.dart';
 import '../../widgets/cards.dart';
 import '../../widgets/common_widgets.dart';
 import '../request/create_request_screen.dart';
@@ -37,6 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final userAsync = ref.watch(currentUserProfileProvider);
     final donationStats = ref.watch(donationStatsProvider);
     final locationState = ref.watch(locationNotifierProvider);
+    final unreadCount = ref.watch(unreadNotificationsCountProvider);
 
     return Scaffold(
       body: userAsync.when(
@@ -93,9 +95,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           );
                         },
-                        icon: const BadgeCounter(
-                          count: 0,
-                          child: Icon(Icons.notifications_outlined),
+                        icon: BadgeCounter(
+                          count: unreadCount,
+                          child: const Icon(Icons.notifications_outlined),
                         ),
                       ),
                     ],

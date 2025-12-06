@@ -82,7 +82,9 @@ final userDonationsProvider = StreamProvider<List<Donation>>((ref) {
 
 /// Donation statistics provider
 final donationStatsProvider = Provider<DonationStats>((ref) {
-  final donations = ref.watch(userDonationsProvider).value ?? [];
+  // Handle errors gracefully - return empty stats if query fails
+  final donationsAsync = ref.watch(userDonationsProvider);
+  final donations = donationsAsync.whenOrNull(data: (data) => data) ?? [];
 
   return DonationStats(
     totalDonations: donations.length,
