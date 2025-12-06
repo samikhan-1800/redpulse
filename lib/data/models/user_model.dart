@@ -49,6 +49,14 @@ class UserModel {
   /// Create from Firestore document
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Handle both base64 and URL formats for profile image
+    String? imageUrl = data['profileImageUrl'];
+    final base64Image = data['profileImageBase64'];
+    if (base64Image != null && base64Image.isNotEmpty) {
+      imageUrl = 'data:image/jpeg;base64,$base64Image';
+    }
+
     return UserModel(
       id: doc.id,
       email: data['email'] ?? '',
@@ -57,7 +65,7 @@ class UserModel {
       bloodGroup: data['bloodGroup'] ?? '',
       gender: data['gender'] ?? '',
       dateOfBirth: (data['dateOfBirth'] as Timestamp).toDate(),
-      profileImageUrl: data['profileImageUrl'],
+      profileImageUrl: imageUrl,
       bio: data['bio'],
       address: data['address'],
       city: data['city'],

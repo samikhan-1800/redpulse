@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/extensions.dart';
+import '../../core/utils/image_helper.dart';
 import '../../data/models/blood_request_model.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/donation_model.dart';
@@ -447,37 +447,9 @@ class UserAvatar extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: avatarSize.w,
-        height: avatarSize.h,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.primary.withOpacity(0.1),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: imageUrl != null && imageUrl!.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: imageUrl!,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => _buildPlaceholder(avatarSize),
-                errorWidget: (context, url, error) =>
-                    _buildPlaceholder(avatarSize),
-              )
-            : _buildPlaceholder(avatarSize),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder(double avatarSize) {
-    final initials = name.isNotEmpty ? name.initials : '?';
-    return Center(
-      child: Text(
-        initials,
-        style: TextStyle(
-          fontSize: (avatarSize * 0.4).sp,
-          fontWeight: FontWeight.bold,
-          color: AppColors.primary,
-        ),
+      child: ImageHelper.buildProfileImage(
+        imageUrl: imageUrl,
+        size: avatarSize,
       ),
     );
   }

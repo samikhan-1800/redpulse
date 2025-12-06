@@ -46,11 +46,23 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
 
       // Upload profile image if provided
       if (profileImage != null) {
-        final imageUrl = await _storageService.uploadProfileImage(
-          _userId,
-          profileImage,
-        );
-        updates['profileImageUrl'] = imageUrl;
+        try {
+          // Verify the file exists before uploading
+          if (!await profileImage.exists()) {
+            throw 'Selected image file does not exist';
+          }
+
+          final imageUrl = await _storageService.uploadProfileImage(
+            _userId,
+            profileImage,
+          );
+          updates['profileImageUrl'] = imageUrl;
+        } catch (uploadError) {
+          // Log the error but don't fail the entire profile update
+          print('Profile image upload failed: $uploadError');
+          // Rethrow only if no other updates to save
+          if (updates.isEmpty) rethrow;
+        }
       }
 
       if (updates.isNotEmpty) {

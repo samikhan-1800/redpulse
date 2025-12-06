@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/utils/image_helper.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/user_provider.dart';
 import '../../../data/providers/location_provider.dart';
@@ -100,11 +101,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     if (image == null) return;
 
-    setState(() {
-      _selectedImageFile = File(image.path);
-      // Don't update _profileImageUrl here - keep the network URL
-      // The preview will be handled differently
-    });
+    try {
+      // Read the image as bytes and create a new file
+      final bytes = await image.readAsBytes();
+      final tempFile = File(image.path);
+
+      // Verify we can read the file
+      if (bytes.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Selected image is empty')),
+          );
+        }
+        return;
+      }
+
+      setState(() {
+        _selectedImageFile = tempFile;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load image: $e')));
+      }
+    }
   }
 
   Future<void> _selectDate() async {
@@ -216,23 +237,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 children: [
                   GestureDetector(
                     onTap: _pickImage,
-                    child: CircleAvatar(
-                      radius: 60.r,
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
-                      backgroundImage: _selectedImageFile != null
-                          ? FileImage(_selectedImageFile!)
-                          : _profileImageUrl != null
-                          ? NetworkImage(_profileImageUrl!)
-                          : null,
-                      child:
-                          _profileImageUrl == null && _selectedImageFile == null
-                          ? Icon(
-                              Icons.person,
-                              size: 60.sp,
-                              color: AppColors.primary,
-                            )
-                          : null,
-                    ),
+                    child: _selectedImageFile != null
+                        ? CircleAvatar(
+                            radius: 60.r,
+                            backgroundImage: FileImage(_selectedImageFile!),
+                          )
+                        : ImageHelper.buildProfileImage(
+                            imageUrl: _profileImageUrl,
+                            size: 120.r,
+                          ),
                   ),
                   if (_isUploading)
                     Positioned.fill(
