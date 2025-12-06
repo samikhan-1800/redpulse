@@ -380,6 +380,10 @@ class DatabaseService implements DatabaseServiceInterface {
         .collection(AppConstants.messagesCollection)
         .orderBy('createdAt', descending: false)
         .snapshots()
+        .handleError((error) {
+          print('Error in messagesStream: $error');
+          return <Message>[];
+        })
         .map(
           (snapshot) =>
               snapshot.docs.map((doc) => Message.fromFirestore(doc)).toList(),

@@ -31,11 +31,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.initState();
     // Mark messages as read when entering chat
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = ref.read(currentUserIdProvider);
-      if (userId != null) {
-        ref
-            .read(chatNotifierProvider.notifier)
-            .markAsRead(widget.chat.id, userId);
+      try {
+        final userId = ref.read(currentUserIdProvider);
+        if (userId != null) {
+          ref
+              .read(chatNotifierProvider.notifier)
+              .markAsRead(widget.chat.id, userId);
+        }
+      } catch (e) {
+        print('Error marking messages as read: $e');
       }
     });
   }
@@ -148,7 +152,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
                 // Scroll to bottom when new messages arrive
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _scrollToBottom();
+                  try {
+                    _scrollToBottom();
+                  } catch (e) {
+                    print('Error scrolling to bottom: $e');
+                  }
                 });
 
                 return ListView.builder(

@@ -32,27 +32,46 @@ class Chat {
 
   /// Create from Firestore document
   factory Chat.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return Chat(
-      id: doc.id,
-      requestId: data['requestId'] ?? '',
-      participantIds: List<String>.from(data['participantIds'] ?? []),
-      participantNames: Map<String, String>.from(
-        data['participantNames'] ?? {},
-      ),
-      participantImages: Map<String, String?>.from(
-        data['participantImages'] ?? {},
-      ),
-      lastMessage: data['lastMessage'],
-      lastMessageTime: data['lastMessageTime'] != null
-          ? (data['lastMessageTime'] as Timestamp).toDate()
-          : null,
-      lastMessageSenderId: data['lastMessageSenderId'],
-      unreadCount: Map<String, int>.from(data['unreadCount'] ?? {}),
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
-      isActive: data['isActive'] ?? true,
-    );
+    try {
+      final data = doc.data() as Map<String, dynamic>? ?? {};
+      return Chat(
+        id: doc.id,
+        requestId: data['requestId'] ?? '',
+        participantIds: List<String>.from(data['participantIds'] ?? []),
+        participantNames: Map<String, String>.from(
+          data['participantNames'] ?? {},
+        ),
+        participantImages: Map<String, String?>.from(
+          data['participantImages'] ?? {},
+        ),
+        lastMessage: data['lastMessage'],
+        lastMessageTime: data['lastMessageTime'] != null
+            ? (data['lastMessageTime'] as Timestamp).toDate()
+            : null,
+        lastMessageSenderId: data['lastMessageSenderId'],
+        unreadCount: Map<String, int>.from(data['unreadCount'] ?? {}),
+        createdAt: data['createdAt'] != null
+            ? (data['createdAt'] as Timestamp).toDate()
+            : DateTime.now(),
+        updatedAt: data['updatedAt'] != null
+            ? (data['updatedAt'] as Timestamp).toDate()
+            : DateTime.now(),
+        isActive: data['isActive'] ?? true,
+      );
+    } catch (e) {
+      print('Error parsing chat from Firestore: $e');
+      // Return a fallback chat instead of crashing
+      return Chat(
+        id: doc.id,
+        requestId: '',
+        participantIds: [],
+        participantNames: {},
+        participantImages: {},
+        unreadCount: {},
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    }
   }
 
   /// Convert to Firestore map

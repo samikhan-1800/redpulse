@@ -26,18 +26,33 @@ class Message {
 
   /// Create from Firestore document
   factory Message.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return Message(
-      id: doc.id,
-      chatId: data['chatId'] ?? '',
-      senderId: data['senderId'] ?? '',
-      senderName: data['senderName'] ?? '',
-      content: data['content'] ?? '',
-      type: data['type'] ?? 'text',
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      isRead: data['isRead'] ?? false,
-      metadata: data['metadata'],
-    );
+    try {
+      final data = doc.data() as Map<String, dynamic>? ?? {};
+      return Message(
+        id: doc.id,
+        chatId: data['chatId'] ?? '',
+        senderId: data['senderId'] ?? '',
+        senderName: data['senderName'] ?? 'Unknown',
+        content: data['content'] ?? '',
+        type: data['type'] ?? 'text',
+        createdAt: data['createdAt'] != null
+            ? (data['createdAt'] as Timestamp).toDate()
+            : DateTime.now(),
+        isRead: data['isRead'] ?? false,
+        metadata: data['metadata'],
+      );
+    } catch (e) {
+      print('Error parsing message from Firestore: $e');
+      // Return a fallback message instead of crashing
+      return Message(
+        id: doc.id,
+        chatId: '',
+        senderId: '',
+        senderName: 'Error',
+        content: 'Failed to load message',
+        createdAt: DateTime.now(),
+      );
+    }
   }
 
   /// Convert to Firestore map
