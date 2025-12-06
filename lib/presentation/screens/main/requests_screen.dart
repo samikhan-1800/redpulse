@@ -28,6 +28,9 @@ class RequestsScreen extends ConsumerWidget {
         appBar: AppBar(
           title: const Text(AppStrings.requests),
           bottom: TabBar(
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white.withOpacity(0.7),
             onTap: (index) {
               ref.read(requestsTabProvider.notifier).state = index;
             },

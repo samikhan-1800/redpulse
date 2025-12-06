@@ -92,7 +92,9 @@ class _ChatListItem extends StatelessWidget {
       ),
       color: unreadCount > 0
           ? AppColors.primary.withOpacity(0.05)
-          : AppColors.surface,
+          : Theme.of(context).brightness == Brightness.dark
+              ? AppColors.surfaceDark
+              : AppColors.cardBackground,
       child: ListTile(
         onTap: onTap,
         leading: UserAvatar(imageUrl: otherImage, name: otherName, size: 50),

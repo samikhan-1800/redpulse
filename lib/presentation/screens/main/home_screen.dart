@@ -52,21 +52,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             return const Center(child: Text('Please login'));
           }
 
-          return SafeArea(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(currentUserProfileProvider);
-                await ref
-                    .read(locationNotifierProvider.notifier)
-                    .getCurrentLocation();
-              },
-              child: CustomScrollView(
-                slivers: [
-                  // App bar
-                  SliverAppBar(
-                    floating: true,
-                    elevation: 0,
-                    leading: Padding(
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(currentUserProfileProvider);
+              await ref
+                  .read(locationNotifierProvider.notifier)
+                  .getCurrentLocation();
+            },
+            child: CustomScrollView(
+              slivers: [
+                // App bar
+                SliverAppBar(
+                  floating: true,
+                  elevation: 0,
+                  expandedHeight: 0,
+                  leading: Padding(
                       padding: EdgeInsets.all(8.w),
                       child: GestureDetector(
                         onTap: () {
@@ -94,7 +94,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             user.city!,
                             style: TextStyle(
                               fontSize: 11.sp,
-                              color: AppColors.textSecondary,
+                              color: Colors.white.withOpacity(0.9),
                             ),
                           ),
                       ],

@@ -37,10 +37,10 @@ class MainScreen extends ConsumerWidget {
       body: IndexedStack(index: currentIndex, children: screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          color: AppColors.primary,
           border: Border(
             top: BorderSide(
-              color: Theme.of(context).dividerColor.withOpacity(0.1),
+              color: Colors.white.withOpacity(0.1),
               width: 1,
             ),
           ),
@@ -118,7 +118,7 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.primary : AppColors.textSecondary;
+    final color = isSelected ? Colors.white : Colors.white.withOpacity(0.6);
 
     return Expanded(
       child: GestureDetector(
@@ -139,7 +139,7 @@ class _NavBarItem extends StatelessWidget {
                     padding: EdgeInsets.all(isPrimary ? 8.w : 6.w),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.primary.withOpacity(0.15)
+                          ? Colors.white.withOpacity(0.2)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(
                         isPrimary ? 14.r : 10.r,
@@ -148,9 +148,7 @@ class _NavBarItem extends StatelessWidget {
                     child: Icon(
                       icon,
                       size: isPrimary ? 26.sp : 22.sp,
-                      color: isPrimary && isSelected
-                          ? AppColors.primary
-                          : color,
+                      color: color,
                     ),
                   ),
                   // Badge
