@@ -313,12 +313,12 @@ class _NotificationTile extends StatelessWidget {
     NotificationModel notification,
   ) {
     // Navigate based on notification type
-    switch (notification.type) {
+    switch (_getNotificationType()) {
       case NotificationType.newRequest:
       case NotificationType.requestAccepted:
       case NotificationType.requestCancelled:
         // Navigate to request detail if we have a requestId
-        if (notification.data.containsKey('requestId')) {
+        if (notification.data?.containsKey('requestId') ?? false) {
           // TODO: Navigate to request detail screen
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Opening request details...')),
