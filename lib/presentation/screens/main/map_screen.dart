@@ -111,8 +111,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   : BitmapDescriptor.hueOrange,
             ),
             infoWindow: InfoWindow(
-              title: '${request.bloodGroup} - ${request.patientName}',
-              snippet: request.hospitalName,
+              title: '🩸 ${request.bloodGroup} Blood Needed',
+              snippet:
+                  '${request.patientName} at ${request.hospitalName}\nTap to view details',
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -121,6 +122,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 );
               },
             ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RequestDetailScreen(request: request),
+                ),
+              );
+            },
           ),
         );
       }
@@ -138,10 +146,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 BitmapDescriptor.hueGreen,
               ),
               infoWindow: InfoWindow(
-                title: donor.name,
+                title: '🩸 ${donor.name} (${donor.bloodGroup})',
                 snippet:
-                    '${donor.bloodGroup} - ${donor.totalDonations} donations',
+                    'Available Donor • ${donor.totalDonations} donations\nTap marker for options',
               ),
+              onTap: () {
+                _showDonorOptions(donor);
+              },
             ),
           );
         }
@@ -292,6 +303,90 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       context,
       title: 'Map Filters',
       child: const _MapFilterSheet(),
+    );
+  }
+
+  void _showDonorOptions(UserModel donor) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 30.r,
+                  backgroundColor: Colors.red.shade100,
+                  child: Icon(Icons.person, size: 30.sp, color: Colors.red),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        donor.name,
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.water_drop,
+                            size: 16.sp,
+                            color: Colors.red,
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            donor.bloodGroup,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '${donor.totalDonations} donations',
+                        style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            if (donor.phone.isNotEmpty) ...[
+              ListTile(
+                leading: Icon(Icons.phone, color: Colors.green),
+                title: Text('Call Donor'),
+                subtitle: Text(donor.phone),
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: Implement call functionality
+                },
+              ),
+            ],
+            ListTile(
+              leading: Icon(Icons.chat, color: Colors.blue),
+              title: Text('Send Message'),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: Navigate to chat
+              },
+            ),
+            SizedBox(height: 16.h),
+          ],
+        ),
+      ),
     );
   }
 }

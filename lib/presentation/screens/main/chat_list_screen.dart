@@ -34,7 +34,6 @@ class ChatListScreen extends ConsumerWidget {
               icon: Icons.chat_bubble_outline,
               title: AppStrings.noChats,
               subtitle: 'Accept a request to start chatting',
-              animationUrl: AppAnimations.chat,
             );
           }
 

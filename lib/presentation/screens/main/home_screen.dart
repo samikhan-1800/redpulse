@@ -347,7 +347,6 @@ class _NearbyRequestsList extends ConsumerWidget {
               icon: Icons.check_circle,
               title: AppStrings.noRequests,
               subtitle: 'No blood requests in your area right now',
-              animationUrl: AppAnimations.noData,
             ),
           );
         }

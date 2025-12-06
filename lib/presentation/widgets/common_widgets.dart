@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:lottie/lottie.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/constants/app_animations.dart';
+import 'animated_empty_state.dart';
 
 /// Loading indicator widget
 class LoadingIndicator extends StatelessWidget {
@@ -28,7 +27,7 @@ class LoadingIndicator extends StatelessWidget {
   }
 }
 
-/// Full page loading with Lottie animation
+/// Full page loading with animated blood drop
 class LoadingPage extends StatelessWidget {
   final String? message;
 
@@ -36,44 +35,17 @@ class LoadingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Lottie.network(
-              AppAnimations.bloodDrop,
-              width: 150.w,
-              height: 150.h,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const LoadingIndicator();
-              },
-            ),
-            SizedBox(height: 16.h),
-            if (message != null)
-              Text(
-                message!,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
+    return Scaffold(body: AnimatedLoadingWidget(message: message));
   }
 }
 
-/// Empty state widget with Lottie animation
+/// Empty state widget with smooth animation
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
   final String? buttonText;
   final VoidCallback? onButtonPressed;
-  final String? animationUrl;
 
   const EmptyState({
     super.key,
@@ -82,7 +54,6 @@ class EmptyState extends StatelessWidget {
     this.subtitle,
     this.buttonText,
     this.onButtonPressed,
-    this.animationUrl,
   });
 
   @override
@@ -93,40 +64,14 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (animationUrl != null)
-              Lottie.network(
-                animationUrl!,
-                width: 200.w,
-                height: 200.h,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    padding: EdgeInsets.all(24.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, size: 48.sp, color: AppColors.primary),
-                  );
-                },
-              )
-            else
-              Container(
-                padding: EdgeInsets.all(24.w),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 48.sp, color: AppColors.primary),
-              ),
-            SizedBox(height: 24.h),
-            Text(
-              title,
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
+            AnimatedEmptyState(
+              icon: icon,
+              message: title,
+              iconColor: AppColors.primary.withOpacity(0.3),
+              iconSize: 80,
             ),
             if (subtitle != null) ...[
-              SizedBox(height: 8.h),
+              SizedBox(height: 16.h),
               Text(
                 subtitle!,
                 style: TextStyle(

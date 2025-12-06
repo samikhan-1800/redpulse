@@ -184,7 +184,9 @@ class ProfileScreen extends ConsumerWidget {
                       _buildInfoRow(
                         Icons.water_drop,
                         AppStrings.lastDonation,
-                        user.lastDonationDate?.formattedDate ?? 'Never',
+                        user.lastDonationDate != null
+                            ? '${user.lastDonationDate!.formattedDate} (${user.lastDonationDate!.timeAgo})'
+                            : 'Never',
                       ),
                       if (user.lastDonationDate != null) ...[
                         const Divider(height: 1),
