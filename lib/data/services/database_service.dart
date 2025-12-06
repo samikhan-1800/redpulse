@@ -508,10 +508,6 @@ class DatabaseService implements DatabaseServiceInterface {
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     final distance = earthRadius * c;
 
-    print(
-      '   🧮 Distance calculation: ($lat1, $lon1) to ($lat2, $lon2) = ${distance.toStringAsFixed(4)} km',
-    );
-
     return distance;
   }
 

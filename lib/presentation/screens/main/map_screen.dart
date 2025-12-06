@@ -57,6 +57,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   GoogleMapController? _mapController;
   final Set<Marker> _markers = {};
 
+  // Cache to prevent unnecessary marker updates
+  String _lastMarkersHash = '';
+
   @override
   void initState() {
     super.initState();
@@ -87,6 +90,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     List<UserModel> donors,
     MapFilterState filter,
   ) {
+    // Create hash to detect changes
+    final newHash =
+        '${requests.length}_${donors.length}_${filter.showDonors}_${filter.showRequests}';
+    if (_lastMarkersHash == newHash) return; // No changes, skip update
+    _lastMarkersHash = newHash;
+
     _markers.clear();
 
     // Add request markers
@@ -180,10 +189,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (requestsAsync != null && donorsAsync != null) {
       final requests = requestsAsync.valueOrNull ?? [];
       final donors = donorsAsync.valueOrNull ?? [];
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _updateMarkers(requests, donors, mapFilter);
-      });
+      _updateMarkers(requests, donors, mapFilter);
     }
 
     return Scaffold(
