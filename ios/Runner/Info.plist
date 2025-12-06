@@ -45,5 +45,17 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Location permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>RedPulse needs your location to find nearby blood donors and show them on the map.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>RedPulse needs your location in the background to alert nearby donors when you need help.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>RedPulse needs your location to connect donors with recipients and show emergency requests on the map.</string>
+	<!-- Camera and photo library permissions -->
+	<key>NSCameraUsageDescription</key>
+	<string>RedPulse needs camera access to update your profile picture.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>RedPulse needs photo library access to update your profile picture.</string>
 </dict>
 </plist>

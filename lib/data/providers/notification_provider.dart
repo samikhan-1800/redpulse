@@ -22,14 +22,10 @@ final unreadNotificationsCountProvider = Provider<int>((ref) {
 /// Notification notifier for handling FCM initialization
 class NotificationNotifier extends StateNotifier<AsyncValue<void>> {
   final NotificationService _notificationService;
-  final DatabaseService _databaseService;
   final String? _userId;
 
-  NotificationNotifier(
-    this._notificationService,
-    this._databaseService,
-    this._userId,
-  ) : super(const AsyncValue.data(null));
+  NotificationNotifier(this._notificationService, this._userId)
+    : super(const AsyncValue.data(null));
 
   /// Initialize notifications
   Future<void> initialize() async {
@@ -51,7 +47,6 @@ final notificationNotifierProvider =
     StateNotifierProvider<NotificationNotifier, AsyncValue<void>>((ref) {
       return NotificationNotifier(
         ref.watch(notificationServiceProvider),
-        ref.watch(databaseServiceProvider),
         ref.watch(currentUserIdProvider),
       );
     });

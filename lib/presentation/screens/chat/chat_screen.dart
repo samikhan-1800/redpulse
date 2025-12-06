@@ -116,14 +116,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (widget.chat.requestId != null)
-                    Text(
-                      'Blood Request',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppColors.textSecondary,
-                      ),
+                  Text(
+                    'Blood Request',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColors.textSecondary,
                     ),
+                  ),
                 ],
               ),
             ),
