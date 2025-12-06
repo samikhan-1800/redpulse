@@ -273,12 +273,18 @@ class _QuickActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      elevation: 0,
+      color: color.withOpacity(0.08),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12.r),
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 8.w),
+        borderRadius: BorderRadius.circular(16.r),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: color.withOpacity(0.2), width: 1),
+          ),
+          padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 12.w),
           child: Column(
             children: [
               Container(

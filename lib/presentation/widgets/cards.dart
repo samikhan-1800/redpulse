@@ -25,12 +25,15 @@ class RequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      elevation: 2,
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      elevation: request.isEmergency || request.isSOS ? 4 : 1,
+      shadowColor: request.isEmergency || request.isSOS
+          ? AppColors.emergency.withOpacity(0.3)
+          : Colors.black.withOpacity(0.1),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(12.r),
         child: Padding(
           padding: EdgeInsets.all(16.w),
           child: Column(
@@ -501,8 +504,16 @@ class StatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cardColor = color ?? AppColors.primary;
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [cardColor.withOpacity(0.08), cardColor.withOpacity(0.03)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: cardColor.withOpacity(0.15), width: 1),
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16.r),

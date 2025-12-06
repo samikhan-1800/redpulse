@@ -286,12 +286,14 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,
-        elevation: 2,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        elevation: 0,
+        shadowColor: AppColors.primary.withOpacity(0.3),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: GoogleFonts.poppins(
           fontSize: 16,
           fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
         ),
       ),
     );
@@ -474,11 +476,14 @@ class AppTheme {
 
   // Floating Action Button Theme
   static FloatingActionButtonThemeData get _floatingActionButtonTheme {
-    return const FloatingActionButtonThemeData(
+    return FloatingActionButtonThemeData(
       backgroundColor: AppColors.primary,
       foregroundColor: AppColors.textOnPrimary,
-      elevation: 4,
-      shape: CircleBorder(),
+      elevation: 2,
+      highlightElevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
     );
   }
 

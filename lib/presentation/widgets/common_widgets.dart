@@ -345,12 +345,18 @@ class AvailabilityToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: isAvailable
             ? AppColors.success.withOpacity(0.1)
-            : AppColors.textSecondary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20.r),
+            : AppColors.textSecondary.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(24.r),
+        border: Border.all(
+          color: isAvailable
+              ? AppColors.success.withOpacity(0.3)
+              : AppColors.textSecondary.withOpacity(0.2),
+          width: 1.5,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
