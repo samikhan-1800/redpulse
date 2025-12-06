@@ -98,13 +98,18 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _authService.signInWithEmail(email, password);
 
-      // Initialize notifications
-      final userId = _authService.currentUser?.uid;
-      if (userId != null) {
-        final token = await _notificationService.initialize();
-        if (token != null) {
-          await _notificationService.saveToken(userId, token);
+      // Initialize notifications (don't fail login if this fails)
+      try {
+        final userId = _authService.currentUser?.uid;
+        if (userId != null) {
+          final token = await _notificationService.initialize();
+          if (token != null) {
+            await _notificationService.saveToken(userId, token);
+          }
         }
+      } catch (notificationError) {
+        // Log but don't fail login
+        print('Notification setup failed: $notificationError');
       }
 
       state = const AsyncValue.data(null);

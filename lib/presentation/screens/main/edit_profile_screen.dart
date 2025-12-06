@@ -102,7 +102,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     setState(() {
       _selectedImageFile = File(image.path);
-      _profileImageUrl = image.path; // Show local preview
+      // Don't update _profileImageUrl here - keep the network URL
+      // The preview will be handled differently
     });
   }
 
@@ -218,10 +219,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: CircleAvatar(
                       radius: 60.r,
                       backgroundColor: AppColors.primary.withOpacity(0.1),
-                      backgroundImage: _profileImageUrl != null
+                      backgroundImage: _selectedImageFile != null
+                          ? FileImage(_selectedImageFile!)
+                          : _profileImageUrl != null
                           ? NetworkImage(_profileImageUrl!)
                           : null,
-                      child: _profileImageUrl == null
+                      child:
+                          _profileImageUrl == null && _selectedImageFile == null
                           ? Icon(
                               Icons.person,
                               size: 60.sp,

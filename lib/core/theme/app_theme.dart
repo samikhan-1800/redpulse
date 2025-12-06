@@ -481,9 +481,7 @@ class AppTheme {
       foregroundColor: AppColors.textOnPrimary,
       elevation: 2,
       highlightElevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 

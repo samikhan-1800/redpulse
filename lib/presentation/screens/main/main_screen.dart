@@ -71,44 +71,44 @@ class MainScreen extends ConsumerWidget {
                 height: 1.5,
               ),
               items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: AppStrings.home,
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.map_outlined),
-              activeIcon: Icon(Icons.map),
-              label: AppStrings.map,
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle_outline),
-              activeIcon: Icon(Icons.add_circle),
-              label: AppStrings.requests,
-            ),
-            BottomNavigationBarItem(
-              icon: BadgeCounter(
-                count: unreadMessages,
-                child: const Icon(Icons.chat_bubble_outline),
-              ),
-              activeIcon: BadgeCounter(
-                count: unreadMessages,
-                child: const Icon(Icons.chat_bubble),
-              ),
-              label: AppStrings.chat,
-            ),
-            BottomNavigationBarItem(
-              icon: BadgeCounter(
-                count: unreadNotifications,
-                child: const Icon(Icons.person_outline),
-              ),
-              activeIcon: BadgeCounter(
-                count: unreadNotifications,
-                child: const Icon(Icons.person),
-              ),
-              label: AppStrings.profile,
-            ),
-          ],
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home),
+                  label: AppStrings.home,
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.map_outlined),
+                  activeIcon: Icon(Icons.map),
+                  label: AppStrings.map,
+                ),
+                const BottomNavigationBarItem(
+                  icon: Icon(Icons.add_circle_outline),
+                  activeIcon: Icon(Icons.add_circle),
+                  label: AppStrings.requests,
+                ),
+                BottomNavigationBarItem(
+                  icon: BadgeCounter(
+                    count: unreadMessages,
+                    child: const Icon(Icons.chat_bubble_outline),
+                  ),
+                  activeIcon: BadgeCounter(
+                    count: unreadMessages,
+                    child: const Icon(Icons.chat_bubble),
+                  ),
+                  label: AppStrings.chat,
+                ),
+                BottomNavigationBarItem(
+                  icon: BadgeCounter(
+                    count: unreadNotifications,
+                    child: const Icon(Icons.person_outline),
+                  ),
+                  activeIcon: BadgeCounter(
+                    count: unreadNotifications,
+                    child: const Icon(Icons.person),
+                  ),
+                  label: AppStrings.profile,
+                ),
+              ],
             ),
           ),
         ),

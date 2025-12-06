@@ -15,32 +15,41 @@ class NotificationService {
 
   /// Initialize FCM and get token
   Future<String?> initialize() async {
-    // Request permission for iOS
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
+    try {
+      // Request permission for iOS
+      final settings = await _messaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      // Get FCM token
-      final token = await _messaging.getToken();
-      return token;
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        // Get FCM token
+        final token = await _messaging.getToken();
+        return token;
+      }
+
+      return null;
+    } catch (e) {
+      print('FCM initialization failed: $e');
+      return null;
     }
-
-    return null;
   }
 
   /// Save FCM token to user document
   Future<void> saveToken(String userId, String token) async {
-    await _firestore
-        .collection(AppConstants.usersCollection)
-        .doc(userId)
-        .update({'fcmToken': token});
+    try {
+      await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .update({'fcmToken': token});
+    } catch (e) {
+      print('Failed to save FCM token: $e');
+    }
   }
 
   /// Listen for token refresh
