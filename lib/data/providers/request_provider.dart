@@ -224,6 +224,12 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
 
           await _databaseService.createDonation(donation);
 
+          // Update donor's profile with last donation date and increment total donations
+          await _databaseService.updateUser(request.acceptedById!, {
+            'lastDonationDate': Timestamp.fromDate(now),
+            'totalDonations': FieldValue.increment(1),
+          });
+
           // Notify donor about completion
           await _notificationService.sendNotificationToUser(
             userId: request.acceptedById!,
