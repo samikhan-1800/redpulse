@@ -178,11 +178,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             );
       }
 
+      // Refresh the profile to show updated image
+      ref.invalidate(currentUserProfileProvider);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true); // Return true to indicate success
       }
     } catch (e) {
       if (mounted) {

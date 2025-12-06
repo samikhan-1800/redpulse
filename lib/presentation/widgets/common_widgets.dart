@@ -345,7 +345,7 @@ class AvailabilityToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: isAvailable
             ? AppColors.success.withOpacity(0.1)
@@ -357,8 +357,8 @@ class AvailabilityToggle extends StatelessWidget {
         children: [
           if (isLoading)
             SizedBox(
-              width: 16.w,
-              height: 16.h,
+              width: 14.w,
+              height: 14.h,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 color: isAvailable
@@ -368,8 +368,8 @@ class AvailabilityToggle extends StatelessWidget {
             )
           else
             Container(
-              width: 12.w,
-              height: 12.h,
+              width: 10.w,
+              height: 10.h,
               decoration: BoxDecoration(
                 color: isAvailable
                     ? AppColors.success
@@ -377,21 +377,25 @@ class AvailabilityToggle extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-          SizedBox(width: 8.w),
-          Text(
-            isAvailable
-                ? AppStrings.availableToDonate
-                : AppStrings.notAvailable,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w600,
-              color: isAvailable ? AppColors.success : AppColors.textSecondary,
+          SizedBox(width: 6.w),
+          Flexible(
+            child: Text(
+              isAvailable
+                  ? AppStrings.availableToDonate
+                  : AppStrings.notAvailable,
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+                color: isAvailable
+                    ? AppColors.success
+                    : AppColors.textSecondary,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          SizedBox(width: 8.w),
-          SizedBox(
-            width: 40.w,
-            height: 24.h,
+          SizedBox(width: 4.w),
+          Transform.scale(
+            scale: 0.8,
             child: Switch(
               value: isAvailable,
               onChanged: isLoading ? null : onChanged,

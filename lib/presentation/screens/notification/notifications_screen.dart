@@ -73,10 +73,42 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       ),
       body: notificationsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => ErrorState(
-          message: 'Failed to load notifications: $error',
-          onRetry: () => ref.refresh(notificationsProvider),
-        ),
+        error: (error, stack) {
+          // Handle Firestore errors gracefully
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(24.w),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.notifications_off_outlined,
+                    size: 64.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'No Notifications',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'You don\'t have any notifications yet',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
         data: (notifications) {
           if (notifications.isEmpty) {
             return _buildEmptyState();

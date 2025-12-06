@@ -32,12 +32,17 @@ extension StringExtension on String {
 
   /// Convert to initials
   String get initials {
-    if (isEmpty) return '';
-    final words = split(' ');
+    if (isEmpty) return '?';
+    final words = split(' ').where((word) => word.trim().isNotEmpty).toList();
+    if (words.isEmpty) return '?';
     if (words.length == 1) {
-      return words[0].isNotEmpty ? words[0][0].toUpperCase() : '';
+      final word = words[0].trim();
+      return word.isNotEmpty ? word[0].toUpperCase() : '?';
     }
-    return '${words[0][0]}${words[words.length - 1][0]}'.toUpperCase();
+    final first = words.first.trim();
+    final last = words.last.trim();
+    if (first.isEmpty || last.isEmpty) return '?';
+    return '${first[0]}${last[0]}'.toUpperCase();
   }
 }
 

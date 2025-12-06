@@ -466,9 +466,10 @@ class UserAvatar extends StatelessWidget {
   }
 
   Widget _buildPlaceholder(double avatarSize) {
+    final initials = name.isNotEmpty ? name.initials : '?';
     return Center(
       child: Text(
-        name.initials,
+        initials,
         style: TextStyle(
           fontSize: (avatarSize * 0.4).sp,
           fontWeight: FontWeight.bold,
