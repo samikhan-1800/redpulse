@@ -60,6 +60,44 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   // Cache to prevent unnecessary marker updates
   String _lastMarkersHash = '';
 
+  // Dark mode map style
+  static const String _darkMapStyle = '''
+[
+  {
+    "elementType": "geometry",
+    "stylers": [{"color": "#212121"}]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#757575"}]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [{"color": "#212121"}]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [{"color": "#2c2c2c"}]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#8a8a8a"}]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [{"color": "#000000"}]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.fill",
+    "stylers": [{"color": "#3d3d3d"}]
+  }
+]
+''';
+
   @override
   void initState() {
     super.initState();
@@ -70,7 +108,18 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
+    _setMapStyle();
     _centerOnUserLocation();
+  }
+
+  void _setMapStyle() {
+    if (_mapController == null) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isDark) {
+      _mapController!.setMapStyle(_darkMapStyle);
+    } else {
+      _mapController!.setMapStyle(null);
+    }
   }
 
   void _centerOnUserLocation() {

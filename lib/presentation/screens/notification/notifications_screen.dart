@@ -45,7 +45,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final notificationsAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
         title: const Text('Notifications'),

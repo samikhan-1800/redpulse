@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/providers/chat_provider.dart';
-import '../../../data/providers/notification_provider.dart';
 import '../../widgets/common_widgets.dart';
 import 'home_screen.dart';
 import 'map_screen.dart';
@@ -36,7 +35,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final unreadMessages = ref.watch(unreadMessagesCountProvider);
-    final unreadNotifications = ref.watch(unreadNotificationsCountProvider);
 
     // Screens
     final screens = [
@@ -97,7 +95,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   icon: Icons.person_rounded,
                   label: AppStrings.profile,
                   isSelected: currentIndex == 4,
-                  badgeCount: unreadNotifications,
                   onTap: () =>
                       ref.read(bottomNavIndexProvider.notifier).state = 4,
                 ),
