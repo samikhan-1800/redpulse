@@ -65,22 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // App bar
                   SliverAppBar(
                     floating: true,
-                    backgroundColor: Colors.transparent,
-                    flexibleSpace: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.appBarBackground,
-                        borderRadius: BorderRadius.vertical(
-                          bottom: Radius.circular(20.r),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                    ),
+                    elevation: 0,
                     leading: Padding(
                       padding: EdgeInsets.all(8.w),
                       child: GestureDetector(
@@ -193,47 +178,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              _QuickActionCard(
-                                icon: Icons.add_circle,
-                                title: AppStrings.createRequest,
-                                color: AppColors.primary,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const CreateRequestScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              SizedBox(width: 12.w),
-                              _QuickActionCard(
-                                icon: Icons.emergency,
-                                title: AppStrings.sosAlert,
-                                color: AppColors.emergency,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const CreateRequestScreen(
-                                        requestType: 'sos',
+                              Expanded(
+                                child: _QuickActionCard(
+                                  icon: Icons.add_circle,
+                                  title: AppStrings.createRequest,
+                                  color: AppColors.primary,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const CreateRequestScreen(),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                               SizedBox(width: 12.w),
-                              _QuickActionCard(
-                                icon: Icons.search,
-                                title: AppStrings.findDonors,
-                                color: AppColors.secondary,
-                                onTap: () {
-                                  ref
-                                          .read(bottomNavIndexProvider.notifier)
-                                          .state =
-                                      1;
-                                },
+                              Expanded(
+                                child: _QuickActionCard(
+                                  icon: Icons.emergency,
+                                  title: AppStrings.sosAlert,
+                                  color: AppColors.emergency,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const CreateRequestScreen(
+                                              requestType: 'sos',
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: _QuickActionCard(
+                                  icon: Icons.search,
+                                  title: AppStrings.findDonors,
+                                  color: AppColors.primary,
+                                  onTap: () {
+                                    ref
+                                            .read(
+                                              bottomNavIndexProvider.notifier,
+                                            )
+                                            .state =
+                                        1;
+                                  },
+                                ),
                               ),
                             ],
                           ),
