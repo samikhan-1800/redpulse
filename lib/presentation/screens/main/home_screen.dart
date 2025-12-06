@@ -339,6 +339,8 @@ class _NearbyRequestsList extends ConsumerWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: requests.take(3).length,
+          addRepaintBoundaries: true,
+          addAutomaticKeepAlives: false,
           itemBuilder: (context, index) {
             final request = requests[index];
             final locationService = ref.read(locationServiceProvider);

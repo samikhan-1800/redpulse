@@ -43,6 +43,8 @@ class ChatListScreen extends ConsumerWidget {
             child: ListView.builder(
               padding: EdgeInsets.symmetric(vertical: 8.h),
               itemCount: chats.length,
+              cacheExtent: 300,
+              addRepaintBoundaries: true,
               itemBuilder: (context, index) {
                 final chat = chats[index];
                 return _ChatListItem(

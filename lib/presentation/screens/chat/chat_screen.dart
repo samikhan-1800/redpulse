@@ -167,6 +167,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     vertical: 8.h,
                   ),
                   itemCount: messages.length,
+                  cacheExtent: 500,
+                  addRepaintBoundaries: true,
+                  addAutomaticKeepAlives: true,
                   itemBuilder: (context, index) {
                     final message = messages[index];
                     final isMe = message.senderId == userId;

@@ -78,6 +78,15 @@ class RedPulseApp extends ConsumerWidget {
           title: AppStrings.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
+          builder: (context, child) {
+            // Reduce overdraw and improve performance
+            return MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(1.0)),
+              child: child!,
+            );
+          },
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.light,
           home: const AuthWrapper(),
