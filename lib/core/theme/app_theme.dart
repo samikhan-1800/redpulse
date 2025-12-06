@@ -252,14 +252,14 @@ class AppTheme {
     return AppBarTheme(
       elevation: 0,
       centerTitle: false,
-      backgroundColor: AppColors.surface,
-      foregroundColor: AppColors.textPrimary,
-      systemOverlayStyle: SystemUiOverlayStyle.dark,
-      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
+      iconTheme: const IconThemeData(color: Colors.white),
       titleTextStyle: GoogleFonts.poppins(
         fontSize: 18,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+        color: Colors.white,
       ),
     );
   }

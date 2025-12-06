@@ -300,7 +300,11 @@ class _MessageBubble extends StatelessWidget {
         ),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
         decoration: BoxDecoration(
-          color: isMe ? AppColors.primary : AppColors.cardBackground,
+          color: isMe
+              ? AppColors.primary
+              : Theme.of(context).brightness == Brightness.dark
+              ? AppColors.surfaceDark
+              : AppColors.cardBackground,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(16.r),
             topRight: Radius.circular(16.r),
@@ -324,7 +328,11 @@ class _MessageBubble extends StatelessWidget {
               message.content,
               style: TextStyle(
                 fontSize: 14.sp,
-                color: isMe ? Colors.white : AppColors.textPrimary,
+                color: isMe
+                    ? Colors.white
+                    : Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimary,
               ),
             ),
             SizedBox(height: 4.h),
