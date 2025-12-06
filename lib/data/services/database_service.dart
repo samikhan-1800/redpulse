@@ -508,7 +508,7 @@ class DatabaseService implements DatabaseServiceInterface {
     double lon2,
   ) {
     const earthRadius = 6371.0; // Earth's radius in kilometers
-    
+
     // Convert degrees to radians
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
@@ -516,24 +516,24 @@ class DatabaseService implements DatabaseServiceInterface {
     final lat2Rad = _toRadians(lat2);
 
     // Haversine formula
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(lat1Rad) * math.cos(lat2Rad) *
-        math.sin(dLon / 2) * math.sin(dLon / 2);
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1Rad) *
+            math.cos(lat2Rad) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
 
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     final distance = earthRadius * c;
-    
-    print('   🧮 Distance calculation: ($lat1, $lon1) to ($lat2, $lon2) = ${distance.toStringAsFixed(4)} km');
-    
+
+    print(
+      '   🧮 Distance calculation: ($lat1, $lon1) to ($lat2, $lon2) = ${distance.toStringAsFixed(4)} km',
+    );
+
     return distance;
   }
 
   double _toRadians(double degree) => degree * math.pi / 180;
-      term *= -x * x / ((i - 1) * i);
-      result += term;
-    }
-    return result;
-  }
 
   int _getRequestPriority(String type) {
     switch (type) {
