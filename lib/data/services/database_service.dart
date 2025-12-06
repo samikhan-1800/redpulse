@@ -220,18 +220,12 @@ class DatabaseService implements DatabaseServiceInterface {
     double longitude,
     double radiusKm,
   ) {
-    print(
-      '📍 nearbyRequestsStream - My location: ($latitude, $longitude), Radius: $radiusKm km',
-    );
-
     return _requestsCollection
         .where('status', isEqualTo: AppConstants.statusPending)
         .orderBy('createdAt', descending: true)
         .limit(50) // Limit to prevent too much data
         .snapshots()
         .map((snapshot) {
-          print('📦 Total pending requests in DB: ${snapshot.docs.length}');
-
           final requests = snapshot.docs
               .map((doc) => BloodRequest.fromFirestore(doc))
               .where((request) {
@@ -243,22 +237,10 @@ class DatabaseService implements DatabaseServiceInterface {
                   request.longitude,
                 );
 
-                print(
-                  '🔍 Request: ${request.patientName} at (${request.latitude}, ${request.longitude}) - Distance: ${distance.toStringAsFixed(2)} km',
-                );
-
-                // Show all requests within radius (removed user filter for testing)
-                final isNearby = distance <= radiusKm;
-                if (!isNearby) {
-                  print('   ❌ Too far (>${radiusKm}km)');
-                } else {
-                  print('   ✅ Within range');
-                }
-                return isNearby;
+                // Show all requests within radius
+                return distance <= radiusKm;
               })
               .toList();
-
-          print('✨ Final nearby requests count: ${requests.length}');
 
           // Sort by urgency and distance
           requests.sort((a, b) {

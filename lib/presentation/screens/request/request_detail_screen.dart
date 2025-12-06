@@ -96,7 +96,6 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
         }
       }
     } catch (e) {
-      print('❌ Error calling: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
