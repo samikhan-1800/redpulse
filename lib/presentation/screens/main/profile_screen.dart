@@ -162,7 +162,9 @@ class ProfileScreen extends ConsumerWidget {
                       _buildInfoRow(
                         Icons.person,
                         AppStrings.gender,
-                        user.gender.isNotEmpty ? user.gender.capitalize : 'Not specified',
+                        user.gender.isNotEmpty
+                            ? user.gender.capitalize
+                            : 'Not specified',
                       ),
                       if (user.city != null && user.city!.isNotEmpty) ...[
                         const Divider(height: 1),

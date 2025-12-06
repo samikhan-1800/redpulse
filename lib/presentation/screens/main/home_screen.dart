@@ -12,6 +12,7 @@ import '../../widgets/cards.dart';
 import '../../widgets/common_widgets.dart';
 import '../request/create_request_screen.dart';
 import '../request/request_detail_screen.dart';
+import '../notification/notifications_screen.dart';
 import 'main_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -85,7 +86,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     actions: [
                       IconButton(
                         onPressed: () {
-                          // TODO: Show notifications
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationsScreen(),
+                            ),
+                          );
                         },
                         icon: const BadgeCounter(
                           count: 0,

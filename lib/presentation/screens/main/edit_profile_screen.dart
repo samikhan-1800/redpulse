@@ -50,7 +50,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _bioController.text = user.bio ?? '';
       _cityController.text = user.city ?? '';
       _selectedBloodGroup = user.bloodGroup;
-      _selectedGender = user.gender;
+      // Normalize gender to lowercase to match dropdown values
+      _selectedGender = user.gender.isNotEmpty
+          ? user.gender.toLowerCase()
+          : 'male';
       _selectedDate = user.dateOfBirth;
       _profileImageUrl = user.profileImageUrl;
     }

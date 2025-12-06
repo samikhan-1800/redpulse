@@ -10,6 +10,7 @@ import 'data/providers/auth_provider.dart';
 import 'data/providers/notification_provider.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/main/main_screen.dart';
+import 'presentation/screens/splash/splash_screen.dart';
 import 'presentation/widgets/common_widgets.dart';
 
 /// Track Firebase initialization result
@@ -120,7 +121,7 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
     final authState = ref.watch(authStateChangesProvider);
 
     return authState.when(
-      loading: () => const _SplashScreen(),
+      loading: () => const SplashScreen(),
       error: (error, _) => Scaffold(
         body: ErrorState(
           message: 'Authentication error: $error',
@@ -133,79 +134,6 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
         }
         return const LoginScreen();
       },
-    );
-  }
-}
-
-/// Demo mode screen when Firebase is not configured
-/// Splash screen shown while loading
-class _SplashScreen extends StatelessWidget {
-  const _SplashScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.primary.withOpacity(0.8),
-            ],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // App logo
-              Container(
-                padding: EdgeInsets.all(24.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.water_drop,
-                  size: 64.sp,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              SizedBox(height: 24.h),
-              Text(
-                AppStrings.appName,
-                style: TextStyle(
-                  fontSize: 32.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                AppStrings.appTagline,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.white.withOpacity(0.9),
-                ),
-              ),
-              SizedBox(height: 48.h),
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation(Colors.white),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
