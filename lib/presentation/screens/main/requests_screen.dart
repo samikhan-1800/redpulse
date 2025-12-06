@@ -84,7 +84,7 @@ class _NearbyRequestsTab extends ConsumerWidget {
       radiusKm: 50.0, // Increased radius to show more requests
     );
     final requestsAsync = ref.watch(nearbyRequestsProvider(params));
-    
+
     return requestsAsync.when(
       loading: () => const ShimmerList(),
       error: (error, _) => ErrorState(
