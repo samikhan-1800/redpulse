@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:lottie/lottie.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/constants/app_animations.dart';
 
 /// Loading indicator widget
 class LoadingIndicator extends StatelessWidget {
@@ -26,7 +28,7 @@ class LoadingIndicator extends StatelessWidget {
   }
 }
 
-/// Full page loading
+/// Full page loading with Lottie animation
 class LoadingPage extends StatelessWidget {
   final String? message;
 
@@ -39,9 +41,17 @@ class LoadingPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const LoadingIndicator(),
-            if (message != null) ...[
-              SizedBox(height: 16.h),
+            Lottie.network(
+              AppAnimations.bloodDrop,
+              width: 150.w,
+              height: 150.h,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return const LoadingIndicator();
+              },
+            ),
+            SizedBox(height: 16.h),
+            if (message != null)
               Text(
                 message!,
                 style: TextStyle(
@@ -49,7 +59,6 @@ class LoadingPage extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
-            ],
           ],
         ),
       ),
@@ -57,13 +66,14 @@ class LoadingPage extends StatelessWidget {
   }
 }
 
-/// Empty state widget
+/// Empty state widget with Lottie animation
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
   final String? buttonText;
   final VoidCallback? onButtonPressed;
+  final String? animationUrl;
 
   const EmptyState({
     super.key,
@@ -72,6 +82,7 @@ class EmptyState extends StatelessWidget {
     this.subtitle,
     this.buttonText,
     this.onButtonPressed,
+    this.animationUrl,
   });
 
   @override
@@ -82,14 +93,32 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
+            if (animationUrl != null)
+              Lottie.network(
+                animationUrl!,
+                width: 200.w,
+                height: 200.h,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    padding: EdgeInsets.all(24.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, size: 48.sp, color: AppColors.primary),
+                  );
+                },
+              )
+            else
+              Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 48.sp, color: AppColors.primary),
               ),
-              child: Icon(icon, size: 48.sp, color: AppColors.primary),
-            ),
             SizedBox(height: 24.h),
             Text(
               title,

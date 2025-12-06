@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/app_animations.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/chat_provider.dart';
@@ -149,6 +150,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     icon: Icons.chat_bubble_outline,
                     title: 'No messages yet',
                     subtitle: 'Send a message to start the conversation',
+                    animationUrl: AppAnimations.chat,
                   );
                 }
 
