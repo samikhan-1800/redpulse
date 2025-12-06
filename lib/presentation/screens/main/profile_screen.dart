@@ -150,7 +150,7 @@ class ProfileScreen extends ConsumerWidget {
                       _buildInfoRow(
                         Icons.phone,
                         AppStrings.phoneNumber,
-                        user.phone,
+                        user.phone.isNotEmpty ? user.phone : 'Not provided',
                       ),
                       const Divider(height: 1),
                       _buildInfoRow(
@@ -162,9 +162,9 @@ class ProfileScreen extends ConsumerWidget {
                       _buildInfoRow(
                         Icons.person,
                         AppStrings.gender,
-                        user.gender.capitalize,
+                        user.gender.isNotEmpty ? user.gender.capitalize : 'Not specified',
                       ),
-                      if (user.city != null) ...[
+                      if (user.city != null && user.city!.isNotEmpty) ...[
                         const Divider(height: 1),
                         _buildInfoRow(
                           Icons.location_city,
