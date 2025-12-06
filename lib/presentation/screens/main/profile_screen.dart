@@ -92,13 +92,17 @@ class ProfileScreen extends ConsumerWidget {
                               size: 48,
                             ),
                             SizedBox(width: 12.w),
-                            AvailabilityToggle(
-                              isAvailable: user.isAvailable,
-                              onChanged: (value) {
-                                ref
-                                    .read(userProfileNotifierProvider.notifier)
-                                    .toggleAvailability(value);
-                              },
+                            Flexible(
+                              child: AvailabilityToggle(
+                                isAvailable: user.isAvailable,
+                                onChanged: (value) {
+                                  ref
+                                      .read(
+                                        userProfileNotifierProvider.notifier,
+                                      )
+                                      .toggleAvailability(value);
+                                },
+                              ),
                             ),
                           ],
                         ),

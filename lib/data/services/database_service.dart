@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../models/blood_request_model.dart';
@@ -219,12 +220,18 @@ class DatabaseService implements DatabaseServiceInterface {
     double longitude,
     double radiusKm,
   ) {
+    print(
+      '📍 nearbyRequestsStream - My location: ($latitude, $longitude), Radius: $radiusKm km',
+    );
+
     return _requestsCollection
         .where('status', isEqualTo: AppConstants.statusPending)
         .orderBy('createdAt', descending: true)
         .limit(50) // Limit to prevent too much data
         .snapshots()
         .map((snapshot) {
+          print('📦 Total pending requests in DB: ${snapshot.docs.length}');
+
           final requests = snapshot.docs
               .map((doc) => BloodRequest.fromFirestore(doc))
               .where((request) {
@@ -235,10 +242,23 @@ class DatabaseService implements DatabaseServiceInterface {
                   request.latitude,
                   request.longitude,
                 );
+
+                print(
+                  '🔍 Request: ${request.patientName} at (${request.latitude}, ${request.longitude}) - Distance: ${distance.toStringAsFixed(2)} km',
+                );
+
                 // Show all requests within radius (removed user filter for testing)
-                return distance <= radiusKm;
+                final isNearby = distance <= radiusKm;
+                if (!isNearby) {
+                  print('   ❌ Too far (>${radiusKm}km)');
+                } else {
+                  print('   ✅ Within range');
+                }
+                return isNearby;
               })
               .toList();
+
+          print('✨ Final nearby requests count: ${requests.length}');
 
           // Sort by urgency and distance
           requests.sort((a, b) {
@@ -480,7 +500,7 @@ class DatabaseService implements DatabaseServiceInterface {
 
   // ============ Helper Methods ============
 
-  /// Calculate distance between two coordinates using Haversine formula (simplified)
+  /// Calculate distance between two coordinates using Haversine formula
   double _calculateDistance(
     double lat1,
     double lon1,
@@ -488,56 +508,27 @@ class DatabaseService implements DatabaseServiceInterface {
     double lon2,
   ) {
     const earthRadius = 6371.0; // Earth's radius in kilometers
+    
+    // Convert degrees to radians
     final dLat = _toRadians(lat2 - lat1);
     final dLon = _toRadians(lon2 - lon1);
+    final lat1Rad = _toRadians(lat1);
+    final lat2Rad = _toRadians(lat2);
 
-    final a =
-        _sin(dLat / 2) * _sin(dLat / 2) +
-        _cos(_toRadians(lat1)) *
-            _cos(_toRadians(lat2)) *
-            _sin(dLon / 2) *
-            _sin(dLon / 2);
+    // Haversine formula
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1Rad) * math.cos(lat2Rad) *
+        math.sin(dLon / 2) * math.sin(dLon / 2);
 
-    final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
-    return earthRadius * c;
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    final distance = earthRadius * c;
+    
+    print('   🧮 Distance calculation: ($lat1, $lon1) to ($lat2, $lon2) = ${distance.toStringAsFixed(4)} km');
+    
+    return distance;
   }
 
-  double _toRadians(double degree) => degree * 3.14159265359 / 180;
-  double _sin(double x) => _taylor(x, true);
-  double _cos(double x) => _taylor(x, false);
-  double _sqrt(double x) {
-    if (x <= 0) return 0;
-    double guess = x / 2;
-    for (int i = 0; i < 10; i++) {
-      guess = (guess + x / guess) / 2;
-    }
-    return guess;
-  }
-
-  double _atan2(double y, double x) {
-    if (x > 0) return _atan(y / x);
-    if (x < 0 && y >= 0) return _atan(y / x) + 3.14159265359;
-    if (x < 0 && y < 0) return _atan(y / x) - 3.14159265359;
-    if (x == 0 && y > 0) return 3.14159265359 / 2;
-    if (x == 0 && y < 0) return -3.14159265359 / 2;
-    return 0;
-  }
-
-  double _atan(double x) {
-    double result = 0;
-    double term = x;
-    for (int i = 1; i <= 15; i += 2) {
-      result += term / i;
-      term *= -x * x;
-    }
-    return result;
-  }
-
-  double _taylor(double x, bool isSin) {
-    x = x % (2 * 3.14159265359);
-    double result = isSin ? x : 1;
-    double term = isSin ? x : 1;
-    for (int i = isSin ? 3 : 2; i <= 15; i += 2) {
+  double _toRadians(double degree) => degree * math.pi / 180;
       term *= -x * x / ((i - 1) * i);
       result += term;
     }

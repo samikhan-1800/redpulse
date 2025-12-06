@@ -91,6 +91,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         lat = locationState.position!.latitude;
         lng = locationState.position!.longitude;
         address = locationState.address ?? _addressController.text.trim();
+        print('📍 Using current location: ($lat, $lng)');
       } else {
         final locationService = ref.read(locationServiceProvider);
         final coords = await locationService.getCoordinatesFromAddress(
@@ -100,10 +101,15 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           lat = coords.latitude;
           lng = coords.longitude;
           address = _addressController.text.trim();
+          print('📍 Using geocoded address location: ($lat, $lng)');
         } else {
           throw Exception('Could not find location for the given address');
         }
       }
+
+      print('🏥 Creating request at coordinates: ($lat, $lng)');
+      print('🏥 Hospital: ${_hospitalController.text.trim()}');
+      print('🏥 Address: $address');
 
       await ref
           .read(bloodRequestNotifierProvider.notifier)

@@ -60,7 +60,10 @@ class _NearbyRequestsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locationState = ref.watch(locationNotifierProvider);
 
+    print('🗺️ RequestsScreen - Location state: ${locationState.position}');
+
     if (locationState.position == null) {
+      print('❌ Location is NULL - showing enable location screen');
       return Center(
         child: EmptyState(
           icon: Icons.location_off,
@@ -74,21 +77,36 @@ class _NearbyRequestsTab extends ConsumerWidget {
       );
     }
 
+    print(
+      '✅ Location available: (${locationState.position!.latitude}, ${locationState.position!.longitude})',
+    );
+
     final params = NearbyRequestsParams(
       latitude: locationState.position!.latitude,
       longitude: locationState.position!.longitude,
       radiusKm: 50.0, // Increased radius to show more requests
     );
+
+    print('🔧 Watching nearbyRequestsProvider with params: $params');
     final requestsAsync = ref.watch(nearbyRequestsProvider(params));
 
     return requestsAsync.when(
-      loading: () => const ShimmerList(),
-      error: (error, _) => ErrorState(
-        message: error.toString(),
-        onRetry: () => ref.refresh(nearbyRequestsProvider(params)),
-      ),
+      loading: () {
+        print('⏳ Requests loading...');
+        return const ShimmerList();
+      },
+      error: (error, _) {
+        print('❌ Error loading requests: $error');
+        return ErrorState(
+          message: error.toString(),
+          onRetry: () => ref.refresh(nearbyRequestsProvider(params)),
+        );
+      },
       data: (requests) {
+        print('📋 Received ${requests.length} nearby requests');
+
         if (requests.isEmpty) {
+          print('📭 No requests found - showing empty state');
           return const EmptyState(
             icon: Icons.check_circle,
             title: AppStrings.noRequests,
@@ -96,6 +114,7 @@ class _NearbyRequestsTab extends ConsumerWidget {
           );
         }
 
+        print('✨ Displaying ${requests.length} requests');
         return RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(nearbyRequestsProvider(params));

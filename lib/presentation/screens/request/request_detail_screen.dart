@@ -77,9 +77,29 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
   }
 
   Future<void> _callRequester() async {
-    final uri = Uri.parse('tel:${widget.request.requesterPhone}');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    try {
+      final uri = Uri.parse('tel:${widget.request.requesterPhone}');
+      print('📞 Attempting to call: ${widget.request.requesterPhone}');
+      print('📞 URI: $uri');
+      
+      if (await canLaunchUrl(uri)) {
+        print('✅ Can launch URL, launching...');
+        await launchUrl(uri);
+      } else {
+        print('❌ Cannot launch URL');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cannot make phone calls on this device')),
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ Error calling: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
