@@ -67,202 +67,196 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   elevation: 0,
                   expandedHeight: 0,
                   leading: Padding(
-                      padding: EdgeInsets.all(8.w),
-                      child: GestureDetector(
-                        onTap: () {
-                          ref.read(bottomNavIndexProvider.notifier).state = 4;
-                        },
-                        child: UserAvatar(
-                          imageUrl: user.profileImageUrl,
-                          name: user.name,
-                          size: 40,
-                        ),
+                    padding: EdgeInsets.all(8.w),
+                    child: GestureDetector(
+                      onTap: () {
+                        ref.read(bottomNavIndexProvider.notifier).state = 4;
+                      },
+                      child: UserAvatar(
+                        imageUrl: user.profileImageUrl,
+                        name: user.name,
+                        size: 40,
                       ),
                     ),
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                  ),
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${AppStrings.hello}, ${user.name.split(' ').first}! 👋',
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (user.city != null)
                         Text(
-                          '${AppStrings.hello}, ${user.name.split(' ').first}! 👋',
+                          user.city!,
                           style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 11.sp,
+                            color: Colors.white.withOpacity(0.9),
                           ),
                         ),
-                        if (user.city != null)
-                          Text(
-                            user.city!,
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                      ],
-                    ),
-                    actions: [
-                      IconButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const NotificationsScreen(),
-                            ),
-                          );
-                        },
-                        icon: BadgeCounter(
-                          count: unreadCount,
-                          child: const Icon(Icons.notifications_outlined),
-                        ),
-                      ),
                     ],
                   ),
-                  // Content
-                  SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Availability toggle
+                  actions: [
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationsScreen(),
+                          ),
+                        );
+                      },
+                      icon: BadgeCounter(
+                        count: unreadCount,
+                        child: const Icon(Icons.notifications_outlined),
+                      ),
+                    ),
+                  ],
+                ),
+                // Content
+                SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Availability toggle
+                      Padding(
+                        padding: EdgeInsets.all(16.w),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: AvailabilityToggle(
+                                isAvailable: user.isAvailable,
+                                onChanged: (value) {
+                                  ref
+                                      .read(
+                                        userProfileNotifierProvider.notifier,
+                                      )
+                                      .toggleAvailability(value);
+                                },
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            BloodGroupBadge(
+                              bloodGroup: user.bloodGroup,
+                              size: 48,
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Stats cards
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: StatsCard(
+                                title: AppStrings.totalDonations,
+                                value: donationStats.totalDonations.toString(),
+                                icon: Icons.volunteer_activism,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: StatsCard(
+                                title: AppStrings.livesSaved,
+                                value: donationStats.livesSaved.toString(),
+                                icon: Icons.favorite,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+                      // Quick actions
+                      const SectionHeader(title: AppStrings.quickActions),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Expanded(
+                              child: _QuickActionCard(
+                                icon: Icons.add_circle,
+                                title: AppStrings.createRequest,
+                                color: AppColors.primary,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const CreateRequestScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: _QuickActionCard(
+                                icon: Icons.emergency,
+                                title: AppStrings.sosAlert,
+                                color: AppColors.emergency,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const CreateRequestScreen(
+                                        requestType: 'sos',
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: _QuickActionCard(
+                                icon: Icons.search,
+                                title: AppStrings.findDonors,
+                                color: AppColors.primary,
+                                onTap: () {
+                                  ref
+                                          .read(bottomNavIndexProvider.notifier)
+                                          .state =
+                                      1;
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+                      // Nearby requests
+                      SectionHeader(
+                        title: AppStrings.nearbyRequests,
+                        actionText: 'See All',
+                        onActionPressed: () {
+                          ref.read(bottomNavIndexProvider.notifier).state = 2;
+                        },
+                      ),
+                      // Requests list
+                      if (locationState.position != null)
+                        _NearbyRequestsList(
+                          latitude: locationState.position!.latitude,
+                          longitude: locationState.position!.longitude,
+                        )
+                      else
                         Padding(
                           padding: EdgeInsets.all(16.w),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: AvailabilityToggle(
-                                  isAvailable: user.isAvailable,
-                                  onChanged: (value) {
-                                    ref
-                                        .read(
-                                          userProfileNotifierProvider.notifier,
-                                        )
-                                        .toggleAvailability(value);
-                                  },
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              BloodGroupBadge(
-                                bloodGroup: user.bloodGroup,
-                                size: 48,
-                              ),
-                            ],
+                          child: const EmptyState(
+                            icon: Icons.location_off,
+                            title: 'Location not available',
+                            subtitle: 'Enable location to see nearby requests',
                           ),
                         ),
-                        // Stats cards
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: StatsCard(
-                                  title: AppStrings.totalDonations,
-                                  value: donationStats.totalDonations
-                                      .toString(),
-                                  icon: Icons.volunteer_activism,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: StatsCard(
-                                  title: AppStrings.livesSaved,
-                                  value: donationStats.livesSaved.toString(),
-                                  icon: Icons.favorite,
-                                  color: AppColors.success,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
-                        // Quick actions
-                        const SectionHeader(title: AppStrings.quickActions),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Expanded(
-                                child: _QuickActionCard(
-                                  icon: Icons.add_circle,
-                                  title: AppStrings.createRequest,
-                                  color: AppColors.primary,
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const CreateRequestScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: _QuickActionCard(
-                                  icon: Icons.emergency,
-                                  title: AppStrings.sosAlert,
-                                  color: AppColors.emergency,
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const CreateRequestScreen(
-                                              requestType: 'sos',
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: _QuickActionCard(
-                                  icon: Icons.search,
-                                  title: AppStrings.findDonors,
-                                  color: AppColors.primary,
-                                  onTap: () {
-                                    ref
-                                            .read(
-                                              bottomNavIndexProvider.notifier,
-                                            )
-                                            .state =
-                                        1;
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
-                        // Nearby requests
-                        SectionHeader(
-                          title: AppStrings.nearbyRequests,
-                          actionText: 'See All',
-                          onActionPressed: () {
-                            ref.read(bottomNavIndexProvider.notifier).state = 2;
-                          },
-                        ),
-                        // Requests list
-                        if (locationState.position != null)
-                          _NearbyRequestsList(
-                            latitude: locationState.position!.latitude,
-                            longitude: locationState.position!.longitude,
-                          )
-                        else
-                          Padding(
-                            padding: EdgeInsets.all(16.w),
-                            child: const EmptyState(
-                              icon: Icons.location_off,
-                              title: 'Location not available',
-                              subtitle:
-                                  'Enable location to see nearby requests',
-                            ),
-                          ),
-                        SizedBox(height: 24.h),
-                      ],
-                    ),
+                      SizedBox(height: 24.h),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },

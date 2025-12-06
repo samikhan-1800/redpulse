@@ -39,10 +39,7 @@ class MainScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppColors.primary,
           border: Border(
-            top: BorderSide(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
+            top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
           ),
         ),
         child: SafeArea(
