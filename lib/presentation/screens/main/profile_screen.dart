@@ -7,6 +7,7 @@ import '../../../core/utils/extensions.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/donation_provider.dart';
 import '../../../data/providers/user_provider.dart';
+import '../../../data/providers/theme_provider.dart';
 import '../../widgets/cards.dart';
 import '../../widgets/buttons.dart';
 import '../../widgets/common_widgets.dart';
@@ -231,9 +232,7 @@ class ProfileScreen extends ConsumerWidget {
                         },
                       ),
                       const Divider(height: 1),
-                      _buildMenuItem(Icons.help_outline, 'Help & Support', () {
-                        // TODO: Navigate to help
-                      }),
+                      _buildThemeMenuItem(context, ref),
                       const Divider(height: 1),
                       _buildMenuItem(Icons.info_outline, 'About', () {
                         // TODO: Show about dialog
@@ -326,6 +325,30 @@ class ProfileScreen extends ConsumerWidget {
       title: Text(title),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
+    );
+  }
+
+  Widget _buildThemeMenuItem(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
+
+    return ListTile(
+      leading: Icon(
+        isDark ? Icons.dark_mode : Icons.light_mode,
+        color: AppColors.textSecondary,
+      ),
+      title: const Text('Theme'),
+      subtitle: Text(
+        isDark ? 'Dark Mode' : 'Light Mode',
+        style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
+      ),
+      trailing: Switch(
+        value: isDark,
+        activeColor: AppColors.primary,
+        onChanged: (value) {
+          ref.read(themeModeProvider.notifier).toggleTheme();
+        },
+      ),
     );
   }
 }

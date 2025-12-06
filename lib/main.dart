@@ -8,6 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'core/constants/app_strings.dart';
 import 'data/providers/auth_provider.dart';
 import 'data/providers/notification_provider.dart';
+import 'data/providers/theme_provider.dart';
 import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/screens/main/main_screen.dart';
 import 'presentation/screens/splash/splash_screen.dart';
@@ -69,6 +70,8 @@ class RedPulseApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
@@ -88,7 +91,7 @@ class RedPulseApp extends ConsumerWidget {
             );
           },
           darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.light,
+          themeMode: themeMode,
           home: const AuthWrapper(),
         );
       },

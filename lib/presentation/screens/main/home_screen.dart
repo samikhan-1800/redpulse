@@ -193,55 +193,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded(
-                                child: _QuickActionCard(
-                                  icon: Icons.add_circle,
-                                  title: AppStrings.createRequest,
-                                  color: AppColors.primary,
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const CreateRequestScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
+                              _QuickActionCard(
+                                icon: Icons.add_circle,
+                                title: AppStrings.createRequest,
+                                color: AppColors.primary,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const CreateRequestScreen(),
+                                    ),
+                                  );
+                                },
                               ),
                               SizedBox(width: 12.w),
-                              Expanded(
-                                child: _QuickActionCard(
-                                  icon: Icons.emergency,
-                                  title: AppStrings.sosAlert,
-                                  color: AppColors.emergency,
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const CreateRequestScreen(
-                                              requestType: 'sos',
-                                            ),
+                              _QuickActionCard(
+                                icon: Icons.emergency,
+                                title: AppStrings.sosAlert,
+                                color: AppColors.emergency,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const CreateRequestScreen(
+                                        requestType: 'sos',
                                       ),
-                                    );
-                                  },
-                                ),
+                                    ),
+                                  );
+                                },
                               ),
                               SizedBox(width: 12.w),
-                              Expanded(
-                                child: _QuickActionCard(
-                                  icon: Icons.search,
-                                  title: AppStrings.findDonors,
-                                  color: AppColors.secondary,
-                                  onTap: () {
-                                    ref
-                                            .read(
-                                              bottomNavIndexProvider.notifier,
-                                            )
-                                            .state =
-                                        1;
-                                  },
-                                ),
+                              _QuickActionCard(
+                                icon: Icons.search,
+                                title: AppStrings.findDonors,
+                                color: AppColors.secondary,
+                                onTap: () {
+                                  ref
+                                          .read(bottomNavIndexProvider.notifier)
+                                          .state =
+                                      1;
+                                },
                               ),
                             ],
                           ),

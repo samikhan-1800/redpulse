@@ -5,6 +5,11 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/notification_model.dart';
 import '../../../data/providers/notification_provider.dart';
+import '../../../data/providers/chat_provider.dart';
+import '../../../data/providers/request_provider.dart';
+import '../chat/chat_screen.dart';
+import '../request/request_detail_screen.dart';
+import '../main/donation_history_screen.dart';
 
 /// Notification types enum
 enum NotificationType {
@@ -41,33 +46,48 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        elevation: 0,
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'clear') {
-                _showClearConfirmation();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    Icon(Icons.clear_all, size: 20),
-                    SizedBox(width: 12),
-                    Text('Clear All'),
-                  ],
-                ),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.appBarBackground,
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.r)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
-        ],
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: const Text('Notifications'),
+            actions: [
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) {
+                  if (value == 'clear') {
+                    _showClearConfirmation();
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'clear',
+                    child: Row(
+                      children: [
+                        Icon(Icons.clear_all, size: 20),
+                        SizedBox(width: 12),
+                        Text('Clear All'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
       body: notificationsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -341,6 +361,8 @@ class _NotificationTile extends StatelessWidget {
     BuildContext context,
     NotificationModel notification,
   ) {
+    final ref = ProviderScope.containerOf(context);
+
     // Navigate based on notification type
     switch (_getNotificationType()) {
       case NotificationType.newRequest:
@@ -348,26 +370,53 @@ class _NotificationTile extends StatelessWidget {
       case NotificationType.requestCancelled:
         // Navigate to request detail if we have a requestId
         if (notification.data?.containsKey('requestId') ?? false) {
-          // TODO: Navigate to request detail screen
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Opening request details...')),
-          );
+          final requestId = notification.data!['requestId'];
+          ref
+              .read(requestDetailProvider(requestId).future)
+              .then((request) {
+                if (request != null && context.mounted) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RequestDetailScreen(request: request),
+                    ),
+                  );
+                }
+              })
+              .catchError((e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Request not found')),
+                  );
+                }
+              });
         }
         break;
       case NotificationType.newMessage:
         // Navigate to chat if we have a chatId
         if (notification.data?.containsKey('chatId') ?? false) {
-          // TODO: Navigate to chat screen
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Opening chat...')));
+          final chatId = notification.data!['chatId'];
+          ref
+              .read(chatDetailProvider(chatId).future)
+              .then((chat) {
+                if (chat != null && context.mounted) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => ChatScreen(chat: chat)),
+                  );
+                }
+              })
+              .catchError((e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Chat not found')),
+                  );
+                }
+              });
         }
         break;
       case NotificationType.donationCompleted:
         // Navigate to donation history
-        // TODO: Navigate to donation history
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Opening donation history...')),
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const DonationHistoryScreen()),
         );
         break;
       case NotificationType.system:
