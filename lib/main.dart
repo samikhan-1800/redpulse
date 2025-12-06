@@ -96,6 +96,8 @@ class AuthWrapper extends ConsumerStatefulWidget {
 }
 
 class _AuthWrapperState extends ConsumerState<AuthWrapper> {
+  bool _showSplash = true;
+
   @override
   void initState() {
     super.initState();
@@ -105,6 +107,15 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
         ref.read(notificationNotifierProvider.notifier).initialize();
       });
     }
+
+    // Show splash screen for minimum 2 seconds
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _showSplash = false;
+        });
+      }
+    });
   }
 
   @override
@@ -116,6 +127,11 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
           onRetry: () => ref.refresh(authStateChangesProvider),
         ),
       );
+    }
+
+    // Show splash screen during initial load
+    if (_showSplash) {
+      return const SplashScreen();
     }
 
     final authState = ref.watch(authStateChangesProvider);

@@ -77,6 +77,7 @@ class _NearbyRequestsTab extends ConsumerWidget {
     final params = NearbyRequestsParams(
       latitude: locationState.position!.latitude,
       longitude: locationState.position!.longitude,
+      radiusKm: 50.0, // Increased radius to show more requests
     );
     final requestsAsync = ref.watch(nearbyRequestsProvider(params));
 

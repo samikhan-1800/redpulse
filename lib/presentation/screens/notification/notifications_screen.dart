@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_strings.dart';
 import '../../../data/models/notification_model.dart';
 import '../../../data/providers/notification_provider.dart';
-import '../../widgets/common_widgets.dart';
 
 /// Notification types enum
 enum NotificationType {
@@ -307,7 +305,6 @@ class _NotificationTile extends StatelessWidget {
         iconColor = AppColors.primary;
         break;
       case NotificationType.system:
-      default:
         iconData = Icons.notifications;
         iconColor = AppColors.textSecondary;
         break;
@@ -374,7 +371,6 @@ class _NotificationTile extends StatelessWidget {
         );
         break;
       case NotificationType.system:
-      default:
         // Show notification details in a dialog
         showDialog(
           context: context,

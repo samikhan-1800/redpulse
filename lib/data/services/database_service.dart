@@ -222,17 +222,20 @@ class DatabaseService implements DatabaseServiceInterface {
     return _requestsCollection
         .where('status', isEqualTo: AppConstants.statusPending)
         .orderBy('createdAt', descending: true)
+        .limit(50) // Limit to prevent too much data
         .snapshots()
         .map((snapshot) {
           final requests = snapshot.docs
               .map((doc) => BloodRequest.fromFirestore(doc))
               .where((request) {
+                // Calculate distance
                 final distance = _calculateDistance(
                   latitude,
                   longitude,
                   request.latitude,
                   request.longitude,
                 );
+                // Show all requests within radius (removed user filter for testing)
                 return distance <= radiusKm;
               })
               .toList();
