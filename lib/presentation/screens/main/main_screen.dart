@@ -70,7 +70,7 @@ class MainScreen extends ConsumerWidget {
                 fontWeight: FontWeight.w500,
                 height: 1.5,
               ),
-          items: [
+              items: [
             const BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined),
               activeIcon: Icon(Icons.home),
@@ -109,6 +109,8 @@ class MainScreen extends ConsumerWidget {
               label: AppStrings.profile,
             ),
           ],
+            ),
+          ),
         ),
       ),
     );
