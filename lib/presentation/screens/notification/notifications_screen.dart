@@ -90,7 +90,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               padding: EdgeInsets.symmetric(vertical: 8.h),
               itemCount: notifications.length,
               separatorBuilder: (context, index) =>
-                  Divider(height: 1, thickness: 1, color: AppColors.border),
+                  Divider(height: 1, thickness: 1, color: AppColors.divider),
               itemBuilder: (context, index) {
                 final notification = notifications[index];
                 return _NotificationTile(notification: notification);
