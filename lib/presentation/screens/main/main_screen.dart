@@ -37,7 +37,7 @@ class MainScreen extends ConsumerWidget {
       body: IndexedStack(index: currentIndex, children: screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.navBarBackground,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           boxShadow: [
             BoxShadow(
@@ -50,8 +50,8 @@ class MainScreen extends ConsumerWidget {
         ),
         child: SafeArea(
           child: Container(
-            height: 65.h,
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+            height: 70.h,
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 6.h),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -59,19 +59,22 @@ class MainScreen extends ConsumerWidget {
                   icon: Icons.home_rounded,
                   label: AppStrings.home,
                   isSelected: currentIndex == 0,
-                  onTap: () => ref.read(bottomNavIndexProvider.notifier).state = 0,
+                  onTap: () =>
+                      ref.read(bottomNavIndexProvider.notifier).state = 0,
                 ),
                 _NavBarItem(
                   icon: Icons.location_on_rounded,
                   label: AppStrings.map,
                   isSelected: currentIndex == 1,
-                  onTap: () => ref.read(bottomNavIndexProvider.notifier).state = 1,
+                  onTap: () =>
+                      ref.read(bottomNavIndexProvider.notifier).state = 1,
                 ),
                 _NavBarItem(
                   icon: Icons.water_drop_rounded,
                   label: AppStrings.requests,
                   isSelected: currentIndex == 2,
-                  onTap: () => ref.read(bottomNavIndexProvider.notifier).state = 2,
+                  onTap: () =>
+                      ref.read(bottomNavIndexProvider.notifier).state = 2,
                   isPrimary: true,
                 ),
                 _NavBarItem(
@@ -79,14 +82,16 @@ class MainScreen extends ConsumerWidget {
                   label: AppStrings.chat,
                   isSelected: currentIndex == 3,
                   badgeCount: unreadMessages,
-                  onTap: () => ref.read(bottomNavIndexProvider.notifier).state = 3,
+                  onTap: () =>
+                      ref.read(bottomNavIndexProvider.notifier).state = 3,
                 ),
                 _NavBarItem(
                   icon: Icons.person_rounded,
                   label: AppStrings.profile,
                   isSelected: currentIndex == 4,
                   badgeCount: unreadNotifications,
-                  onTap: () => ref.read(bottomNavIndexProvider.notifier).state = 4,
+                  onTap: () =>
+                      ref.read(bottomNavIndexProvider.notifier).state = 4,
                 ),
               ],
             ),
@@ -117,13 +122,13 @@ class _NavBarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : AppColors.textSecondary;
-    
+
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 4.h),
+          padding: EdgeInsets.symmetric(vertical: 2.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -134,46 +139,45 @@ class _NavBarItem extends StatelessWidget {
                   // Icon container with background
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.all(isPrimary ? 10.w : 8.w),
+                    padding: EdgeInsets.all(isPrimary ? 8.w : 6.w),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.primary.withOpacity(0.15)
                           : Colors.transparent,
-                      borderRadius: BorderRadius.circular(isPrimary ? 16.r : 12.r),
+                      borderRadius: BorderRadius.circular(
+                        isPrimary ? 14.r : 10.r,
+                      ),
                     ),
                     child: Icon(
                       icon,
-                      size: isPrimary ? 28.sp : 24.sp,
-                      color: isPrimary && isSelected 
-                          ? AppColors.primary 
+                      size: isPrimary ? 26.sp : 22.sp,
+                      color: isPrimary && isSelected
+                          ? AppColors.primary
                           : color,
                     ),
                   ),
                   // Badge
                   if (badgeCount != null && badgeCount! > 0)
                     Positioned(
-                      right: -4,
-                      top: -4,
+                      right: -2,
+                      top: -2,
                       child: Container(
-                        padding: EdgeInsets.all(4.w),
+                        padding: EdgeInsets.all(3.w),
                         decoration: BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
+                          border: Border.all(color: Colors.white, width: 1.5),
                         ),
                         constraints: BoxConstraints(
-                          minWidth: 18.w,
-                          minHeight: 18.w,
+                          minWidth: 16.w,
+                          minHeight: 16.w,
                         ),
                         child: Center(
                           child: Text(
                             badgeCount! > 99 ? '99+' : badgeCount.toString(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 9.sp,
+                              fontSize: 8.sp,
                               fontWeight: FontWeight.bold,
                               height: 1,
                             ),
@@ -183,12 +187,12 @@ class _NavBarItem extends StatelessWidget {
                     ),
                 ],
               ),
-              SizedBox(height: 4.h),
+              SizedBox(height: 3.h),
               // Label
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 style: TextStyle(
-                  fontSize: 10.sp,
+                  fontSize: 9.5.sp,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: color,
                   height: 1,

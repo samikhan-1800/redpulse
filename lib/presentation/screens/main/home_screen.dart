@@ -65,13 +65,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // App bar
                   SliverAppBar(
                     floating: true,
+                    backgroundColor: Colors.transparent,
+                    flexibleSpace: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.appBarBackground,
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(20.r),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                    ),
+                    leading: Padding(
+                      padding: EdgeInsets.all(8.w),
+                      child: GestureDetector(
+                        onTap: () {
+                          ref.read(bottomNavIndexProvider.notifier).state = 4;
+                        },
+                        child: UserAvatar(
+                          imageUrl: user.profileImageUrl,
+                          name: user.name,
+                          size: 40,
+                        ),
+                      ),
+                    ),
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '${AppStrings.hello}, ${user.name.split(' ').first}! 👋',
                           style: TextStyle(
-                            fontSize: 20.sp,
+                            fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -79,7 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Text(
                             user.city!,
                             style: TextStyle(
-                              fontSize: 12.sp,
+                              fontSize: 11.sp,
                               color: AppColors.textSecondary,
                             ),
                           ),

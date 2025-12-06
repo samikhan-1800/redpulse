@@ -22,12 +22,16 @@ class AppColors {
   static const Color accentDark = Color(0xFFB0003A);
 
   // Background Colors
-  static const Color background = Color(0xFFFAFAFA);
+  static const Color background = Color(0xFFF5F5F5);
   static const Color backgroundDark = Color(0xFF121212);
-  static const Color surface = Color(0xFFFFFFFF);
+  static const Color surface = Color(0xFFFFFBF5);
   static const Color surfaceDark = Color(0xFF1E1E1E);
   static const Color cardBackground = Color(0xFFFFFFFF);
   static const Color cardBackgroundDark = Color(0xFF2C2C2C);
+
+  // AppBar and Navigation Colors
+  static const Color appBarBackground = Color(0xFFFFFFFF);
+  static const Color navBarBackground = Color(0xFFFFFFFF);
 
   // Text Colors
   static const Color textPrimary = Color(0xFF212121);

@@ -251,8 +251,8 @@ class AppTheme {
   static AppBarTheme get _appBarTheme {
     return AppBarTheme(
       elevation: 0,
-      centerTitle: true,
-      backgroundColor: AppColors.surface,
+      centerTitle: false,
+      backgroundColor: Colors.transparent,
       foregroundColor: AppColors.textPrimary,
       systemOverlayStyle: SystemUiOverlayStyle.dark,
       iconTheme: const IconThemeData(color: AppColors.textPrimary),
