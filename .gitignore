@@ -52,6 +52,9 @@ ios/Runner/GoogleService-Info.plist
 .env.local
 .env.*.local
 
+# Security documentation with actual keys
+SECURITY_SETUP.md
+
 # Android sensitive files
 android/local.properties
 android/key.properties
