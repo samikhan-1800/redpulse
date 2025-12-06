@@ -76,66 +76,92 @@ class _ChatListItem extends StatelessWidget {
     final otherImage = chat.getOtherParticipantImage(userId);
     final unreadCount = chat.getUnreadCount(userId);
 
-    return ListTile(
-      onTap: onTap,
-      leading: UserAvatar(imageUrl: otherImage, name: otherName, size: 50),
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(
-              otherName,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.w600,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (chat.lastMessageTime != null)
-            Text(
-              chat.lastMessageTime!.timeAgo,
-              style: TextStyle(fontSize: 12.sp, color: AppColors.textHint),
-            ),
-        ],
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+      elevation: unreadCount > 0 ? 2 : 0.5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: BorderSide(
+          color: unreadCount > 0
+              ? AppColors.primary.withOpacity(0.3)
+              : Colors.grey.withOpacity(0.2),
+          width: unreadCount > 0 ? 1.5 : 0.5,
+        ),
       ),
-      subtitle: Row(
-        children: [
-          Expanded(
-            child: Text(
-              chat.lastMessage ?? 'No messages yet',
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: unreadCount > 0
-                    ? AppColors.textPrimary
-                    : AppColors.textSecondary,
-                fontWeight: unreadCount > 0
-                    ? FontWeight.w500
-                    : FontWeight.normal,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (unreadCount > 0)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
+      color: unreadCount > 0
+          ? AppColors.primary.withOpacity(0.05)
+          : Colors.white,
+      child: ListTile(
+        onTap: onTap,
+        leading: UserAvatar(imageUrl: otherImage, name: otherName, size: 50),
+        title: Row(
+          children: [
+            Expanded(
               child: Text(
-                unreadCount > 99 ? '99+' : unreadCount.toString(),
+                otherName,
                 style: TextStyle(
-                  fontSize: 11.sp,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 16.sp,
+                  fontWeight: unreadCount > 0
+                      ? FontWeight.bold
+                      : FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (chat.lastMessageTime != null)
+              Text(
+                chat.lastMessageTime!.timeAgo,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: unreadCount > 0
+                      ? AppColors.primary
+                      : AppColors.textHint,
+                  fontWeight: unreadCount > 0
+                      ? FontWeight.w600
+                      : FontWeight.normal,
                 ),
               ),
+          ],
+        ),
+        subtitle: Row(
+          children: [
+            Expanded(
+              child: Text(
+                chat.lastMessage ?? 'No messages yet',
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: unreadCount > 0
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                  fontWeight: unreadCount > 0
+                      ? FontWeight.w500
+                      : FontWeight.normal,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-        ],
+            if (unreadCount > 0)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Text(
+                  unreadCount > 99 ? '99+' : unreadCount.toString(),
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
     );
   }
 }

@@ -65,6 +65,11 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
 
       final requestId = await _databaseService.createRequest(request);
 
+      print('🆘 Request created with ID: $requestId');
+      print('🆘 Request type: $requestType');
+      print('🆘 Location: ($latitude, $longitude)');
+      print('🆘 Blood group: $bloodGroup');
+
       // Find and notify nearby donors
       final nearbyDonors = await _databaseService.getNearbyDonors(
         latitude,
@@ -73,7 +78,12 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
         requestType == 'sos' ? 25.0 : 10.0,
       );
 
+      print('🆘 Found ${nearbyDonors.length} nearby donors');
       if (nearbyDonors.isNotEmpty) {
+        print(
+          '🆘 Notifying ${nearbyDonors.where((d) => d.id != _userId).length} donors (excluding self)',
+        );
+
         await _notificationService.notifyNearbyDonors(
           requestId: requestId,
           bloodGroup: bloodGroup,
@@ -84,6 +94,10 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
               .map((d) => d.id)
               .toList(),
         );
+
+        print('✅ Notifications sent successfully');
+      } else {
+        print('❌ No nearby donors found to notify');
       }
 
       state = const AsyncValue.data(null);
