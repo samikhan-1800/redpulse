@@ -121,6 +121,6 @@ class DonationStats {
     required this.donationsByMonth,
   });
 
-  /// Estimated lives saved (approximately 3 lives per donation)
-  int get livesSaved => totalDonations * 3;
+  /// Lives saved count (1 donation = 1 life saved)
+  int get livesSaved => totalDonations;
 }
