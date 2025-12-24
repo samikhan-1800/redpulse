@@ -98,6 +98,16 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
   Future<String?> acceptRequest(BloodRequest request) async {
     if (_userId == null || _currentUser == null) return null;
 
+    // Check if already accepted by this user
+    if (request.acceptedByIds.contains(_userId)) {
+      throw Exception('You have already accepted this request');
+    }
+
+    // Check if all units are already fulfilled
+    if (request.isFulfilled) {
+      throw Exception('This request has already been fulfilled');
+    }
+
     state = const AsyncValue.loading();
     try {
       final now = DateTime.now();
@@ -122,20 +132,30 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
 
       final chatId = await _databaseService.createChat(chat);
 
+      // Add this user to acceptedByIds and increment unitsAccepted
+      final updatedAcceptedByIds = [...request.acceptedByIds, _userId];
+      final updatedUnitsAccepted = request.unitsAccepted + 1;
+
       // Update request status
       await _databaseService.updateRequest(request.id, {
-        'status': 'accepted',
+        'status': updatedUnitsAccepted >= request.unitsRequired
+            ? 'fulfilled'
+            : 'accepted',
         'acceptedById': _userId,
         'acceptedByName': _currentUser.name,
         'acceptedAt': Timestamp.fromDate(now),
         'chatId': chatId,
+        'acceptedByIds': updatedAcceptedByIds,
+        'unitsAccepted': updatedUnitsAccepted,
       });
 
       // Notify requester
       await _notificationService.sendNotificationToUser(
         userId: request.requesterId,
         title: '🎉 Request Accepted!',
-        body: '${_currentUser.name} has accepted your blood request',
+        body: updatedUnitsAccepted >= request.unitsRequired
+            ? '${_currentUser.name} accepted - All ${request.unitsRequired} units fulfilled!'
+            : '${_currentUser.name} accepted - ${updatedUnitsAccepted} of ${request.unitsRequired} units',
         data: {
           'type': 'request_accepted',
           'requestId': request.id,
@@ -238,6 +258,15 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
                 'Thank you for saving a life! Your donation has been recorded.',
             data: {'type': 'donation_completed', 'requestId': requestId},
           );
+
+          // Delete the chat between donor and requester
+          if (request.chatId != null) {
+            try {
+              await _databaseService.deleteChat(request.chatId!);
+            } catch (e) {
+              print('Failed to delete chat: $e');
+            }
+          }
         }
       }
 

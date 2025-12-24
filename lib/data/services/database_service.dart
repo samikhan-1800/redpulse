@@ -51,6 +51,7 @@ abstract class DatabaseServiceInterface {
     String message,
     String senderId,
   );
+  Future<void> deleteChat(String chatId);
 
   // Message operations
   Future<String> sendMessage(Message message);
