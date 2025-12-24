@@ -334,8 +334,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       // Cancel existing timer
       _updateDebounceTimer?.cancel();
 
-      // Debounce updates to reduce frequency
-      _updateDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      // Debounce updates to reduce frequency and improve performance
+      _updateDebounceTimer = Timer(const Duration(milliseconds: 800), () {
         if (mounted) {
           _updateMarkers(requests, donors, mapFilter);
         }
@@ -546,7 +546,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        '${donor.totalDonations} donations',
+                        '${donor.totalDonations} ${donor.totalDonations == 1 ? 'donation' : 'donations'}',
                         style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                       ),
                     ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
@@ -170,25 +171,27 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
 
   Future<void> _callRequester() async {
     try {
-      final uri = Uri.parse('tel:${widget.request.requesterPhone}');
-
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Cannot make phone calls on this device'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-    } catch (e) {
+      final phoneNumber = widget.request.requesterPhone;
+      final uri = Uri.parse('tel:$phoneNumber');
+      
+      // Launch phone dialer directly - let the system handle availability
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on PlatformException catch (e) {
+      // Handle specific platform errors
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text('Unable to make phone call: ${e.message ?? "Unknown error"}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      // Handle other errors
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error initiating call: $e'),
             backgroundColor: AppColors.error,
           ),
         );

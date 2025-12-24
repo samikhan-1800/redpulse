@@ -1,6 +1,7 @@
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/biometric_auth_result.dart';
 
 /// Service for handling biometric authentication
 class BiometricService {
@@ -25,24 +26,31 @@ class BiometricService {
     }
   }
 
-  /// Authenticate using biometrics with timeout
-  Future<bool> authenticate({
+  /// Authenticate using biometrics with detailed error handling
+  Future<BiometricAuthResult> authenticate({
     String localizedReason = 'Please authenticate to continue',
     bool useErrorDialogs = true,
     bool stickyAuth = true,
   }) async {
     try {
+      // Check if biometric hardware is available
       final isAvailable = await isBiometricAvailable();
-      if (!isAvailable) return false;
+      if (!isAvailable) {
+        return BiometricAuthResult.failure(
+          errorType: BiometricErrorType.notAvailable,
+        );
+      }
 
       // Check if biometrics are enrolled
       final availableBiometrics = await getAvailableBiometrics();
       if (availableBiometrics.isEmpty) {
-        return false;
+        return BiometricAuthResult.failure(
+          errorType: BiometricErrorType.notEnrolled,
+        );
       }
 
-      // Add timeout to prevent hanging
-      return await _localAuth
+      // Attempt authentication with timeout
+      final authenticated = await _localAuth
           .authenticate(
             localizedReason: localizedReason,
             options: AuthenticationOptions(
@@ -51,15 +59,67 @@ class BiometricService {
               biometricOnly: false,
             ),
           )
-          .timeout(const Duration(seconds: 30), onTimeout: () => false);
-    } on PlatformException catch (e) {
-      // Handle specific error codes
-      if (e.code == 'NotEnrolled' || e.code == 'NotAvailable') {
-        return false;
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => false,
+          );
+
+      if (authenticated) {
+        return BiometricAuthResult.success();
+      } else {
+        // User likely cancelled
+        return BiometricAuthResult.failure(
+          errorType: BiometricErrorType.userCancelled,
+        );
       }
-      return false;
+    } on PlatformException catch (e) {
+      // Handle specific platform error codes
+      print('Biometric authentication error: ${e.code} - ${e.message}');
+
+      switch (e.code) {
+        case 'NotEnrolled':
+        case 'PasscodeNotSet':
+          return BiometricAuthResult.failure(
+            errorType: BiometricErrorType.notEnrolled,
+            errorMessage: e.message,
+          );
+
+        case 'NotAvailable':
+          return BiometricAuthResult.failure(
+            errorType: BiometricErrorType.notAvailable,
+            errorMessage: e.message,
+          );
+
+        case 'LockedOut':
+          return BiometricAuthResult.failure(
+            errorType: BiometricErrorType.lockedOut,
+            errorMessage: e.message,
+          );
+
+        case 'PermanentlyLockedOut':
+          return BiometricAuthResult.failure(
+            errorType: BiometricErrorType.permanentlyLockedOut,
+            errorMessage: e.message,
+          );
+
+        case 'Timeout':
+          return BiometricAuthResult.failure(
+            errorType: BiometricErrorType.timeout,
+            errorMessage: e.message,
+          );
+
+        default:
+          return BiometricAuthResult.failure(
+            errorType: BiometricErrorType.other,
+            errorMessage: e.message ?? 'Authentication failed',
+          );
+      }
     } catch (e) {
-      return false;
+      print('Unexpected biometric error: $e');
+      return BiometricAuthResult.failure(
+        errorType: BiometricErrorType.other,
+        errorMessage: e.toString(),
+      );
     }
   }
 

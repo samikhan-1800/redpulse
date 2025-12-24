@@ -120,9 +120,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       body: IndexedStack(index: currentIndex, children: screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppColors.primary,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.surfaceDark
+              : AppColors.primary,
           border: Border(
-            top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+            top: BorderSide(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.white.withOpacity(0.1),
+              width: 1,
+            ),
           ),
         ),
         child: SafeArea(
@@ -197,7 +204,12 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? Colors.white : Colors.white.withOpacity(0.6);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isSelected
+        ? (isDark ? AppColors.primary : Colors.white)
+        : (isDark
+              ? Colors.white.withOpacity(0.6)
+              : Colors.white.withOpacity(0.6));
 
     return Expanded(
       child: GestureDetector(
@@ -218,7 +230,9 @@ class _NavBarItem extends StatelessWidget {
                     padding: EdgeInsets.all(isPrimary ? 8.w : 6.w),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.white.withOpacity(0.2)
+                          ? (Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.primary.withOpacity(0.3)
+                                : Colors.white.withOpacity(0.2))
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(
                         isPrimary ? 14.r : 10.r,

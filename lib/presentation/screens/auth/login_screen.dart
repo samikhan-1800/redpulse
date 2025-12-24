@@ -49,16 +49,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final biometricService = ref.read(biometricServiceProvider);
 
     // Authenticate with biometrics
-    final authenticated = await biometricService.authenticate(
+    final result = await biometricService.authenticate(
       localizedReason: 'Authenticate to login to RedPulse',
     );
 
-    if (!authenticated) {
+    if (!result.success) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Authentication failed or cancelled'),
+          SnackBar(
+            content: Text(result.userMessage),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

@@ -161,21 +161,20 @@ class ProfileScreen extends ConsumerWidget {
                             }
 
                             if (value) {
-                              // Authenticate before enabling (without loading dialog)
-                              final authenticated = await biometricService
+                              // Authenticate before enabling
+                              final result = await biometricService
                                   .authenticate(
                                     localizedReason:
                                         'Authenticate to enable biometric login',
                                   );
 
-                              if (!authenticated) {
+                              if (!result.success) {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Authentication failed or cancelled. Please try again.',
-                                      ),
+                                    SnackBar(
+                                      content: Text(result.userMessage),
                                       backgroundColor: AppColors.error,
+                                      duration: const Duration(seconds: 4),
                                     ),
                                   );
                                 }

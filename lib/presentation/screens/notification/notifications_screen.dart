@@ -215,7 +215,9 @@ class _NotificationTile extends StatelessWidget {
           style: TextStyle(
             fontSize: 15.sp,
             fontWeight: notification.isRead ? FontWeight.w500 : FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.textPrimaryDark
+                : AppColors.textPrimary,
           ),
         ),
         subtitle: Column(
