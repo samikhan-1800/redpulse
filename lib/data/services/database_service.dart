@@ -509,6 +509,12 @@ class DatabaseService implements DatabaseServiceInterface {
     double lat2,
     double lon2,
   ) {
+    // Check if coordinates are the same (within small threshold for floating point comparison)
+    const threshold = 0.0001; // ~11 meters
+    if ((lat1 - lat2).abs() < threshold && (lon1 - lon2).abs() < threshold) {
+      return 0.0;
+    }
+
     const earthRadius = 6371.0; // Earth's radius in kilometers
 
     // Convert degrees to radians
@@ -528,7 +534,8 @@ class DatabaseService implements DatabaseServiceInterface {
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
     final distance = earthRadius * c;
 
-    return distance;
+    // Round to 2 decimal places to avoid very small distances
+    return double.parse(distance.toStringAsFixed(2));
   }
 
   double _toRadians(double degree) => degree * math.pi / 180;

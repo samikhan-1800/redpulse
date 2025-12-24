@@ -70,13 +70,24 @@ class LocationService {
     double endLatitude,
     double endLongitude,
   ) {
-    return Geolocator.distanceBetween(
-          startLatitude,
-          startLongitude,
-          endLatitude,
-          endLongitude,
-        ) /
-        1000; // Convert to kilometers
+    // Check if coordinates are the same
+    const threshold = 0.0001; // ~11 meters
+    if ((startLatitude - endLatitude).abs() < threshold &&
+        (startLongitude - endLongitude).abs() < threshold) {
+      return 0.0;
+    }
+
+    final distanceInMeters = Geolocator.distanceBetween(
+      startLatitude,
+      startLongitude,
+      endLatitude,
+      endLongitude,
+    );
+
+    final distanceInKm = distanceInMeters / 1000;
+
+    // Round to 2 decimal places
+    return double.parse(distanceInKm.toStringAsFixed(2));
   }
 
   /// Get address from coordinates (reverse geocoding)

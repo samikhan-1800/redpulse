@@ -1,42 +1,17 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/location_provider.dart';
 import '../../../data/providers/request_provider.dart';
+import '../../../data/providers/user_provider.dart';
 import '../../../data/models/blood_request_model.dart';
 import '../../../data/models/user_model.dart';
-import '../../../data/services/database_service.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dialogs.dart';
 import '../request/request_detail_screen.dart';
-
-/// Cluster item for markers
-class MapMarkerItem with ClusterItem {
-  final String id;
-  final LatLng position;
-  final String type; // 'donor', 'request', 'emergency'
-  final dynamic data; // UserModel or BloodRequest
-  final bool isEmergency;
-
-  MapMarkerItem({
-    required this.id,
-    required this.position,
-    required this.type,
-    required this.data,
-    this.isEmergency = false,
-  });
-
-  @override
-  LatLng get location => position;
-
-  @override
-  String get geohash => '';
-}
 
 /// Map filter state
 class MapFilterState {
@@ -48,7 +23,7 @@ class MapFilterState {
   const MapFilterState({
     this.showDonors = true,
     this.showRequests = true,
-    this.radius = 50.0, // Increased default radius
+    this.radius = 10.0,
     this.bloodGroupFilter,
   });
 
@@ -71,40 +46,6 @@ final mapFilterProvider = StateProvider<MapFilterState>((ref) {
   return const MapFilterState();
 });
 
-/// Provider for all available donors (not just nearby)
-final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
-  final databaseService = ref.watch(databaseServiceProvider);
-  return databaseService.firestore
-      .collection('users')
-      .where('isAvailable', isEqualTo: true)
-      .where('canDonate', isEqualTo: true)
-      .where('latitude', isNotEqualTo: null)
-      .limit(500) // Limit for performance
-      .snapshots()
-      .map(
-        (snapshot) => snapshot.docs
-            .map((doc) => UserModel.fromFirestore(doc))
-            .where((user) => user.hasLocation)
-            .toList(),
-      );
-});
-
-/// Provider for all active requests
-final allActiveRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
-  final databaseService = ref.watch(databaseServiceProvider);
-  return databaseService.firestore
-      .collection('blood_requests')
-      .where('status', isEqualTo: 'active')
-      .where('latitude', isNotEqualTo: null)
-      .limit(500) // Limit for performance
-      .snapshots()
-      .map(
-        (snapshot) => snapshot.docs
-            .map((doc) => BloodRequest.fromFirestore(doc))
-            .toList(),
-      );
-});
-
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key});
 
@@ -112,14 +53,12 @@ class MapScreen extends ConsumerStatefulWidget {
   ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends ConsumerState<MapScreen>
-    with TickerProviderStateMixin {
+class _MapScreenState extends ConsumerState<MapScreen> {
   GoogleMapController? _mapController;
-  late ClusterManager _clusterManager;
-  Set<Marker> _markers = {};
-  Timer? _blinkTimer;
-  bool _showEmergencyMarkers = true;
-  late AnimationController _pulseController;
+  final Set<Marker> _markers = {};
+
+  // Cache to prevent unnecessary marker updates
+  String _lastMarkersHash = '';
 
   // Dark mode map style
   static const String _darkMapStyle = '''
@@ -162,45 +101,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
-
-    _clusterManager = ClusterManager<MapMarkerItem>(
-      [],
-      _updateMarkers,
-      markerBuilder: _markerBuilder,
-      levels: [1, 4.25, 6.75, 8.25, 11.5, 14.5, 16.0, 16.5, 20.0],
-      extraPercent: 0.2,
-      stopClusteringZoom: 17.0,
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(locationNotifierProvider.notifier).getCurrentLocation();
     });
-
-    // Start blinking timer for emergency markers
-    _blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (mounted) {
-        setState(() {
-          _showEmergencyMarkers = !_showEmergencyMarkers;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _blinkTimer?.cancel();
-    _pulseController.dispose();
-    _clusterManager.dispose();
-    super.dispose();
   }
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
-    _clusterManager.setMapId(controller.mapId);
     _setMapStyle();
     _centerOnUserLocation();
   }
@@ -227,125 +134,50 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
-  Future<Marker> _markerBuilder(Cluster<MapMarkerItem> cluster) async {
-    if (cluster.isMultiple) {
-      // Cluster marker
-      return Marker(
-        markerId: MarkerId(cluster.getId()),
-        position: cluster.location,
-        icon: await _getClusterBitmap(
-          cluster.count,
-          cluster.items.any((item) => item.isEmergency),
-        ),
-        onTap: () {
-          // Zoom in to cluster
-          _mapController?.animateCamera(
-            CameraUpdate.newLatLngZoom(cluster.location, 15),
-          );
-        },
-      );
-    }
-
-    // Single marker
-    final item = cluster.items.first;
-    return _createSingleMarker(item);
-  }
-
-  Marker _createSingleMarker(MapMarkerItem item) {
-    if (item.type == 'request') {
-      final request = item.data as BloodRequest;
-      final isEmergency = request.isSOS || request.isEmergency;
-
-      // For emergency, use blinking logic
-      if (isEmergency && !_showEmergencyMarkers) {
-        return Marker(
-          markerId: MarkerId(item.id),
-          position: item.position,
-          alpha: 0.3, // Faded for blink effect
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        );
-      }
-
-      return Marker(
-        markerId: MarkerId(item.id),
-        position: item.position,
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-          isEmergency ? BitmapDescriptor.hueRed : BitmapDescriptor.hueOrange,
-        ),
-        infoWindow: InfoWindow(
-          title:
-              '🩸 ${request.bloodGroup} Blood ${isEmergency ? "EMERGENCY" : "Needed"}',
-          snippet:
-              '${request.unitsRequired} units • ${request.patientName}\n${request.hospitalName}\nTap to view details',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => RequestDetailScreen(request: request),
-              ),
-            );
-          },
-        ),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => RequestDetailScreen(request: request),
-            ),
-          );
-        },
-      );
-    } else {
-      // Donor marker
-      final donor = item.data as UserModel;
-      return Marker(
-        markerId: MarkerId(item.id),
-        position: item.position,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: InfoWindow(
-          title: '🩸 ${donor.name} (${donor.bloodGroup})',
-          snippet:
-              'Available Donor • ${donor.totalDonations} donations\nTap marker for options',
-        ),
-        onTap: () {
-          _showDonorOptions(donor);
-        },
-      );
-    }
-  }
-
-  Future<BitmapDescriptor> _getClusterBitmap(
-    int size,
-    bool hasEmergency,
-  ) async {
-    // For now, use default markers with appropriate color
-    // In production, you'd want to create custom cluster icons with numbers
-    return BitmapDescriptor.defaultMarkerWithHue(
-      hasEmergency ? BitmapDescriptor.hueRed : BitmapDescriptor.hueViolet,
-    );
-  }
-
-  void _updateMarkers(Set<Marker> markers) {
-    setState(() {
-      _markers = markers;
-    });
-  }
-
-  void _updateClusterItems(
+  void _updateMarkers(
     List<BloodRequest> requests,
     List<UserModel> donors,
     MapFilterState filter,
   ) {
-    final items = <MapMarkerItem>[];
+    // Create hash to detect changes
+    final newHash =
+        '${requests.length}_${donors.length}_${filter.showDonors}_${filter.showRequests}';
+    if (_lastMarkersHash == newHash) return; // No changes, skip update
+    _lastMarkersHash = newHash;
+
+    _markers.clear();
 
     // Add request markers
     if (filter.showRequests) {
       for (final request in requests) {
-        items.add(
-          MapMarkerItem(
-            id: 'request_${request.id}',
+        _markers.add(
+          Marker(
+            markerId: MarkerId('request_${request.id}'),
             position: LatLng(request.latitude, request.longitude),
-            type: 'request',
-            data: request,
-            isEmergency: request.isSOS || request.isEmergency,
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              request.isSOS || request.isEmergency
+                  ? BitmapDescriptor.hueRed
+                  : BitmapDescriptor.hueOrange,
+            ),
+            infoWindow: InfoWindow(
+              title: '🩸 ${request.bloodGroup} Blood Needed',
+              snippet:
+                  '${request.patientName} at ${request.hospitalName}\nTap to view details',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => RequestDetailScreen(request: request),
+                  ),
+                );
+              },
+            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RequestDetailScreen(request: request),
+                ),
+              );
+            },
           ),
         );
       }
@@ -355,37 +187,69 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (filter.showDonors) {
       for (final donor in donors) {
         if (donor.hasLocation) {
-          items.add(
-            MapMarkerItem(
-              id: 'donor_${donor.id}',
+          _markers.add(
+            Marker(
+              markerId: MarkerId('donor_${donor.id}'),
               position: LatLng(donor.latitude!, donor.longitude!),
-              type: 'donor',
-              data: donor,
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueGreen,
+              ),
+              infoWindow: InfoWindow(
+                title: '🩸 ${donor.name} (${donor.bloodGroup})',
+                snippet:
+                    'Available Donor • ${donor.totalDonations} donations\nTap marker for options',
+              ),
+              onTap: () {
+                _showDonorOptions(donor);
+              },
             ),
           );
         }
       }
     }
 
-    _clusterManager.setItems(items);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final locationState = ref.watch(locationNotifierProvider);
     final mapFilter = ref.watch(mapFilterProvider);
+    final currentUser = ref.watch(currentUserProfileProvider).value;
 
-    // Watch all requests and donors
-    final requestsAsync = ref.watch(allActiveRequestsProvider);
-    final donorsAsync = ref.watch(allAvailableDonorsProvider);
+    // Watch nearby requests
+    final requestsAsync = locationState.position != null
+        ? ref.watch(
+            nearbyRequestsProvider(
+              NearbyRequestsParams(
+                latitude: locationState.position!.latitude,
+                longitude: locationState.position!.longitude,
+                radiusKm: mapFilter.radius,
+              ),
+            ),
+          )
+        : null;
 
-    // Update cluster items when data changes
-    if (requestsAsync.hasValue && donorsAsync.hasValue) {
-      final requests = requestsAsync.value ?? [];
-      final donors = donorsAsync.value ?? [];
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _updateClusterItems(requests, donors, mapFilter);
-      });
+    // Watch nearby donors
+    final donorsAsync = locationState.position != null && currentUser != null
+        ? ref.watch(
+            nearbyDonorsProvider(
+              NearbyDonorsParams(
+                latitude: locationState.position!.latitude,
+                longitude: locationState.position!.longitude,
+                bloodGroup:
+                    mapFilter.bloodGroupFilter ?? currentUser.bloodGroup,
+                radiusKm: mapFilter.radius,
+              ),
+            ),
+          )
+        : null;
+
+    // Update markers when data changes
+    if (requestsAsync != null && donorsAsync != null) {
+      final requests = requestsAsync.valueOrNull ?? [];
+      final donors = donorsAsync.valueOrNull ?? [];
+      _updateMarkers(requests, donors, mapFilter);
     }
 
     return Scaffold(
@@ -431,20 +295,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
                   mapToolbarEnabled: false,
-                  onCameraMove: _clusterManager.onCameraMove,
-                  onCameraIdle: _clusterManager.updateMap,
                 ),
                 // Legend
                 Positioned(top: 16.h, left: 16.w, child: _buildLegend()),
-                // Stats card
-                Positioned(
-                  top: 16.h,
-                  right: 16.w,
-                  child: _buildStatsCard(
-                    requestsAsync.value?.length ?? 0,
-                    donorsAsync.value?.length ?? 0,
-                  ),
-                ),
                 // Center on location button
                 Positioned(
                   bottom: 100.h,
@@ -460,42 +313,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
-  Widget _buildStatsCard(int requestCount, int donorCount) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(12.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Active',
-              style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 4.h),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.bloodtype, size: 12.sp, color: Colors.red),
-                SizedBox(width: 4.w),
-                Text('$requestCount', style: TextStyle(fontSize: 10.sp)),
-              ],
-            ),
-            SizedBox(height: 2.h),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.person, size: 12.sp, color: Colors.green),
-                SizedBox(width: 4.w),
-                Text('$donorCount', style: TextStyle(fontSize: 10.sp)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildLegend() {
     return Card(
       child: Padding(
@@ -504,11 +321,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _legendItem(Colors.red, 'Emergency'),
+            _legendItem(Colors.red, 'Emergency Request'),
             SizedBox(height: 4.h),
-            _legendItem(Colors.orange, 'Request'),
+            _legendItem(Colors.orange, 'Normal Request'),
             SizedBox(height: 4.h),
-            _legendItem(Colors.green, 'Donor'),
+            _legendItem(Colors.green, 'Available Donor'),
           ],
         ),
       ),
@@ -598,8 +415,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
             SizedBox(height: 20.h),
             if (donor.phone.isNotEmpty) ...[
               ListTile(
-                leading: const Icon(Icons.phone, color: Colors.green),
-                title: const Text('Call Donor'),
+                leading: Icon(Icons.phone, color: Colors.green),
+                title: Text('Call Donor'),
                 subtitle: Text(donor.phone),
                 onTap: () {
                   Navigator.pop(context);
@@ -608,8 +425,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
               ),
             ],
             ListTile(
-              leading: const Icon(Icons.chat, color: Colors.blue),
-              title: const Text('Send Message'),
+              leading: Icon(Icons.chat, color: Colors.blue),
+              title: Text('Send Message'),
               onTap: () {
                 Navigator.pop(context);
                 // TODO: Navigate to chat
@@ -651,6 +468,31 @@ class _MapFilterSheet extends ConsumerWidget {
               showRequests: value,
             );
           },
+        ),
+        const Divider(),
+        // Radius slider
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${AppStrings.searchRadius}: ${filter.radius.toInt()} km',
+                style: TextStyle(fontSize: 14.sp),
+              ),
+              Slider(
+                value: filter.radius,
+                min: 1,
+                max: 50,
+                divisions: 49,
+                onChanged: (value) {
+                  ref.read(mapFilterProvider.notifier).state = filter.copyWith(
+                    radius: value,
+                  );
+                },
+              ),
+            ],
+          ),
         ),
         SizedBox(height: 16.h),
       ],
