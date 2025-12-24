@@ -21,11 +21,13 @@ class BloodRequest {
   final DateTime requiredBy;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String? acceptedById;
-  final String? acceptedByName;
+  final String? acceptedById; // Deprecated - kept for backward compatibility
+  final String? acceptedByName; // Deprecated - kept for backward compatibility
   final DateTime? acceptedAt;
   final DateTime? completedAt;
   final String? chatId;
+  final List<String> acceptedByIds; // List of donor IDs who accepted
+  final int unitsAccepted; // Number of units accepted so far
 
   BloodRequest({
     required this.id,
@@ -52,6 +54,8 @@ class BloodRequest {
     this.acceptedAt,
     this.completedAt,
     this.chatId,
+    this.acceptedByIds = const [],
+    this.unitsAccepted = 0,
   });
 
   /// Create from Firestore document
@@ -86,6 +90,10 @@ class BloodRequest {
           ? (data['completedAt'] as Timestamp).toDate()
           : null,
       chatId: data['chatId'],
+      acceptedByIds: data['acceptedByIds'] != null
+          ? List<String>.from(data['acceptedByIds'] as List)
+          : [],
+      unitsAccepted: data['unitsAccepted'] ?? 0,
     );
   }
 
@@ -117,6 +125,8 @@ class BloodRequest {
           ? Timestamp.fromDate(completedAt!)
           : null,
       'chatId': chatId,
+      'acceptedByIds': acceptedByIds,
+      'unitsAccepted': unitsAccepted,
     };
   }
 
@@ -146,6 +156,8 @@ class BloodRequest {
     DateTime? acceptedAt,
     DateTime? completedAt,
     String? chatId,
+    List<String>? acceptedByIds,
+    int? unitsAccepted,
   }) {
     return BloodRequest(
       id: id ?? this.id,
@@ -172,7 +184,19 @@ class BloodRequest {
       acceptedAt: acceptedAt ?? this.acceptedAt,
       completedAt: completedAt ?? this.completedAt,
       chatId: chatId ?? this.chatId,
+      acceptedByIds: acceptedByIds ?? this.acceptedByIds,
+      unitsAccepted: unitsAccepted ?? this.unitsAccepted,
     );
+  }
+
+  /// Check if all units are fulfilled
+  bool get isFulfilled {
+    return unitsAccepted >= unitsRequired;
+  }
+
+  /// Get acceptance progress text (e.g., "2 of 5")
+  String get acceptanceProgress {
+    return '$unitsAccepted of $unitsRequired';
   }
 
   /// Check if request is expired
@@ -182,7 +206,7 @@ class BloodRequest {
 
   /// Check if request is active
   bool get isActive {
-    return status == 'pending' || status == 'accepted';
+    return (status == 'pending' || status == 'accepted') && !isFulfilled;
   }
 
   /// Check if request is emergency

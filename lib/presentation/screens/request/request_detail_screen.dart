@@ -14,6 +14,7 @@ import '../../widgets/cards.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dialogs.dart';
 import '../chat/chat_screen.dart';
+import '../main/main_screen.dart';
 
 class RequestDetailScreen extends ConsumerStatefulWidget {
   final BloodRequest request;
@@ -34,6 +35,61 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
   bool _isAccepting = false;
 
   Future<void> _acceptRequest() async {
+    // Get current user profile
+    final currentUser = ref.read(currentUserProfileProvider).value;
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to load your profile. Please try again.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Check if user is available for donation
+    if (!currentUser.isAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'You are currently marked as unavailable. Please enable your availability in your profile to accept donation requests.',
+          ),
+          backgroundColor: AppColors.error,
+          duration: Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Go to Profile',
+            textColor: Colors.white,
+            onPressed: () {
+              // Navigate to profile screen
+              ref.read(bottomNavIndexProvider.notifier).state = 4;
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Check if user is eligible to donate (not donated recently)
+    if (!currentUser.canDonate) {
+      final nextDate = currentUser.nextEligibleDate;
+      final daysRemaining = nextDate != null
+          ? nextDate.difference(DateTime.now()).inDays
+          : 0;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'You recently donated blood and must wait until ${nextDate?.formattedDate ?? "your next eligible date"} (${daysRemaining} days remaining) before donating again.',
+          ),
+          backgroundColor: AppColors.error,
+          duration: Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+
     final confirmed = await ConfirmationDialog.show(
       context,
       title: AppStrings.acceptRequest,

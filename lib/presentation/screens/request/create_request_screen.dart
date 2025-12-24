@@ -66,6 +66,28 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   Future<void> _createRequest() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validate units (max 10)
+    final units = int.tryParse(_unitsController.text) ?? 0;
+    if (units < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter at least 1 unit'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    if (units > 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Maximum 10 units allowed per request'),
+          backgroundColor: AppColors.error,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     final locationState = ref.read(locationNotifierProvider);
     if (_useCurrentLocation && locationState.position == null) {
       ScaffoldMessenger.of(context).showSnackBar(

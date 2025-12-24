@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/providers/chat_provider.dart';
 import '../../widgets/common_widgets.dart';
+import '../../widgets/notification_banner.dart';
 import 'home_screen.dart';
 import 'map_screen.dart';
 import 'requests_screen.dart';
@@ -28,6 +30,75 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     // Reset to home screen when MainScreen is created
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(bottomNavIndexProvider.notifier).state = 0;
+      _setupNotificationListeners();
+    });
+  }
+
+  void _setupNotificationListeners() {
+    // Listen to foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (!mounted) return;
+
+      final notification = message.notification;
+      final data = message.data;
+
+      if (notification != null) {
+        final type = data['type'] ?? '';
+
+        // Show different banner based on notification type
+        if (type == 'emergency' || type == 'sos') {
+          NotificationBanner.showEmergency(
+            context,
+            title: notification.title ?? '🚨 Emergency Request',
+            message: notification.body ?? 'Blood needed urgently!',
+            onTap: () {
+              // Navigate to requests tab
+              ref.read(bottomNavIndexProvider.notifier).state = 2;
+            },
+          );
+        } else if (type == 'message' || type == 'chat') {
+          NotificationBanner.showMessage(
+            context,
+            title: notification.title ?? '💬 New Message',
+            message: notification.body ?? 'You have a new message',
+            onTap: () {
+              // Navigate to chats tab
+              ref.read(bottomNavIndexProvider.notifier).state = 3;
+            },
+          );
+        } else if (type == 'request') {
+          NotificationBanner.show(
+            context,
+            title: notification.title ?? '🩸 Blood Request',
+            message: notification.body ?? 'Someone needs your blood type',
+            icon: Icons.water_drop_rounded,
+            backgroundColor: AppColors.primary,
+            onTap: () {
+              // Navigate to requests tab
+              ref.read(bottomNavIndexProvider.notifier).state = 2;
+            },
+          );
+        } else {
+          NotificationBanner.show(
+            context,
+            title: notification.title ?? 'Notification',
+            message: notification.body ?? 'You have a new notification',
+          );
+        }
+      }
+    });
+
+    // Listen to notification tap when app is in background
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      final data = message.data;
+      final type = data['type'] ?? '';
+
+      // Navigate based on notification type
+      if (type == 'message' || type == 'chat') {
+        ref.read(bottomNavIndexProvider.notifier).state = 3;
+      } else if (type == 'request' || type == 'emergency' || type == 'sos') {
+        ref.read(bottomNavIndexProvider.notifier).state = 2;
+      }
     });
   }
 

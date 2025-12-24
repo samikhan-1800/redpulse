@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/database_service.dart';
+import '../services/notification_service.dart';
 import '../models/chat_model.dart';
 import '../models/message_model.dart';
 import '../models/user_model.dart';
@@ -18,11 +19,16 @@ final chatMessagesProvider = StreamProvider.family<List<Message>, String>((
 /// Chat notifier for managing chat operations
 class ChatNotifier extends StateNotifier<AsyncValue<void>> {
   final DatabaseService _databaseService;
+  final NotificationService _notificationService;
   final String? _userId;
   final UserModel? _currentUser;
 
-  ChatNotifier(this._databaseService, this._userId, this._currentUser)
-    : super(const AsyncValue.data(null));
+  ChatNotifier(
+    this._databaseService,
+    this._notificationService,
+    this._userId,
+    this._currentUser,
+  ) : super(const AsyncValue.data(null));
 
   /// Start a chat for a blood request
   Future<Chat?> startChatForRequest(BloodRequest request) async {
@@ -77,6 +83,23 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
       );
 
       await _databaseService.sendMessage(message);
+
+      // Send notification to the other user
+      final chat = await _databaseService.getChat(chatId);
+      if (chat != null) {
+        final recipientId = chat.user1Id == _userId
+            ? chat.user2Id
+            : chat.user1Id;
+
+        await _notificationService.sendNotificationToUser(
+          userId: recipientId,
+          title: '💬 ${_currentUser.name}',
+          body: content.length > 100
+              ? '${content.substring(0, 100)}...'
+              : content,
+          data: {'type': 'message', 'chatId': chatId, 'senderId': _userId},
+        );
+      }
     } catch (e) {
       // Handle error silently for chat messages
     }
@@ -116,6 +139,7 @@ final chatNotifierProvider =
       final currentUser = ref.watch(currentUserProfileProvider).value;
       return ChatNotifier(
         ref.watch(databaseServiceProvider),
+        ref.watch(notificationServiceProvider),
         ref.watch(currentUserIdProvider),
         currentUser,
       );

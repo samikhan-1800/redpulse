@@ -99,6 +99,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
+    // Validate age (must be between 18 and 65)
+    final now = DateTime.now();
+    final age = now.year - _dateOfBirth!.year;
+    final hasHadBirthdayThisYear =
+        now.month > _dateOfBirth!.month ||
+        (now.month == _dateOfBirth!.month && now.day >= _dateOfBirth!.day);
+    final actualAge = hasHadBirthdayThisYear ? age : age - 1;
+
+    if (actualAge < 18) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'You must be at least 18 years old to register as a blood donor',
+          ),
+          backgroundColor: AppColors.error,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    if (actualAge > 65) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Blood donation is restricted to people under 65 years of age',
+          ),
+          backgroundColor: AppColors.error,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
     await ref
         .read(authNotifierProvider.notifier)
         .signUp(
