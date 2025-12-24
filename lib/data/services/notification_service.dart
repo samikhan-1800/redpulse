@@ -119,6 +119,16 @@ class NotificationService {
   }) async {
     final batch = _firestore.batch();
 
+    // Determine notification title based on request type
+    final title = requestType == 'sos'
+        ? '🚨 SOS: Blood Needed Urgently!'
+        : requestType == 'emergency'
+        ? '⚠️ Emergency Blood Request'
+        : '🩸 Blood Request Nearby';
+
+    final body = '$bloodGroup blood needed at $hospitalName';
+
+    // Create notification records for each donor
     for (final donorId in donorIds) {
       final notificationRef = _firestore
           .collection(AppConstants.notificationsCollection)
@@ -126,20 +136,17 @@ class NotificationService {
 
       batch.set(notificationRef, {
         'userId': donorId,
-        'title': requestType == 'sos'
-            ? '🚨 SOS: Blood Needed Urgently!'
-            : requestType == 'emergency'
-            ? '⚠️ Emergency Blood Request'
-            : '🩸 Blood Request Nearby',
-        'body': '$bloodGroup blood needed at $hospitalName',
+        'title': title,
+        'body': body,
         'data': {
-          'type': 'request',
+          'type': 'blood_request',
           'requestId': requestId,
           'bloodGroup': bloodGroup,
+          'requestType': requestType,
         },
         'isRead': false,
         'createdAt': Timestamp.now(),
-        'type': 'request',
+        'type': 'blood_request',
       });
     }
 
