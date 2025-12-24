@@ -70,13 +70,17 @@ class NotificationService {
   }
 
   /// Handle foreground messages
+  /// NOTE: Listeners are now in main_screen.dart to avoid duplicate notifications
   void onForegroundMessage(Function(RemoteMessage) callback) {
-    FirebaseMessaging.onMessage.listen(callback);
+    // Removed to prevent duplicate listeners - handled in main_screen.dart
+    // FirebaseMessaging.onMessage.listen(callback);
   }
 
   /// Handle background/terminated message tap
+  /// NOTE: Listeners are now in main_screen.dart to avoid duplicate notifications
   void onMessageOpenedApp(Function(RemoteMessage) callback) {
-    FirebaseMessaging.onMessageOpenedApp.listen(callback);
+    // Removed to prevent duplicate listeners - handled in main_screen.dart
+    // FirebaseMessaging.onMessageOpenedApp.listen(callback);
   }
 
   /// Check for initial message (app opened from terminated state)

@@ -62,11 +62,11 @@ final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
       );
 });
 
-/// Provider for all active requests
+/// Provider for all active requests (pending or accepted, not completed/cancelled)
 final allActiveRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
   return FirebaseFirestore.instance
       .collection('blood_requests')
-      .where('status', isEqualTo: 'active')
+      .where('status', whereIn: ['pending', 'accepted'])
       .where('latitude', isNotEqualTo: null)
       .limit(500) // Limit for performance
       .snapshots()

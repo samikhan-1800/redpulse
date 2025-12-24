@@ -57,5 +57,8 @@
 	<string>RedPulse needs camera access to update your profile picture.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>RedPulse needs photo library access to update your profile picture.</string>
+	<!-- Face ID / Touch ID permission -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>RedPulse uses Face ID or Touch ID for secure and convenient login to your account.</string>
 </dict>
 </plist>

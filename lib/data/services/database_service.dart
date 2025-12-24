@@ -222,7 +222,10 @@ class DatabaseService implements DatabaseServiceInterface {
     double radiusKm,
   ) {
     return _requestsCollection
-        .where('status', isEqualTo: AppConstants.statusPending)
+        .where(
+          'status',
+          whereIn: [AppConstants.statusPending, AppConstants.statusAccepted],
+        )
         .orderBy('createdAt', descending: true)
         .limit(50) // Limit to prevent too much data
         .snapshots()
@@ -230,6 +233,9 @@ class DatabaseService implements DatabaseServiceInterface {
           final requests = snapshot.docs
               .map((doc) => BloodRequest.fromFirestore(doc))
               .where((request) {
+                // Filter out fulfilled requests (all units accepted)
+                if (request.isFulfilled) return false;
+
                 // Calculate distance
                 final distance = _calculateDistance(
                   latitude,
@@ -238,7 +244,7 @@ class DatabaseService implements DatabaseServiceInterface {
                   request.longitude,
                 );
 
-                // Show all requests within radius
+                // Show all requests within radius that are not fulfilled
                 return distance <= radiusKm;
               })
               .toList();
