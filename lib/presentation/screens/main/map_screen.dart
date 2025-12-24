@@ -2,15 +2,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart'
+    hide ClusterManager, Cluster;
 import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/location_provider.dart';
 import '../../../data/providers/request_provider.dart';
+import '../../../data/providers/user_provider.dart';
 import '../../../data/models/blood_request_model.dart';
 import '../../../data/models/user_model.dart';
-import '../../../data/services/database_service.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dialogs.dart';
 import '../request/request_detail_screen.dart';
@@ -73,8 +75,7 @@ final mapFilterProvider = StateProvider<MapFilterState>((ref) {
 
 /// Provider for all available donors (not just nearby)
 final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
-  final databaseService = ref.watch(databaseServiceProvider);
-  return databaseService.firestore
+  return FirebaseFirestore.instance
       .collection('users')
       .where('isAvailable', isEqualTo: true)
       .where('canDonate', isEqualTo: true)
@@ -91,8 +92,7 @@ final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
 
 /// Provider for all active requests
 final allActiveRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
-  final databaseService = ref.watch(databaseServiceProvider);
-  return databaseService.firestore
+  return FirebaseFirestore.instance
       .collection('blood_requests')
       .where('status', isEqualTo: 'active')
       .where('latitude', isNotEqualTo: null)
@@ -194,7 +194,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void dispose() {
     _blinkTimer?.cancel();
     _pulseController.dispose();
-    _clusterManager.dispose();
     super.dispose();
   }
 
@@ -227,7 +226,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
-  Future<Marker> _markerBuilder(Cluster<MapMarkerItem> cluster) async {
+  Future<Marker> _markerBuilder(dynamic clusterData) async {
+    final cluster = clusterData as Cluster<MapMarkerItem>;
     if (cluster.isMultiple) {
       // Cluster marker
       return Marker(

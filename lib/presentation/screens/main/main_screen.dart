@@ -5,7 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/providers/chat_provider.dart';
-import '../../widgets/common_widgets.dart';
+
 import '../../widgets/notification_banner.dart';
 import 'home_screen.dart';
 import 'map_screen.dart';
