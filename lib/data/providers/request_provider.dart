@@ -113,24 +113,24 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
       final now = DateTime.now();
 
       // Create chat between donor and requester
-      final chat = Chat(
-        id: '',
-        requestId: request.id,
-        participantIds: [_userId, request.requesterId],
-        participantNames: {
-          _userId: _currentUser.name,
-          request.requesterId: request.requesterName,
-        },
-        participantImages: {
-          _userId: _currentUser.profileImageUrl,
-          request.requesterId: request.requesterImageUrl,
-        },
-        unreadCount: {_userId: 0, request.requesterId: 0},
-        createdAt: now,
-        updatedAt: now,
+      final chatId = await _databaseService.createChat(
+        Chat(
+          id: '',
+          requestId: request.id,
+          participantIds: [_userId, request.requesterId],
+          participantNames: {
+            _userId: _currentUser.name,
+            request.requesterId: request.requesterName,
+          },
+          participantImages: {
+            _userId: _currentUser.profileImageUrl,
+            request.requesterId: request.requesterImageUrl,
+          },
+          unreadCount: {_userId: 0, request.requesterId: 0},
+          createdAt: now,
+          updatedAt: now,
+        ),
       );
-
-      final chatId = await _databaseService.createChat(chat);
 
       // Add this user to acceptedByIds and increment unitsAccepted
       final updatedAcceptedByIds = [...request.acceptedByIds, _userId];

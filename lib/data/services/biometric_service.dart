@@ -25,7 +25,7 @@ class BiometricService {
     }
   }
 
-  /// Authenticate using biometrics
+  /// Authenticate using biometrics with timeout
   Future<bool> authenticate({
     String localizedReason = 'Please authenticate to continue',
     bool useErrorDialogs = true,
@@ -35,16 +35,30 @@ class BiometricService {
       final isAvailable = await isBiometricAvailable();
       if (!isAvailable) return false;
 
-      return await _localAuth.authenticate(
-        localizedReason: localizedReason,
-        options: AuthenticationOptions(
-          useErrorDialogs: useErrorDialogs,
-          stickyAuth: stickyAuth,
-          biometricOnly: false,
-        ),
-      );
+      // Check if biometrics are enrolled
+      final availableBiometrics = await getAvailableBiometrics();
+      if (availableBiometrics.isEmpty) {
+        return false;
+      }
+
+      // Add timeout to prevent hanging
+      return await _localAuth
+          .authenticate(
+            localizedReason: localizedReason,
+            options: AuthenticationOptions(
+              useErrorDialogs: useErrorDialogs,
+              stickyAuth: stickyAuth,
+              biometricOnly: false,
+            ),
+          )
+          .timeout(const Duration(seconds: 30), onTimeout: () => false);
     } on PlatformException catch (e) {
-      print('Biometric authentication error: $e');
+      // Handle specific error codes
+      if (e.code == 'NotEnrolled' || e.code == 'NotAvailable') {
+        return false;
+      }
+      return false;
+    } catch (e) {
       return false;
     }
   }

@@ -137,51 +137,102 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         value: user.useBiometric,
                         onChanged: (value) async {
-                          final biometricService = ref.read(
-                            biometricServiceProvider,
-                          );
-                          final isAvailable = await biometricService
-                              .isBiometricAvailable();
-
-                          if (!isAvailable) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Biometric authentication is not available on this device',
-                                ),
-                              ),
+                          try {
+                            final biometricService = ref.read(
+                              biometricServiceProvider,
                             );
-                            return;
-                          }
 
-                          if (value) {
-                            // Authenticate before enabling
-                            final authenticated = await biometricService
-                                .authenticate(
-                                  localizedReason:
-                                      'Authenticate to enable biometric login',
-                                );
+                            // Check availability first
+                            final isAvailable = await biometricService
+                                .isBiometricAvailable();
 
-                            if (!authenticated) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Authentication failed or cancelled',
+                            if (!isAvailable) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Biometric authentication is not available on this device',
+                                    ),
+                                    backgroundColor: AppColors.error,
                                   ),
-                                ),
-                              );
+                                );
+                              }
                               return;
                             }
-                          }
 
-                          // Update user preference
-                          await ref
-                              .read(userProfileNotifierProvider.notifier)
-                              .updateProfile(useBiometric: value);
+                            if (value) {
+                              // Authenticate before enabling (without loading dialog)
+                              final authenticated = await biometricService
+                                  .authenticate(
+                                    localizedReason:
+                                        'Authenticate to enable biometric login',
+                                  );
 
-                          if (!value) {
-                            // Clear saved credentials when disabling
-                            await biometricService.clearCredentials();
+                              if (!authenticated) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Authentication failed or cancelled. Please try again.',
+                                      ),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                }
+                                return;
+                              }
+                            }
+
+                            // Show loading for database update
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (context) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
+
+                            // Update user preference
+                            await ref
+                                .read(userProfileNotifierProvider.notifier)
+                                .updateProfile(useBiometric: value);
+
+                            if (!value) {
+                              // Clear saved credentials when disabling
+                              await biometricService.clearCredentials();
+                            }
+
+                            // Refresh user data to show updated state
+                            ref.invalidate(currentUserProfileProvider);
+
+                            if (context.mounted) {
+                              Navigator.pop(context); // Close loading
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    value
+                                        ? 'Biometric login enabled successfully'
+                                        : 'Biometric login disabled',
+                                  ),
+                                  backgroundColor: AppColors.success,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              // Try to close loading dialog if it's open
+                              Navigator.of(
+                                context,
+                              ).popUntil((route) => route.isFirst);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error: ${e.toString()}'),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
                           }
                         },
                       ),

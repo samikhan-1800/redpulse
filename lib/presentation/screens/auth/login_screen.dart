@@ -118,6 +118,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         );
       } else if (authState.hasValue) {
+        // Wait for user profile to load
+        await Future.delayed(const Duration(milliseconds: 500));
+
         // Check if user has biometric enabled and save credentials
         final user = ref.read(currentUserProfileProvider).value;
         if (user != null && user.useBiometric) {
@@ -125,9 +128,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           await biometricService.saveCredentials(email, password);
         }
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-        );
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const MainScreen()),
+          );
+        }
       }
     }
   }

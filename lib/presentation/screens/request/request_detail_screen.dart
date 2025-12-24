@@ -35,6 +35,9 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
   bool _isAccepting = false;
 
   Future<void> _acceptRequest() async {
+    // Prevent concurrent accepts
+    if (_isAccepting) return;
+
     // Get current user profile
     final currentUser = ref.read(currentUserProfileProvider).value;
 
@@ -42,6 +45,17 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Unable to load your profile. Please try again.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Check if user already accepted this request
+    if (widget.request.acceptedByIds.contains(currentUser.id)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You have already accepted this request'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -90,6 +104,17 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
       return;
     }
 
+    // Check if request is already fulfilled
+    if (widget.request.isFulfilled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This request has already been fulfilled'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     final confirmed = await ConfirmationDialog.show(
       context,
       title: AppStrings.acceptRequest,
@@ -103,31 +128,42 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
     setState(() => _isAccepting = true);
 
     try {
-      final userId = ref.read(currentUserIdProvider);
-      if (userId == null) throw Exception('User not authenticated');
-
-      final chat = await ref
-          .read(chatNotifierProvider.notifier)
-          .startChatForRequest(widget.request);
-
-      await ref
+      // Use the proper acceptRequest method from provider
+      final chatId = await ref
           .read(bloodRequestNotifierProvider.notifier)
-          .updateStatus(widget.request.id, 'accepted', acceptedById: userId);
+          .acceptRequest(widget.request);
 
-      if (mounted && chat != null) {
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => ChatScreen(chat: chat)));
+      if (mounted) {
+        setState(() => _isAccepting = false);
+
+        if (chatId != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Request accepted! Chat started with requester.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+
+          // Navigate back or to chat
+          Navigator.of(context).pop();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Request accepted but failed to create chat'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    } finally {
-      if (mounted) {
         setState(() => _isAccepting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     }
   }
@@ -135,27 +171,27 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
   Future<void> _callRequester() async {
     try {
       final uri = Uri.parse('tel:${widget.request.requesterPhone}');
-      print('📞 Attempting to call: ${widget.request.requesterPhone}');
-      print('📞 URI: $uri');
 
       if (await canLaunchUrl(uri)) {
-        print('✅ Can launch URL, launching...');
-        await launchUrl(uri);
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        print('❌ Cannot launch URL');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Cannot make phone calls on this device'),
+              backgroundColor: AppColors.error,
             ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     }
   }
@@ -204,6 +240,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
   Widget build(BuildContext context) {
     final userId = ref.watch(currentUserIdProvider);
     final isOwner = widget.isOwner || widget.request.requesterId == userId;
+    final hasAccepted = widget.request.acceptedByIds.contains(userId);
 
     return Scaffold(
       appBar: AppBar(
@@ -299,7 +336,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                           SizedBox(height: 4.h),
                           Text(
                             widget.request.unitsAccepted > 0
-                                ? '${widget.request.acceptanceProgress} units accepted'
+                                ? '${widget.request.unitsAccepted}/${widget.request.unitsRequired} units accepted'
                                 : '${widget.request.unitsRequired} units required',
                             style: TextStyle(
                               fontSize: 14.sp,
@@ -420,7 +457,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: !isOwner && widget.request.isActive
+      bottomNavigationBar: !isOwner && !hasAccepted && widget.request.isActive
           ? SafeArea(
               child: Padding(
                 padding: EdgeInsets.all(16.w),
@@ -448,6 +485,27 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                               onPressed: _acceptRequest,
                               isLoading: _isAccepting,
                             ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : hasAccepted
+          ? SafeArea(
+              child: Container(
+                padding: EdgeInsets.all(16.w),
+                color: AppColors.success.withOpacity(0.1),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle, color: AppColors.success),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'You have already accepted this request',
+                      style: TextStyle(
+                        color: AppColors.success,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),

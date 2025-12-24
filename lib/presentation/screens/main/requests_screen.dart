@@ -91,10 +91,6 @@ class _NearbyRequestsTab extends ConsumerWidget {
       );
     }
 
-    print(
-      '✅ Location available: (${locationState.position!.latitude}, ${locationState.position!.longitude})',
-    );
-
     final params = NearbyRequestsParams(
       latitude: locationState.position!.latitude,
       longitude: locationState.position!.longitude,

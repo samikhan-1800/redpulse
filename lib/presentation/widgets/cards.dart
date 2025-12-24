@@ -8,7 +8,7 @@ import '../../data/models/user_model.dart';
 import '../../data/models/donation_model.dart';
 
 /// Blood request card widget
-class RequestCard extends StatelessWidget {
+class RequestCard extends StatefulWidget {
   final BloodRequest request;
   final VoidCallback? onTap;
   final double? distance;
@@ -23,16 +23,49 @@ class RequestCard extends StatelessWidget {
   });
 
   @override
+  State<RequestCard> createState() => _RequestCardState();
+}
+
+class _RequestCardState extends State<RequestCard>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _animationController;
+  Animation<double>? _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Create blinking animation for emergency/SOS cards
+    if (widget.request.isEmergency || widget.request.isSOS) {
+      _animationController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 1000),
+      );
+      _animation = Tween<double>(begin: 0.3, end: 1.0).animate(
+        CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
+      );
+      _animationController!.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
+    final isEmergency = widget.request.isEmergency || widget.request.isSOS;
+
+    Widget cardContent = Card(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      elevation: request.isEmergency || request.isSOS ? 4 : 1,
-      shadowColor: request.isEmergency || request.isSOS
+      elevation: isEmergency ? 4 : 1,
+      shadowColor: isEmergency
           ? AppColors.emergency.withOpacity(0.3)
           : Colors.black.withOpacity(0.1),
       child: InkWell(
-        onTap: onTap,
+        onTap: widget.onTap,
         borderRadius: BorderRadius.circular(12.r),
         child: Padding(
           padding: EdgeInsets.all(16.w),
@@ -43,7 +76,10 @@ class RequestCard extends StatelessWidget {
               Row(
                 children: [
                   // Blood group badge
-                  BloodGroupBadge(bloodGroup: request.bloodGroup, size: 48),
+                  BloodGroupBadge(
+                    bloodGroup: widget.request.bloodGroup,
+                    size: 48,
+                  ),
                   SizedBox(width: 12.w),
                   // Request info
                   Expanded(
@@ -52,7 +88,8 @@ class RequestCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            if (request.isEmergency || request.isSOS)
+                            if (widget.request.isEmergency ||
+                                widget.request.isSOS)
                               Container(
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 8.w,
@@ -60,13 +97,13 @@ class RequestCard extends StatelessWidget {
                                 ),
                                 margin: EdgeInsets.only(right: 8.w),
                                 decoration: BoxDecoration(
-                                  color: request.isSOS
+                                  color: widget.request.isSOS
                                       ? AppColors.sos
                                       : AppColors.emergency,
                                   borderRadius: BorderRadius.circular(4.r),
                                 ),
                                 child: Text(
-                                  request.isSOS ? 'SOS' : 'EMERGENCY',
+                                  widget.request.isSOS ? 'SOS' : 'EMERGENCY',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 10.sp,
@@ -76,7 +113,7 @@ class RequestCard extends StatelessWidget {
                               ),
                             Expanded(
                               child: Text(
-                                request.patientName,
+                                widget.request.patientName,
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w600,
@@ -89,7 +126,7 @@ class RequestCard extends StatelessWidget {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          request.hospitalName,
+                          widget.request.hospitalName,
                           style: TextStyle(
                             fontSize: 13.sp,
                             color: AppColors.textSecondary,
@@ -101,7 +138,7 @@ class RequestCard extends StatelessWidget {
                     ),
                   ),
                   // Urgency indicator
-                  UrgencyBadge(urgency: request.urgencyLevel),
+                  UrgencyBadge(urgency: widget.request.urgencyLevel),
                 ],
               ),
               SizedBox(height: 12.h),
@@ -110,18 +147,18 @@ class RequestCard extends StatelessWidget {
                 children: [
                   _buildDetailChip(
                     Icons.water_drop,
-                    request.unitsAccepted > 0
-                        ? '${request.acceptanceProgress} Units'
-                        : '${request.unitsRequired} Units',
+                    widget.request.unitsAccepted > 0
+                        ? '${widget.request.unitsAccepted}/${widget.request.unitsRequired} Units'
+                        : '${widget.request.unitsRequired} Units',
                   ),
                   SizedBox(width: 12.w),
                   _buildDetailChip(
                     Icons.access_time,
-                    request.requiredBy.formattedDate,
+                    widget.request.requiredBy.formattedDate,
                   ),
-                  if (distance != null) ...[
+                  if (widget.distance != null) ...[
                     SizedBox(width: 12.w),
-                    _buildDetailChip(Icons.location_on, distance!.asDistance),
+                    _buildDetailChip(Icons.location_on, widget.distance!.asDistance),
                   ],
                 ],
               ),
@@ -130,9 +167,9 @@ class RequestCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  StatusBadge(status: request.status),
+                  StatusBadge(status: widget.request.status),
                   Text(
-                    request.createdAt.timeAgo,
+                    widget.request.createdAt.timeAgo,
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: AppColors.textHint,
@@ -144,7 +181,7 @@ class RequestCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    );\n\n    // Add blinking red border for emergency/SOS requests\n    if (isEmergency && _animation != null) {\n      return AnimatedBuilder(\n        animation: _animation!,\n        builder: (context, child) {\n          return Container(\n            margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),\n            decoration: BoxDecoration(\n              borderRadius: BorderRadius.circular(14.r),\n              border: Border.all(\n                color: AppColors.emergency.withOpacity(_animation!.value),\n                width: 3,\n              ),\n              boxShadow: [\n                BoxShadow(\n                  color: AppColors.emergency.withOpacity(_animation!.value * 0.5),\n                  blurRadius: 8,\n                  spreadRadius: 2,\n                ),\n              ],\n            ),\n            child: child,\n          );\n        },\n        child: cardContent,\n      );\n    }\n\n    return cardContent;
   }
 
   Widget _buildDetailChip(IconData icon, String text) {

@@ -45,30 +45,38 @@ final mapFilterProvider = StateProvider<MapFilterState>((ref) {
   return const MapFilterState();
 });
 
-/// Provider for all available donors (not just nearby)
+/// Provider for all available donors from across the system
+/// Shows all registered users who have:
+/// - isAvailable = true (marked themselves as available)
+/// - canDonate = true OR field not set (eligible to donate)
+/// - Valid location (latitude/longitude set)
+/// Limited to 100 donors for optimal performance
 final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
   return FirebaseFirestore.instance
       .collection('users')
       .where('isAvailable', isEqualTo: true)
-      .where('canDonate', isEqualTo: true)
       .where('latitude', isNotEqualTo: null)
-      .limit(500) // Limit for performance
+      .limit(100) // Reduced limit for performance
       .snapshots()
       .map(
         (snapshot) => snapshot.docs
             .map((doc) => UserModel.fromFirestore(doc))
-            .where((user) => user.hasLocation)
+            .where((user) => user.hasLocation && (user.canDonate))
             .toList(),
       );
 });
 
-/// Provider for all active requests (pending or accepted, not completed/cancelled)
+/// Provider for all active blood requests
+/// Shows requests with status 'pending' or 'accepted' (not completed/cancelled)
+/// Emergency requests will blink in red on the map
+/// Regular requests show in orange
+/// Limited to 50 requests for optimal performance
 final allActiveRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
   return FirebaseFirestore.instance
       .collection('blood_requests')
       .where('status', whereIn: ['pending', 'accepted'])
       .where('latitude', isNotEqualTo: null)
-      .limit(500) // Limit for performance
+      .limit(50) // Reduced limit for performance
       .snapshots()
       .map(
         (snapshot) => snapshot.docs
@@ -85,12 +93,17 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
   Timer? _blinkTimer;
+  Timer? _updateDebounceTimer;
   bool _showEmergencyMarkers = true;
   late AnimationController _pulseController;
+  bool _isUpdatingMarkers = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   // Dark mode map style
   static const String _darkMapStyle = '''
@@ -142,8 +155,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       ref.read(locationNotifierProvider.notifier).getCurrentLocation();
     });
 
-    // Start blinking timer for emergency markers
-    _blinkTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    // Start blinking timer for emergency markers (reduced frequency)
+    _blinkTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) {
       if (mounted) {
         setState(() {
           _showEmergencyMarkers = !_showEmergencyMarkers;
@@ -155,7 +168,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   void dispose() {
     _blinkTimer?.cancel();
+    _updateDebounceTimer?.cancel();
     _pulseController.dispose();
+    _mapController?.dispose();
     super.dispose();
   }
 
@@ -192,6 +207,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     List<UserModel> donors,
     MapFilterState filter,
   ) {
+    // Prevent concurrent updates
+    if (_isUpdatingMarkers) return;
+    _isUpdatingMarkers = true;
+
     final newMarkers = <Marker>{};
 
     // Add request markers
@@ -199,31 +218,48 @@ class _MapScreenState extends ConsumerState<MapScreen>
       for (final request in requests) {
         final isEmergency = request.isSOS || request.isEmergency;
 
-        // For emergency, use blinking logic
-        if (isEmergency && !_showEmergencyMarkers) {
+        // For emergency, use blinking logic (fade in/out effect)
+        if (isEmergency) {
           newMarkers.add(
             Marker(
               markerId: MarkerId('request_${request.id}'),
               position: LatLng(request.latitude, request.longitude),
-              alpha: 0.3,
+              alpha: _showEmergencyMarkers ? 1.0 : 0.3,
               icon: BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueRed,
               ),
+              infoWindow: InfoWindow(
+                title: '🚨 ${request.bloodGroup} Blood EMERGENCY',
+                snippet:
+                    '${request.unitsRequired} units • ${request.patientName}\n${request.hospitalName}\nTap to view details',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RequestDetailScreen(request: request),
+                    ),
+                  );
+                },
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => RequestDetailScreen(request: request),
+                  ),
+                );
+              },
             ),
           );
         } else {
+          // Non-emergency requests (orange markers)
           newMarkers.add(
             Marker(
               markerId: MarkerId('request_${request.id}'),
               position: LatLng(request.latitude, request.longitude),
               icon: BitmapDescriptor.defaultMarkerWithHue(
-                isEmergency
-                    ? BitmapDescriptor.hueRed
-                    : BitmapDescriptor.hueOrange,
+                BitmapDescriptor.hueOrange,
               ),
               infoWindow: InfoWindow(
-                title:
-                    '🩸 ${request.bloodGroup} Blood ${isEmergency ? "EMERGENCY" : "Needed"}',
+                title: '🩸 ${request.bloodGroup} Blood Needed',
                 snippet:
                     '${request.unitsRequired} units • ${request.patientName}\n${request.hospitalName}\nTap to view details',
                 onTap: () {
@@ -272,13 +308,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
-    setState(() {
-      _markers = newMarkers;
-    });
+    if (mounted) {
+      setState(() {
+        _markers = newMarkers;
+      });
+    }
+    _isUpdatingMarkers = false;
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     final locationState = ref.watch(locationNotifierProvider);
     final mapFilter = ref.watch(mapFilterProvider);
 
@@ -286,12 +326,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final requestsAsync = ref.watch(allActiveRequestsProvider);
     final donorsAsync = ref.watch(allAvailableDonorsProvider);
 
-    // Update cluster items when data changes
+    // Update markers with debouncing when data changes
     if (requestsAsync.hasValue && donorsAsync.hasValue) {
       final requests = requestsAsync.value ?? [];
       final donors = donorsAsync.value ?? [];
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _updateMarkers(requests, donors, mapFilter);
+
+      // Cancel existing timer
+      _updateDebounceTimer?.cancel();
+
+      // Debounce updates to reduce frequency
+      _updateDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _updateMarkers(requests, donors, mapFilter);
+        }
       });
     }
 
@@ -331,13 +378,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       locationState.position!.latitude,
                       locationState.position!.longitude,
                     ),
-                    zoom: 14,
+                    zoom: 13,
                   ),
                   markers: _markers,
                   myLocationEnabled: true,
                   myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
+                  zoomControlsEnabled: true,
+                  zoomGesturesEnabled: true,
+                  scrollGesturesEnabled: true,
+                  tiltGesturesEnabled: true,
+                  rotateGesturesEnabled: true,
                   mapToolbarEnabled: false,
+                  compassEnabled: true,
+                  buildingsEnabled: false,
+                  trafficEnabled: false,
                 ),
                 // Legend
                 Positioned(top: 16.h, left: 16.w, child: _buildLegend()),
