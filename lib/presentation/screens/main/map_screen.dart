@@ -2,43 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart'
-    hide ClusterManager, Cluster;
-import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/location_provider.dart';
-import '../../../data/providers/request_provider.dart';
-import '../../../data/providers/user_provider.dart';
 import '../../../data/models/blood_request_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dialogs.dart';
 import '../request/request_detail_screen.dart';
-
-/// Cluster item for markers
-class MapMarkerItem with ClusterItem {
-  final String id;
-  final LatLng position;
-  final String type; // 'donor', 'request', 'emergency'
-  final dynamic data; // UserModel or BloodRequest
-  final bool isEmergency;
-
-  MapMarkerItem({
-    required this.id,
-    required this.position,
-    required this.type,
-    required this.data,
-    this.isEmergency = false,
-  });
-
-  @override
-  LatLng get location => position;
-
-  @override
-  String get geohash => '';
-}
 
 /// Map filter state
 class MapFilterState {
@@ -50,7 +22,7 @@ class MapFilterState {
   const MapFilterState({
     this.showDonors = true,
     this.showRequests = true,
-    this.radius = 50.0, // Increased default radius
+    this.radius = 50.0,
     this.bloodGroupFilter,
   });
 
@@ -115,7 +87,6 @@ class MapScreen extends ConsumerStatefulWidget {
 class _MapScreenState extends ConsumerState<MapScreen>
     with TickerProviderStateMixin {
   GoogleMapController? _mapController;
-  late ClusterManager _clusterManager;
   Set<Marker> _markers = {};
   Timer? _blinkTimer;
   bool _showEmergencyMarkers = true;
@@ -167,15 +138,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
 
-    _clusterManager = ClusterManager<MapMarkerItem>(
-      [],
-      _updateMarkers,
-      markerBuilder: _markerBuilder,
-      levels: [1, 4.25, 6.75, 8.25, 11.5, 14.5, 16.0, 16.5, 20.0],
-      extraPercent: 0.2,
-      stopClusteringZoom: 17.0,
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(locationNotifierProvider.notifier).getCurrentLocation();
     });
@@ -199,7 +161,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
-    _clusterManager.setMapId(controller.mapId);
     _setMapStyle();
     _centerOnUserLocation();
   }
@@ -226,128 +187,63 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
-  Future<Marker> _markerBuilder(dynamic clusterData) async {
-    final cluster = clusterData as Cluster<MapMarkerItem>;
-    if (cluster.isMultiple) {
-      // Cluster marker
-      return Marker(
-        markerId: MarkerId(cluster.getId()),
-        position: cluster.location,
-        icon: await _getClusterBitmap(
-          cluster.count,
-          cluster.items.any((item) => item.isEmergency),
-        ),
-        onTap: () {
-          // Zoom in to cluster
-          _mapController?.animateCamera(
-            CameraUpdate.newLatLngZoom(cluster.location, 15),
-          );
-        },
-      );
-    }
-
-    // Single marker
-    final item = cluster.items.first;
-    return _createSingleMarker(item);
-  }
-
-  Marker _createSingleMarker(MapMarkerItem item) {
-    if (item.type == 'request') {
-      final request = item.data as BloodRequest;
-      final isEmergency = request.isSOS || request.isEmergency;
-
-      // For emergency, use blinking logic
-      if (isEmergency && !_showEmergencyMarkers) {
-        return Marker(
-          markerId: MarkerId(item.id),
-          position: item.position,
-          alpha: 0.3, // Faded for blink effect
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        );
-      }
-
-      return Marker(
-        markerId: MarkerId(item.id),
-        position: item.position,
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-          isEmergency ? BitmapDescriptor.hueRed : BitmapDescriptor.hueOrange,
-        ),
-        infoWindow: InfoWindow(
-          title:
-              '🩸 ${request.bloodGroup} Blood ${isEmergency ? "EMERGENCY" : "Needed"}',
-          snippet:
-              '${request.unitsRequired} units • ${request.patientName}\n${request.hospitalName}\nTap to view details',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => RequestDetailScreen(request: request),
-              ),
-            );
-          },
-        ),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => RequestDetailScreen(request: request),
-            ),
-          );
-        },
-      );
-    } else {
-      // Donor marker
-      final donor = item.data as UserModel;
-      return Marker(
-        markerId: MarkerId(item.id),
-        position: item.position,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: InfoWindow(
-          title: '🩸 ${donor.name} (${donor.bloodGroup})',
-          snippet:
-              'Available Donor • ${donor.totalDonations} donations\nTap marker for options',
-        ),
-        onTap: () {
-          _showDonorOptions(donor);
-        },
-      );
-    }
-  }
-
-  Future<BitmapDescriptor> _getClusterBitmap(
-    int size,
-    bool hasEmergency,
-  ) async {
-    // For now, use default markers with appropriate color
-    // In production, you'd want to create custom cluster icons with numbers
-    return BitmapDescriptor.defaultMarkerWithHue(
-      hasEmergency ? BitmapDescriptor.hueRed : BitmapDescriptor.hueViolet,
-    );
-  }
-
-  void _updateMarkers(Set<Marker> markers) {
-    setState(() {
-      _markers = markers;
-    });
-  }
-
-  void _updateClusterItems(
+  void _updateMarkers(
     List<BloodRequest> requests,
     List<UserModel> donors,
     MapFilterState filter,
   ) {
-    final items = <MapMarkerItem>[];
+    final newMarkers = <Marker>{};
 
     // Add request markers
     if (filter.showRequests) {
       for (final request in requests) {
-        items.add(
-          MapMarkerItem(
-            id: 'request_${request.id}',
-            position: LatLng(request.latitude, request.longitude),
-            type: 'request',
-            data: request,
-            isEmergency: request.isSOS || request.isEmergency,
-          ),
-        );
+        final isEmergency = request.isSOS || request.isEmergency;
+
+        // For emergency, use blinking logic
+        if (isEmergency && !_showEmergencyMarkers) {
+          newMarkers.add(
+            Marker(
+              markerId: MarkerId('request_${request.id}'),
+              position: LatLng(request.latitude, request.longitude),
+              alpha: 0.3,
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueRed,
+              ),
+            ),
+          );
+        } else {
+          newMarkers.add(
+            Marker(
+              markerId: MarkerId('request_${request.id}'),
+              position: LatLng(request.latitude, request.longitude),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                isEmergency
+                    ? BitmapDescriptor.hueRed
+                    : BitmapDescriptor.hueOrange,
+              ),
+              infoWindow: InfoWindow(
+                title:
+                    '🩸 ${request.bloodGroup} Blood ${isEmergency ? "EMERGENCY" : "Needed"}',
+                snippet:
+                    '${request.unitsRequired} units • ${request.patientName}\n${request.hospitalName}\nTap to view details',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RequestDetailScreen(request: request),
+                    ),
+                  );
+                },
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => RequestDetailScreen(request: request),
+                  ),
+                );
+              },
+            ),
+          );
+        }
       }
     }
 
@@ -355,19 +251,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (filter.showDonors) {
       for (final donor in donors) {
         if (donor.hasLocation) {
-          items.add(
-            MapMarkerItem(
-              id: 'donor_${donor.id}',
+          newMarkers.add(
+            Marker(
+              markerId: MarkerId('donor_${donor.id}'),
               position: LatLng(donor.latitude!, donor.longitude!),
-              type: 'donor',
-              data: donor,
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueGreen,
+              ),
+              infoWindow: InfoWindow(
+                title: '🩸 ${donor.name} (${donor.bloodGroup})',
+                snippet:
+                    'Available Donor • ${donor.totalDonations} donations\nTap marker for options',
+              ),
+              onTap: () {
+                _showDonorOptions(donor);
+              },
             ),
           );
         }
       }
     }
 
-    _clusterManager.setItems(items);
+    setState(() {
+      _markers = newMarkers;
+    });
   }
 
   @override
@@ -384,7 +291,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final requests = requestsAsync.value ?? [];
       final donors = donorsAsync.value ?? [];
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _updateClusterItems(requests, donors, mapFilter);
+        _updateMarkers(requests, donors, mapFilter);
       });
     }
 
@@ -431,8 +338,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
                   mapToolbarEnabled: false,
-                  onCameraMove: _clusterManager.onCameraMove,
-                  onCameraIdle: _clusterManager.updateMap,
                 ),
                 // Legend
                 Positioned(top: 16.h, left: 16.w, child: _buildLegend()),
