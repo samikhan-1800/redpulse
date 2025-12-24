@@ -5,6 +5,7 @@ import '../services/database_service.dart';
 import '../services/location_service.dart';
 import '../services/storage_service.dart';
 import '../services/notification_service.dart';
+import '../services/biometric_service.dart';
 import '../models/user_model.dart';
 
 // ============ Service Providers ============
@@ -27,6 +28,11 @@ final locationServiceProvider = Provider<LocationService>((ref) {
 /// Storage service provider
 final storageServiceProvider = Provider<StorageService>((ref) {
   return StorageService();
+});
+
+/// Biometric service provider
+final biometricServiceProvider = Provider<BiometricService>((ref) {
+  return BiometricService();
 });
 
 /// Notification service provider

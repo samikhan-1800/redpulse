@@ -107,19 +107,85 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        if (user.bio != null && user.bio!.isNotEmpty) ...[
-                          SizedBox(height: 16.h),
-                          Text(
-                            user.bio!,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: AppColors.textSecondary,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
                       ],
                     ),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // Settings Card
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        title: Text(
+                          'Biometric Login',
+                          style: TextStyle(fontSize: 14.sp),
+                        ),
+                        subtitle: Text(
+                          'Use fingerprint or face ID to login',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        secondary: Icon(
+                          Icons.fingerprint,
+                          color: AppColors.primary,
+                        ),
+                        value: user.useBiometric,
+                        onChanged: (value) async {
+                          final biometricService = ref.read(
+                            biometricServiceProvider,
+                          );
+                          final isAvailable = await biometricService
+                              .isBiometricAvailable();
+
+                          if (!isAvailable) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Biometric authentication is not available on this device',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (value) {
+                            // Authenticate before enabling
+                            final authenticated = await biometricService
+                                .authenticate(
+                                  localizedReason:
+                                      'Authenticate to enable biometric login',
+                                );
+
+                            if (!authenticated) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Authentication failed or cancelled',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                          }
+
+                          // Update user preference
+                          await ref
+                              .read(userProfileNotifierProvider.notifier)
+                              .updateProfile(useBiometric: value);
+
+                          if (!value) {
+                            // Clear saved credentials when disabling
+                            await biometricService.clearCredentials();
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 16.h),

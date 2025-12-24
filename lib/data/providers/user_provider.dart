@@ -26,6 +26,7 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
     String? address,
     String? city,
     File? profileImage,
+    bool? useBiometric,
   }) async {
     if (_userId == null) return;
 
@@ -43,6 +44,7 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
       if (bio != null) updates['bio'] = bio;
       if (address != null) updates['address'] = address;
       if (city != null) updates['city'] = city;
+      if (useBiometric != null) updates['useBiometric'] = useBiometric;
 
       // Upload profile image if provided
       if (profileImage != null) {
