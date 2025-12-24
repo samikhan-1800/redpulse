@@ -22,6 +22,7 @@ class UserModel {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String? fcmToken;
+  final bool useBiometric;
 
   UserModel({
     required this.id,
@@ -44,6 +45,7 @@ class UserModel {
     required this.createdAt,
     required this.updatedAt,
     this.fcmToken,
+    this.useBiometric = false,
   });
 
   /// Create from Firestore document
@@ -80,6 +82,7 @@ class UserModel {
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
       fcmToken: data['fcmToken'],
+      useBiometric: data['useBiometric'] ?? false,
     );
   }
 
@@ -107,6 +110,7 @@ class UserModel {
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'fcmToken': fcmToken,
+      'useBiometric': useBiometric,
     };
   }
 
@@ -132,6 +136,7 @@ class UserModel {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? fcmToken,
+    bool? useBiometric,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -154,6 +159,7 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       fcmToken: fcmToken ?? this.fcmToken,
+      useBiometric: useBiometric ?? this.useBiometric,
     );
   }
 
