@@ -298,10 +298,14 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            '${widget.request.unitsRequired} units required',
+                            widget.request.unitsAccepted > 0
+                                ? '${widget.request.acceptanceProgress} units accepted'
+                                : '${widget.request.unitsRequired} units required',
                             style: TextStyle(
                               fontSize: 14.sp,
-                              color: AppColors.textSecondary,
+                              color: widget.request.unitsAccepted > 0
+                                  ? AppColors.success
+                                  : AppColors.textSecondary,
                             ),
                           ),
                           SizedBox(height: 8.h),

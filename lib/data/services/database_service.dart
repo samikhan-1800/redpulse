@@ -360,6 +360,25 @@ class DatabaseService implements DatabaseServiceInterface {
     });
   }
 
+  @override
+  Future<void> deleteChat(String chatId) async {
+    // Delete all messages in the chat first
+    final messagesSnapshot = await _chatsCollection
+        .doc(chatId)
+        .collection(AppConstants.messagesCollection)
+        .get();
+
+    final batch = _firestore.batch();
+    for (final doc in messagesSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // Delete the chat document
+    batch.delete(_chatsCollection.doc(chatId));
+
+    await batch.commit();
+  }
+
   // ============ Message Operations ============
 
   @override

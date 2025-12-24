@@ -110,7 +110,9 @@ class RequestCard extends StatelessWidget {
                 children: [
                   _buildDetailChip(
                     Icons.water_drop,
-                    '${request.unitsRequired} Units',
+                    request.unitsAccepted > 0
+                        ? '${request.acceptanceProgress} Units'
+                        : '${request.unitsRequired} Units',
                   ),
                   SizedBox(width: 12.w),
                   _buildDetailChip(

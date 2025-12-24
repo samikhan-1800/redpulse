@@ -87,18 +87,21 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
       // Send notification to the other user
       final chat = await _databaseService.getChat(chatId);
       if (chat != null) {
-        final recipientId = chat.user1Id == _userId
-            ? chat.user2Id
-            : chat.user1Id;
-
-        await _notificationService.sendNotificationToUser(
-          userId: recipientId,
-          title: '💬 ${_currentUser.name}',
-          body: content.length > 100
-              ? '${content.substring(0, 100)}...'
-              : content,
-          data: {'type': 'message', 'chatId': chatId, 'senderId': _userId},
+        final recipientId = chat.participantIds.firstWhere(
+          (id) => id != _userId,
+          orElse: () => '',
         );
+
+        if (recipientId.isNotEmpty) {
+          await _notificationService.sendNotificationToUser(
+            userId: recipientId,
+            title: '💬 ${_currentUser.name}',
+            body: content.length > 100
+                ? '${content.substring(0, 100)}...'
+                : content,
+            data: {'type': 'message', 'chatId': chatId, 'senderId': _userId},
+          );
+        }
       }
     } catch (e) {
       // Handle error silently for chat messages
