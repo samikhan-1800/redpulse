@@ -91,7 +91,7 @@ RedPulse is a comprehensive blood donation platform that bridges the gap between
   <img src="redpulse_app_screenshots/request_details.jpeg" width="200"/>
   <img src="redpulse_app_screenshots/request_view.jpeg" width="200"/>
   <img src="redpulse_app_screenshots/sos_button.jpeg" width="200"/>
-  <img src="redpulse_app_screenshots/my_requests.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/my_request.jpeg" width="200"/>
   <img src="redpulse_app_screenshots/chat_section.jpeg" width="200"/>
   <img src="redpulse_app_screenshots/profile.jpeg" width="200"/>
   <img src="redpulse_app_screenshots/profile_one.jpeg" width="200"/>
