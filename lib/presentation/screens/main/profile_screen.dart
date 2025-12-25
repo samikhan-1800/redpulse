@@ -180,6 +180,28 @@ class ProfileScreen extends ConsumerWidget {
                                 }
                                 return;
                               }
+
+                              // Ask user to enter password to save credentials
+                              if (context.mounted) {
+                                final password = await _showPasswordDialog(context);
+                                if (password == null || password.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Password required to enable biometric login',
+                                      ),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                // Save credentials for biometric login
+                                await biometricService.saveCredentials(
+                                  user.email,
+                                  password,
+                                );
+                              }
                             }
 
                             // Show loading for database update
@@ -635,6 +657,58 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Future<String?> _showPasswordDialog(BuildContext context) async {
+    final passwordController = TextEditingController();
+    
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Enter your password to enable biometric login',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.lock),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context, passwordController.text);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
     );
   }
 }

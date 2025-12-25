@@ -96,10 +96,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
-  Timer? _blinkTimer;
   Timer? _updateDebounceTimer;
-  bool _showEmergencyMarkers = true;
-  late AnimationController _pulseController;
+  late AnimationController _blinkController;
+  late Animation<double> _blinkAnimation;
   bool _isUpdatingMarkers = false;
   DateTime? _lastUpdateTime;
   List<BloodRequest>? _cachedRequests;
@@ -149,30 +148,43 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
+
+    // Initialize smooth blink animation for emergency markers
+    // Oscillates between 0.4 (faded) and 1.0 (full opacity) in 1.5 seconds
+    _blinkController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _blinkAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _blinkController, curve: Curves.easeInOut),
+    );
+
+    // Add listener to update only emergency markers when animation changes
+    _blinkAnimation.addListener(() {
+      if (mounted && _markers.isNotEmpty) {
+        // Only update if we have emergency markers to avoid unnecessary rebuilds
+        final hasEmergencyMarkers =
+            _cachedRequests?.any((r) => r.isSOS || r.isEmergency) ?? false;
+
+        if (hasEmergencyMarkers) {
+          _updateEmergencyMarkersOpacity();
+        }
+      }
+    });
+
+    // Start the repeating animation
+    _blinkController.repeat(reverse: true);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(locationNotifierProvider.notifier).getCurrentLocation();
-    });
-
-    // Start blinking timer for emergency markers (reduced frequency for performance)
-    _blinkTimer = Timer.periodic(const Duration(milliseconds: 2000), (timer) {
-      if (mounted) {
-        setState(() {
-          _showEmergencyMarkers = !_showEmergencyMarkers;
-        });
-      }
     });
   }
 
   @override
   void dispose() {
-    _blinkTimer?.cancel();
     _updateDebounceTimer?.cancel();
-    _pulseController.dispose();
+    _blinkController.dispose();
     _mapController?.dispose();
     super.dispose();
   }
@@ -205,6 +217,43 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
+  void _updateEmergencyMarkersOpacity() {
+    if (_cachedRequests == null || _isUpdatingMarkers) return;
+
+    final filter = ref.read(mapFilterProvider);
+    if (!filter.showRequests) return;
+
+    final updatedMarkers = <Marker>{};
+    final currentAlpha = _blinkAnimation.value;
+
+    // Update emergency markers with new opacity, keep others as-is
+    for (final marker in _markers) {
+      if (marker.markerId.value.startsWith('request_')) {
+        final requestId = marker.markerId.value.replaceFirst('request_', '');
+        final request = _cachedRequests!.firstWhere(
+          (r) => r.id == requestId,
+          orElse: () => _cachedRequests!.first,
+        );
+
+        if (request.isSOS || request.isEmergency) {
+          // Update emergency marker with animated opacity
+          updatedMarkers.add(marker.copyWith(alphaParam: currentAlpha));
+        } else {
+          updatedMarkers.add(marker);
+        }
+      } else {
+        // Keep donor markers unchanged
+        updatedMarkers.add(marker);
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _markers = updatedMarkers;
+      });
+    }
+  }
+
   void _updateMarkers(
     List<BloodRequest> requests,
     List<UserModel> donors,
@@ -221,13 +270,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
       for (final request in requests) {
         final isEmergency = request.isSOS || request.isEmergency;
 
-        // For emergency, use blinking logic (fade in/out effect)
+        // For emergency, use smooth animated blinking (pulsing effect)
         if (isEmergency) {
           newMarkers.add(
             Marker(
               markerId: MarkerId('request_${request.id}'),
               position: LatLng(request.latitude, request.longitude),
-              alpha: _showEmergencyMarkers ? 1.0 : 0.3,
+              alpha: _blinkAnimation
+                  .value, // Use animated value for smooth pulsing
               icon: BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueRed,
               ),
