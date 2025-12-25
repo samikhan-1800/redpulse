@@ -72,7 +72,36 @@ RedPulse is a comprehensive blood donation platform that bridges the gap between
 
 ## 📱 Screenshots
 
-*Coming soon --will be added after the project is completed*
+<p align="center">
+  <img src="redpulse_app_screenshots/signup.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/signup_one.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/signup_two.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/signup_three.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/login.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/app_permission.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/dashboard.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/map.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/map_darkmode.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/donor_marker_map.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/marker_map_request.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/request.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/create_request_normal.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/create_request_emergency.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/create_request_sos.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/request_details.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/request_view.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/sos_button.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/my_requests.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/chat_section.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/profile.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/profile_one.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/profile_two.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/donation_history.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/notification_screen.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/dark_mode.jpeg" width="200"/>
+  <img src="redpulse_app_screenshots/about_section.jpeg" width="200"/>
+
+</p>
 
 ---
 
