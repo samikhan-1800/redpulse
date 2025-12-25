@@ -8,7 +8,6 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/request_provider.dart';
-import '../../../data/providers/chat_provider.dart';
 import '../../../data/models/blood_request_model.dart';
 import '../../widgets/buttons.dart';
 import '../../widgets/cards.dart';
@@ -173,7 +172,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
     try {
       final phoneNumber = widget.request.requesterPhone;
       final uri = Uri.parse('tel:$phoneNumber');
-      
+
       // Launch phone dialer directly - let the system handle availability
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } on PlatformException catch (e) {
@@ -181,7 +180,9 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Unable to make phone call: ${e.message ?? "Unknown error"}'),
+            content: Text(
+              'Unable to make phone call: ${e.message ?? "Unknown error"}',
+            ),
             backgroundColor: AppColors.error,
           ),
         );

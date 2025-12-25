@@ -50,13 +50,13 @@ final mapFilterProvider = StateProvider<MapFilterState>((ref) {
 /// - isAvailable = true (marked themselves as available)
 /// - canDonate = true OR field not set (eligible to donate)
 /// - Valid location (latitude/longitude set)
-/// Limited to 50 donors for optimal performance
+/// Limited to 30 donors for optimal performance
 final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
   return FirebaseFirestore.instance
       .collection('users')
       .where('isAvailable', isEqualTo: true)
       .where('latitude', isNotEqualTo: null)
-      .limit(50) // Reduced from 100 for better performance
+      .limit(30) // Reduced from 50 for better performance
       .snapshots()
       .map(
         (snapshot) => snapshot.docs
@@ -70,13 +70,13 @@ final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
 /// Shows requests with status 'pending' or 'accepted' (not completed/cancelled)
 /// Emergency requests will blink in red on the map
 /// Regular requests show in orange
-/// Limited to 30 requests for optimal performance
+/// Limited to 20 requests for optimal performance
 final allActiveRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
   return FirebaseFirestore.instance
       .collection('blood_requests')
       .where('status', whereIn: ['pending', 'accepted'])
       .where('latitude', isNotEqualTo: null)
-      .limit(30) // Reduced from 50 for better performance
+      .limit(20) // Reduced from 30 for better performance
       .snapshots()
       .map(
         (snapshot) => snapshot.docs
@@ -101,6 +101,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   late Animation<double> _blinkAnimation;
   bool _isUpdatingMarkers = false;
   DateTime? _lastUpdateTime;
+  DateTime? _lastBlinkUpdateTime;
   List<BloodRequest>? _cachedRequests;
   List<UserModel>? _cachedDonors;
 
@@ -161,8 +162,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
 
     // Add listener to update only emergency markers when animation changes
+    // Throttled to update only every 100ms instead of 60fps for performance
     _blinkAnimation.addListener(() {
       if (mounted && _markers.isNotEmpty) {
+        // Throttle updates to every 100ms
+        final now = DateTime.now();
+        if (_lastBlinkUpdateTime != null &&
+            now.difference(_lastBlinkUpdateTime!) <
+                const Duration(milliseconds: 100)) {
+          return;
+        }
+        _lastBlinkUpdateTime = now;
+
         // Only update if we have emergency markers to avoid unnecessary rebuilds
         final hasEmergencyMarkers =
             _cachedRequests?.any((r) => r.isSOS || r.isEmergency) ?? false;
@@ -250,6 +261,45 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (mounted) {
       setState(() {
         _markers = updatedMarkers;
+      });
+    }
+  }
+
+  void _handleDataUpdate() {
+    // Get latest data
+    final requestsAsync = ref.read(allActiveRequestsProvider);
+    final donorsAsync = ref.read(allAvailableDonorsProvider);
+    final mapFilter = ref.read(mapFilterProvider);
+
+    if (!requestsAsync.hasValue || !donorsAsync.hasValue) return;
+
+    final requests = requestsAsync.value ?? [];
+    final donors = donorsAsync.value ?? [];
+
+    // Check if data has changed
+    final hasChanged =
+        _cachedRequests?.length != requests.length ||
+        _cachedDonors?.length != donors.length;
+
+    // Throttle updates - minimum 2 seconds between updates
+    final now = DateTime.now();
+    final shouldUpdate =
+        _lastUpdateTime == null ||
+        now.difference(_lastUpdateTime!) > const Duration(seconds: 2);
+
+    if (hasChanged && shouldUpdate && !_isUpdatingMarkers) {
+      _cachedRequests = requests;
+      _cachedDonors = donors;
+      _lastUpdateTime = now;
+
+      // Cancel existing timer
+      _updateDebounceTimer?.cancel();
+
+      // Debounce updates to reduce frequency
+      _updateDebounceTimer = Timer(const Duration(milliseconds: 800), () {
+        if (mounted && !_isUpdatingMarkers) {
+          _updateMarkers(requests, donors, mapFilter);
+        }
       });
     }
   }
@@ -375,42 +425,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final locationState = ref.watch(locationNotifierProvider);
     final mapFilter = ref.watch(mapFilterProvider);
 
-    // Watch all requests and donors
-    final requestsAsync = ref.watch(allActiveRequestsProvider);
-    final donorsAsync = ref.watch(allAvailableDonorsProvider);
-
-    // Only update markers if data has actually changed and enough time has passed
-    if (requestsAsync.hasValue && donorsAsync.hasValue) {
-      final requests = requestsAsync.value ?? [];
-      final donors = donorsAsync.value ?? [];
-
-      // Check if data has changed
-      final hasChanged =
-          _cachedRequests?.length != requests.length ||
-          _cachedDonors?.length != donors.length;
-
-      // Throttle updates - minimum 1 second between updates
-      final now = DateTime.now();
-      final shouldUpdate =
-          _lastUpdateTime == null ||
-          now.difference(_lastUpdateTime!) > const Duration(seconds: 1);
-
-      if (hasChanged && shouldUpdate && !_isUpdatingMarkers) {
-        _cachedRequests = requests;
-        _cachedDonors = donors;
-        _lastUpdateTime = now;
-
-        // Cancel existing timer
-        _updateDebounceTimer?.cancel();
-
-        // Debounce updates to reduce frequency
-        _updateDebounceTimer = Timer(const Duration(milliseconds: 500), () {
-          if (mounted && !_isUpdatingMarkers) {
-            _updateMarkers(requests, donors, mapFilter);
-          }
-        });
+    // Use ref.listen instead of ref.watch to prevent rebuild on every change
+    // This improves performance by only updating markers, not rebuilding entire widget
+    ref.listen<AsyncValue<List<BloodRequest>>>(allActiveRequestsProvider, (
+      previous,
+      next,
+    ) {
+      if (next.hasValue) {
+        _handleDataUpdate();
       }
-    }
+    });
+
+    ref.listen<AsyncValue<List<UserModel>>>(allAvailableDonorsProvider, (
+      previous,
+      next,
+    ) {
+      if (next.hasValue) {
+        _handleDataUpdate();
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -470,8 +503,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   top: 16.h,
                   right: 16.w,
                   child: _buildStatsCard(
-                    requestsAsync.value?.length ?? 0,
-                    donorsAsync.value?.length ?? 0,
+                    _cachedRequests?.length ?? 0,
+                    _cachedDonors?.length ?? 0,
                   ),
                 ),
                 // Center on location button

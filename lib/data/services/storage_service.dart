@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 /// Storage service for uploading images
 abstract class StorageServiceInterface {
