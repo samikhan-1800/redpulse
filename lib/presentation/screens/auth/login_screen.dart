@@ -32,8 +32,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _checkBiometricAvailability() async {
     final biometricService = ref.read(biometricServiceProvider);
-    final credentials = await biometricService.getSavedCredentials();
-    if (credentials != null && mounted) {
+    
+    // Check if biometric is enabled (user turned on the toggle)
+    final isEnabled = await biometricService.isBiometricEnabled();
+    
+    // Check if biometric hardware is available
+    final isAvailable = await biometricService.isBiometricAvailable();
+    
+    // Show button if both enabled and available
+    if (isEnabled && isAvailable && mounted) {
       setState(() => _showBiometricButton = true);
     }
   }
@@ -66,20 +73,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    // Get saved credentials and login
+    // Get saved credentials
     final credentials = await biometricService.getSavedCredentials();
+    
+    // If no saved credentials, get the saved email and ask user to enter password
     if (credentials == null) {
+      final savedEmail = await biometricService.getSavedUserEmail();
+      if (savedEmail != null) {
+        _emailController.text = savedEmail;
+      }
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No saved credentials found'),
-            backgroundColor: AppColors.error,
+            content: Text('Please enter your password to complete login'),
+            backgroundColor: AppColors.warning,
           ),
         );
       }
       return;
     }
 
+    // Login with saved credentials
     await ref
         .read(authNotifierProvider.notifier)
         .signIn(credentials['email']!, credentials['password']!);

@@ -50,13 +50,13 @@ final mapFilterProvider = StateProvider<MapFilterState>((ref) {
 /// - isAvailable = true (marked themselves as available)
 /// - canDonate = true OR field not set (eligible to donate)
 /// - Valid location (latitude/longitude set)
-/// Limited to 100 donors for optimal performance
+/// Limited to 50 donors for optimal performance
 final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
   return FirebaseFirestore.instance
       .collection('users')
       .where('isAvailable', isEqualTo: true)
       .where('latitude', isNotEqualTo: null)
-      .limit(100) // Reduced limit for performance
+      .limit(50) // Reduced from 100 for better performance
       .snapshots()
       .map(
         (snapshot) => snapshot.docs
@@ -70,13 +70,13 @@ final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
 /// Shows requests with status 'pending' or 'accepted' (not completed/cancelled)
 /// Emergency requests will blink in red on the map
 /// Regular requests show in orange
-/// Limited to 50 requests for optimal performance
+/// Limited to 30 requests for optimal performance
 final allActiveRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
   return FirebaseFirestore.instance
       .collection('blood_requests')
       .where('status', whereIn: ['pending', 'accepted'])
       .where('latitude', isNotEqualTo: null)
-      .limit(50) // Reduced limit for performance
+      .limit(30) // Reduced from 50 for better performance
       .snapshots()
       .map(
         (snapshot) => snapshot.docs
@@ -101,6 +101,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showEmergencyMarkers = true;
   late AnimationController _pulseController;
   bool _isUpdatingMarkers = false;
+  DateTime? _lastUpdateTime;
+  List<BloodRequest>? _cachedRequests;
+  List<UserModel>? _cachedDonors;
 
   @override
   bool get wantKeepAlive => true;
@@ -155,8 +158,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       ref.read(locationNotifierProvider.notifier).getCurrentLocation();
     });
 
-    // Start blinking timer for emergency markers (reduced frequency)
-    _blinkTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+    // Start blinking timer for emergency markers (reduced frequency for performance)
+    _blinkTimer = Timer.periodic(const Duration(milliseconds: 2000), (timer) {
       if (mounted) {
         setState(() {
           _showEmergencyMarkers = !_showEmergencyMarkers;
@@ -326,20 +329,37 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final requestsAsync = ref.watch(allActiveRequestsProvider);
     final donorsAsync = ref.watch(allAvailableDonorsProvider);
 
-    // Update markers with debouncing when data changes
+    // Only update markers if data has actually changed and enough time has passed
     if (requestsAsync.hasValue && donorsAsync.hasValue) {
       final requests = requestsAsync.value ?? [];
       final donors = donorsAsync.value ?? [];
 
-      // Cancel existing timer
-      _updateDebounceTimer?.cancel();
+      // Check if data has changed
+      final hasChanged =
+          _cachedRequests?.length != requests.length ||
+          _cachedDonors?.length != donors.length;
 
-      // Debounce updates to reduce frequency and improve performance
-      _updateDebounceTimer = Timer(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          _updateMarkers(requests, donors, mapFilter);
-        }
-      });
+      // Throttle updates - minimum 1 second between updates
+      final now = DateTime.now();
+      final shouldUpdate =
+          _lastUpdateTime == null ||
+          now.difference(_lastUpdateTime!) > const Duration(seconds: 1);
+
+      if (hasChanged && shouldUpdate && !_isUpdatingMarkers) {
+        _cachedRequests = requests;
+        _cachedDonors = donors;
+        _lastUpdateTime = now;
+
+        // Cancel existing timer
+        _updateDebounceTimer?.cancel();
+
+        // Debounce updates to reduce frequency
+        _updateDebounceTimer = Timer(const Duration(milliseconds: 500), () {
+          if (mounted && !_isUpdatingMarkers) {
+            _updateMarkers(requests, donors, mapFilter);
+          }
+        });
+      }
     }
 
     return Scaffold(

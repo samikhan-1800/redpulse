@@ -198,7 +198,12 @@ class ProfileScreen extends ConsumerWidget {
                                 .read(userProfileNotifierProvider.notifier)
                                 .updateProfile(useBiometric: value);
 
-                            if (!value) {
+                            // Save biometric enabled flag and user email
+                            await biometricService.setBiometricEnabled(value);
+                            if (value) {
+                              // Save user email for future logins
+                              await biometricService.saveUserEmail(user.email);
+                            } else {
                               // Clear saved credentials when disabling
                               await biometricService.clearCredentials();
                             }

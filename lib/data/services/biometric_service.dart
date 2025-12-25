@@ -160,4 +160,16 @@ class BiometricService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('biometric_enabled', enabled);
   }
+
+  /// Save the user's email for biometric login
+  Future<void> saveUserEmail(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('biometric_user_email', email);
+  }
+
+  /// Get saved user email
+  Future<String?> getSavedUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('biometric_user_email');
+  }
 }
