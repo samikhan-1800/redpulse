@@ -60,10 +60,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final isLoading = authState.isLoading;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text(AppStrings.resetPassword)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24.w),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Form(
             key: _formKey,
             child: Column(

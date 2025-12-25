@@ -178,6 +178,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     final locationState = ref.watch(locationNotifierProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(
           _requestType == 'sos'
@@ -187,6 +188,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Form(
           key: _formKey,
           child: Column(

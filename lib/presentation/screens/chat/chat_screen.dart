@@ -99,6 +99,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final messagesAsync = ref.watch(chatMessagesProvider(widget.chat.id));
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         elevation: 0,
         titleSpacing: 0,

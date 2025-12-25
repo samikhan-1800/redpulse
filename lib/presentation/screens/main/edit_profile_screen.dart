@@ -225,9 +225,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text(AppStrings.editProfile)),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Form(
           key: _formKey,
           child: Column(

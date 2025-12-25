@@ -169,10 +169,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final isLoading = authState.isLoading;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: const Text(AppStrings.signUp)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24.w),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Form(
             key: _formKey,
             child: Column(
