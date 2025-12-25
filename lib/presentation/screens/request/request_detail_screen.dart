@@ -15,6 +15,7 @@ import '../../widgets/common_widgets.dart';
 import '../../widgets/dialogs.dart';
 import '../chat/chat_screen.dart';
 import '../main/main_screen.dart';
+import 'create_request_screen.dart';
 
 class RequestDetailScreen extends ConsumerStatefulWidget {
   final BloodRequest request;
@@ -240,6 +241,42 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
     }
   }
 
+  Future<void> _showDeleteConfirmation() async {
+    final confirmed = await ConfirmationDialog.show(
+      context,
+      title: 'Delete Request',
+      message: 'Are you sure you want to permanently delete this request? This action cannot be undone.',
+      confirmText: 'Delete',
+      isDangerous: true,
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(bloodRequestNotifierProvider.notifier)
+          .deleteRequest(widget.request.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(
+          const SnackBar(
+            content: Text('Request deleted successfully'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userId = ref.watch(currentUserIdProvider);
@@ -250,26 +287,48 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
       appBar: AppBar(
         title: const Text(AppStrings.requestDetails),
         actions: [
-          if (isOwner && widget.request.isActive)
+          if (isOwner && widget.request.status != 'completed' && widget.request.status != 'cancelled')
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'completed') {
+                if (value == 'edit') {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CreateRequestScreen(
+                        requestToEdit: widget.request,
+                      ),
+                    ),
+                  );
+                } else if (value == 'completed') {
                   _updateStatus('completed');
                 } else if (value == 'cancelled') {
                   _updateStatus('cancelled');
+                } else if (value == 'delete') {
+                  _showDeleteConfirmation();
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'completed',
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green),
-                      SizedBox(width: 8),
-                      Text('Mark as Completed'),
-                    ],
+                if (widget.request.status == 'pending')
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit, color: AppColors.primary),
+                        SizedBox(width: 8),
+                        Text('Edit Request'),
+                      ],
+                    ),
                   ),
-                ),
+                if (widget.request.acceptedByIds.isNotEmpty)
+                  const PopupMenuItem(
+                    value: 'completed',
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text('Mark as Completed'),
+                      ],
+                    ),
+                  ),
                 const PopupMenuItem(
                   value: 'cancelled',
                   child: Row(
@@ -277,6 +336,16 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                       Icon(Icons.cancel, color: Colors.red),
                       SizedBox(width: 8),
                       Text('Cancel Request'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_forever, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete Request'),
                     ],
                   ),
                 ),

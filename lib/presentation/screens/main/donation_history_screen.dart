@@ -36,6 +36,9 @@ class DonationHistoryScreen extends ConsumerWidget {
           return ListView.builder(
             padding: EdgeInsets.symmetric(vertical: 8.h),
             itemCount: donations.length,
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: true,
+            cacheExtent: 500,
             itemBuilder: (context, index) {
               final donation = donations[index];
               return _DonationCard(donation: donation);
@@ -54,14 +57,15 @@ class _DonationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return RepaintBoundary(
+      child: Card(
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Row(
               children: [
                 Container(
@@ -151,8 +155,9 @@ class _DonationCard extends StatelessWidget {
                   ],
                 ),
               ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

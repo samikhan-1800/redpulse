@@ -94,6 +94,82 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
+  /// Update an existing blood request (only for pending requests)
+  Future<void> updateRequest({
+    required String requestId,
+    required String bloodGroup,
+    required int unitsRequired,
+    required String requestType,
+    required String urgencyLevel,
+    required String patientName,
+    required String hospitalName,
+    required String hospitalAddress,
+    required double latitude,
+    required double longitude,
+    String? additionalNotes,
+  }) async {
+    if (_userId == null || _currentUser == null) return;
+
+    state = const AsyncValue.loading();
+    try {
+      // Get the existing request to verify it's pending
+      final existingRequest = await _databaseService.getRequest(requestId);
+      if (existingRequest == null) {
+        throw Exception('Request not found');
+      }
+      
+      if (existingRequest.status != 'pending') {
+        throw Exception('Only pending requests can be edited');
+      }
+
+      // Update the request
+      await _databaseService.updateRequest(requestId, {
+        'bloodGroup': bloodGroup,
+        'unitsRequired': unitsRequired,
+        'requestType': requestType,
+        'urgencyLevel': urgencyLevel,
+        'patientName': patientName,
+        'hospitalName': hospitalName,
+        'hospitalAddress': hospitalAddress,
+        'latitude': latitude,
+        'longitude': longitude,
+        'additionalNotes': additionalNotes,
+        'updatedAt': Timestamp.now(),
+      });
+
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  /// Delete a blood request permanently
+  Future<void> deleteRequest(String requestId) async {
+    if (_userId == null) return;
+
+    state = const AsyncValue.loading();
+    try {
+      // Get the request to verify ownership
+      final request = await _databaseService.getRequest(requestId);
+      if (request == null) {
+        throw Exception('Request not found');
+      }
+
+      if (request.requesterId != _userId) {
+        throw Exception('You can only delete your own requests');
+      }
+
+      // Delete the request from Firestore
+      await _databaseService.deleteRequest(requestId);
+
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
   /// Accept a blood request
   Future<String?> acceptRequest(BloodRequest request) async {
     if (_userId == null || _currentUser == null) return null;

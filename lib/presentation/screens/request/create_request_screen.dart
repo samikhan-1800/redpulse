@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_strings.dart';
@@ -12,11 +14,13 @@ import '../../widgets/buttons.dart';
 import '../../widgets/text_fields.dart';
 import '../../widgets/dialogs.dart';
 import '../../widgets/common_widgets.dart';
+import '../../../data/models/blood_request_model.dart';
 
 class CreateRequestScreen extends ConsumerStatefulWidget {
   final String? requestType;
+  final BloodRequest? requestToEdit;
 
-  const CreateRequestScreen({super.key, this.requestType});
+  const CreateRequestScreen({super.key, this.requestType, this.requestToEdit});
 
   @override
   ConsumerState<CreateRequestScreen> createState() =>
@@ -40,7 +44,20 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.requestType != null) {
+    
+    // If editing, pre-fill form fields
+    if (widget.requestToEdit != null) {
+      final request = widget.requestToEdit!;
+      _patientNameController.text = request.patientName;
+      _hospitalController.text = request.hospitalName;
+      _addressController.text = request.hospitalAddress;
+      _unitsController.text = request.unitsRequired.toString();
+      _notesController.text = request.additionalNotes ?? '';
+      _selectedBloodGroup = request.bloodGroup;
+      _requestType = request.requestType;
+      _urgencyLevel = request.urgencyLevel;
+      _useCurrentLocation = false; // Use saved location when editing
+    } else if (widget.requestType != null) {
       _requestType = widget.requestType!;
       if (_requestType == 'sos') {
         _urgencyLevel = 'critical';
@@ -48,6 +65,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         _urgencyLevel = 'high';
       }
     }
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(locationNotifierProvider.notifier).getCurrentLocation();
     });
@@ -114,42 +132,92 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         lng = locationState.position!.longitude;
         address = locationState.address ?? _addressController.text.trim();
       } else {
-        final locationService = ref.read(locationServiceProvider);
-        final coords = await locationService.getCoordinatesFromAddress(
-          _addressController.text.trim(),
-        );
-        if (coords != null) {
-          lat = coords.latitude;
-          lng = coords.longitude;
+        // Use existing coordinates when editing, or get new ones
+        if (widget.requestToEdit != null && !_useCurrentLocation) {
+          lat = widget.requestToEdit!.latitude;
+          lng = widget.requestToEdit!.longitude;
           address = _addressController.text.trim();
         } else {
-          throw Exception('Could not find location for the given address');
+          final locationService = ref.read(locationServiceProvider);
+          final coords = await locationService.getCoordinatesFromAddress(
+            _addressController.text.trim(),
+          );
+          if (coords != null) {
+            lat = coords.latitude;
+            lng = coords.longitude;
+            address = _addressController.text.trim();
+          } else {
+            // Show error dialog for invalid address
+            if (mounted) {
+              await showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Address Not Found'),
+                  content: const Text(
+                    'The address you entered could not be found on the map. Please check the address and try again, or use your current location.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return; // Stop request creation
+          }
         }
       }
 
-      await ref
-          .read(bloodRequestNotifierProvider.notifier)
-          .createRequest(
-            bloodGroup: _selectedBloodGroup,
-            unitsRequired: int.tryParse(_unitsController.text) ?? 1,
-            requestType: _requestType,
-            urgencyLevel: _urgencyLevel,
-            patientName: _patientNameController.text.trim(),
-            hospitalName: _hospitalController.text.trim(),
-            hospitalAddress: address,
-            latitude: lat,
-            longitude: lng,
-            requiredBy: DateTime.now().add(const Duration(days: 1)),
-            additionalNotes: _notesController.text.trim().isNotEmpty
-                ? _notesController.text.trim()
-                : null,
-          );
+      if (widget.requestToEdit != null) {
+        // Update existing request
+        await ref
+            .read(bloodRequestNotifierProvider.notifier)
+            .updateRequest(
+              requestId: widget.requestToEdit!.id,
+              bloodGroup: _selectedBloodGroup,
+              unitsRequired: int.tryParse(_unitsController.text) ?? 1,
+              requestType: _requestType,
+              urgencyLevel: _urgencyLevel,
+              patientName: _patientNameController.text.trim(),
+              hospitalName: _hospitalController.text.trim(),
+              hospitalAddress: address,
+              latitude: lat,
+              longitude: lng,
+              additionalNotes: _notesController.text.trim().isNotEmpty
+                  ? _notesController.text.trim()
+                  : null,
+            );
+      } else {
+        // Create new request
+        await ref
+            .read(bloodRequestNotifierProvider.notifier)
+            .createRequest(
+              bloodGroup: _selectedBloodGroup,
+              unitsRequired: int.tryParse(_unitsController.text) ?? 1,
+              requestType: _requestType,
+              urgencyLevel: _urgencyLevel,
+              patientName: _patientNameController.text.trim(),
+              hospitalName: _hospitalController.text.trim(),
+              hospitalAddress: address,
+              latitude: lat,
+              longitude: lng,
+              requiredBy: DateTime.now().add(const Duration(days: 1)),
+              additionalNotes: _notesController.text.trim().isNotEmpty
+                  ? _notesController.text.trim()
+                  : null,
+            );
+      }
 
       if (mounted) {
         final dialog = SuccessDialog(
-          title: AppStrings.requestCreated,
-          message:
-              'Your blood request has been created successfully. Nearby donors will be notified.',
+          title: widget.requestToEdit != null 
+              ? 'Request Updated' 
+              : AppStrings.requestCreated,
+          message: widget.requestToEdit != null
+              ? 'Your blood request has been updated successfully.'
+              : 'Your blood request has been created successfully. Nearby donors will be notified.',
         );
         await showDialog(
           context: context,
@@ -181,9 +249,11 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(
-          _requestType == 'sos'
-              ? AppStrings.sosAlert
-              : AppStrings.createRequest,
+          widget.requestToEdit != null
+              ? 'Edit Request'
+              : (_requestType == 'sos'
+                  ? AppStrings.sosAlert
+                  : AppStrings.createRequest),
         ),
       ),
       body: SingleChildScrollView(
@@ -299,15 +369,176 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
               ),
               if (!_useCurrentLocation) ...[
                 SizedBox(height: 16.h),
-                CustomTextField(
+                TypeAheadField<String>(
                   controller: _addressController,
-                  label: AppStrings.hospitalAddress,
-                  hint: 'Enter hospital address',
-                  prefixIcon: Icon(Icons.location_on),
-                  maxLines: 2,
-                  validator: _useCurrentLocation
-                      ? null
-                      : Validators.validateRequired,
+                  builder: (context, controller, focusNode) {
+                    return TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: InputDecoration(
+                        labelText: AppStrings.hospitalAddress,
+                        hintText: 'Start typing address...',
+                        prefixIcon: const Icon(Icons.location_on),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide(
+                            color: AppColors.textHint.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      maxLines: 2,
+                      textInputAction: TextInputAction.done,
+                    );
+                  },
+                  decorationBuilder: (context, child) {
+                    return Material(
+                      type: MaterialType.card,
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: child,
+                    );
+                  },
+                  constraints: BoxConstraints(
+                    maxHeight: 200.h,
+                  ),
+                  direction: VerticalDirection.up,
+                  suggestionsCallback: (pattern) async {
+                    if (pattern.length < 3) return [];
+                    
+                    try {
+                      // Get location suggestions from geocoding
+                      final locations = await locationFromAddress(pattern);
+                      
+                      // Convert locations to readable addresses
+                      final suggestions = <String>[];
+                      for (var location in locations.take(5)) {
+                        try {
+                          final placemarks = await placemarkFromCoordinates(
+                            location.latitude,
+                            location.longitude,
+                          );
+                          if (placemarks.isNotEmpty) {
+                            final place = placemarks.first;
+                            // Build readable address from placemark
+                            final addressParts = <String>[];
+                            
+                            // Add name if it's meaningful (not a code)
+                            if (place.name != null && 
+                                place.name!.isNotEmpty && 
+                                place.name!.length > 3 &&
+                                !place.name!.contains(RegExp(r'^[A-Z0-9]{1,4}$'))) {
+                              addressParts.add(place.name!);
+                            }
+                            
+                            // Add thoroughfare (street name)
+                            if (place.thoroughfare != null && place.thoroughfare!.isNotEmpty) {
+                              addressParts.add(place.thoroughfare!);
+                            }
+                            
+                            // Add sub-thoroughfare (street number)
+                            if (place.subThoroughfare != null && place.subThoroughfare!.isNotEmpty) {
+                              if (addressParts.isEmpty) {
+                                addressParts.add(place.subThoroughfare!);
+                              }
+                            }
+                            
+                            // Add subLocality
+                            if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+                              addressParts.add(place.subLocality!);
+                            }
+                            
+                            // Add locality (city)
+                            if (place.locality != null && place.locality!.isNotEmpty) {
+                              addressParts.add(place.locality!);
+                            }
+                            
+                            // Add administrative area (state)
+                            if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+                              addressParts.add(place.administrativeArea!);
+                            }
+                            
+                            // Add postal code if available
+                            if (place.postalCode != null && place.postalCode!.isNotEmpty) {
+                              addressParts.add(place.postalCode!);
+                            }
+                            
+                            if (addressParts.isNotEmpty) {
+                              suggestions.add(addressParts.join(', '));
+                            } else if (pattern.isNotEmpty) {
+                              // Fallback to the search pattern if no parts found
+                              suggestions.add(pattern);
+                            }
+                          }
+                        } catch (e) {
+                          // Skip this location if reverse geocoding fails
+                        }
+                      }
+                      
+                      // Remove duplicates
+                      final uniqueSuggestions = suggestions.toSet().toList();
+                      
+                      return uniqueSuggestions.isEmpty ? ['No results found'] : uniqueSuggestions;
+                    } catch (e) {
+                      return ['No results found'];
+                    }
+                  },
+                  itemBuilder: (context, suggestion) {
+                    if (suggestion == 'No results found') {
+                      return Padding(
+                        padding: EdgeInsets.all(16.w),
+                        child: Text(
+                          suggestion,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: AppColors.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      );
+                    }
+                    return ListTile(
+                      leading: const Icon(
+                        Icons.location_on,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      title: Text(
+                        suggestion,
+                        style: TextStyle(fontSize: 13.sp),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      dense: true,
+                    );
+                  },
+                  onSelected: (suggestion) {
+                    if (suggestion != 'No results found') {
+                      _addressController.text = suggestion;
+                    }
+                  },
+                  emptyBuilder: (context) => Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: Text(
+                      'Type at least 3 characters to search',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  hideOnEmpty: true,
+                  hideOnLoading: false,
+                  hideKeyboardOnDrag: false,
                 ),
               ],
               SizedBox(height: 16.h),
@@ -343,7 +574,9 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                       isLoading: _isLoading,
                     )
                   : PrimaryButton(
-                      text: AppStrings.createRequest,
+                      text: widget.requestToEdit != null 
+                          ? 'Update Request' 
+                          : AppStrings.createRequest,
                       onPressed: _createRequest,
                       isLoading: _isLoading,
                     ),

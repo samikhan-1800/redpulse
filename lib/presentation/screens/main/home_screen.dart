@@ -238,20 +238,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         },
                       ),
                       // Requests list
-                      if (locationState.position != null)
-                        _NearbyRequestsList(
-                          latitude: locationState.position!.latitude,
-                          longitude: locationState.position!.longitude,
-                        )
-                      else
-                        Padding(
-                          padding: EdgeInsets.all(16.w),
-                          child: const EmptyState(
-                            icon: Icons.location_off,
-                            title: 'Location not available',
-                            subtitle: 'Enable location to see nearby requests',
-                          ),
+                      Container(
+                        constraints: BoxConstraints(
+                          minHeight: 100.h,
                         ),
+                        child: locationState.position != null
+                            ? _NearbyRequestsList(
+                                latitude: locationState.position!.latitude,
+                                longitude: locationState.position!.longitude,
+                              )
+                            : Padding(
+                                padding: EdgeInsets.all(16.w),
+                                child: const EmptyState(
+                                  icon: Icons.location_off,
+                                  title: 'Location not available',
+                                  subtitle:
+                                      'Enable location to see nearby requests',
+                                ),
+                              ),
+                      ),
                       SizedBox(height: 24.h),
                     ],
                   ),

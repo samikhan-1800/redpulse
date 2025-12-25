@@ -94,7 +94,7 @@ class _NearbyRequestsTab extends ConsumerWidget {
     final params = NearbyRequestsParams(
       latitude: locationState.position!.latitude,
       longitude: locationState.position!.longitude,
-      radiusKm: 50.0, // Increased radius to show more requests
+      radiusKm: 10.0, // Only show requests within 10km
     );
     final requestsAsync = ref.watch(nearbyRequestsProvider(params));
 
@@ -120,6 +120,9 @@ class _NearbyRequestsTab extends ConsumerWidget {
           child: ListView.builder(
             padding: EdgeInsets.only(top: 8.h, bottom: 100.h),
             itemCount: requests.length,
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: true,
+            cacheExtent: 500,
             itemBuilder: (context, index) {
               final request = requests[index];
               final locationService = ref.read(locationServiceProvider);
@@ -184,6 +187,9 @@ class _MyRequestsTab extends ConsumerWidget {
           child: ListView.builder(
             padding: EdgeInsets.only(top: 8.h, bottom: 100.h),
             itemCount: requests.length,
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: true,
+            cacheExtent: 500,
             itemBuilder: (context, index) {
               final request = requests[index];
               return RequestCard(

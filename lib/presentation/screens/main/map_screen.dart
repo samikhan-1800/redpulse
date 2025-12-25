@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -48,20 +49,19 @@ final mapFilterProvider = StateProvider<MapFilterState>((ref) {
 /// Provider for all available donors from across the system
 /// Shows all registered users who have:
 /// - isAvailable = true (marked themselves as available)
-/// - canDonate = true OR field not set (eligible to donate)
 /// - Valid location (latitude/longitude set)
-/// Limited to 30 donors for optimal performance
+/// Increased limit to show more donors on the map
 final allAvailableDonorsProvider = StreamProvider<List<UserModel>>((ref) {
   return FirebaseFirestore.instance
       .collection('users')
       .where('isAvailable', isEqualTo: true)
       .where('latitude', isNotEqualTo: null)
-      .limit(30) // Reduced from 50 for better performance
+      .limit(100) // Increased to show more donors
       .snapshots()
       .map(
         (snapshot) => snapshot.docs
             .map((doc) => UserModel.fromFirestore(doc))
-            .where((user) => user.hasLocation && (user.canDonate))
+            .where((user) => user.hasLocation) // Show all available donors
             .toList(),
       );
 });
@@ -165,11 +165,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Throttled to update only every 100ms instead of 60fps for performance
     _blinkAnimation.addListener(() {
       if (mounted && _markers.isNotEmpty) {
-        // Throttle updates to every 100ms
+        // Throttle updates to every 200ms (reduced from 100ms for better performance)
         final now = DateTime.now();
         if (_lastBlinkUpdateTime != null &&
             now.difference(_lastBlinkUpdateTime!) <
-                const Duration(milliseconds: 100)) {
+                const Duration(milliseconds: 200)) {
           return;
         }
         _lastBlinkUpdateTime = now;
@@ -263,6 +263,25 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _markers = updatedMarkers;
       });
     }
+  }
+
+  /// Check if two positions are too close (within ~10 meters)
+  bool _arePositionsTooClose(LatLng pos1, LatLng pos2) {
+    const threshold = 0.0001; // Approximately 10-15 meters
+    return (pos1.latitude - pos2.latitude).abs() < threshold &&
+        (pos1.longitude - pos2.longitude).abs() < threshold;
+  }
+
+  /// Apply small offset to overlapping markers to make them all visible
+  LatLng _getOffsetPosition(LatLng original, int offsetIndex) {
+    // Create a circular offset pattern around the original position
+    const offsetDistance = 0.0002; // Approximately 20-25 meters
+    final angle = (offsetIndex * 60) * (3.14159 / 180); // 60 degrees apart
+    
+    return LatLng(
+      original.latitude + (offsetDistance * math.cos(angle)),
+      original.longitude + (offsetDistance * math.sin(angle)),
+    );
   }
 
   void _handleDataUpdate() {
@@ -386,21 +405,59 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
-    // Add donor markers
+    // Add donor markers with overlap detection
     if (filter.showDonors) {
+      // Track positions to detect overlaps
+      final positionMap = <LatLng, List<UserModel>>{};
+      
+      // Group donors by position
       for (final donor in donors) {
         if (donor.hasLocation) {
+          final position = LatLng(donor.latitude!, donor.longitude!);
+          
+          // Check if this position is too close to any existing position
+          LatLng? closePosition;
+          for (final existingPos in positionMap.keys) {
+            if (_arePositionsTooClose(position, existingPos)) {
+              closePosition = existingPos;
+              break;
+            }
+          }
+          
+          if (closePosition != null) {
+            // Add to existing position group
+            positionMap[closePosition]!.add(donor);
+          } else {
+            // Create new position group
+            positionMap[position] = [donor];
+          }
+        }
+      }
+      
+      // Create markers with offsets for overlapping positions
+      for (final entry in positionMap.entries) {
+        final basePosition = entry.key;
+        final donorsAtPosition = entry.value;
+        
+        for (int i = 0; i < donorsAtPosition.length; i++) {
+          final donor = donorsAtPosition[i];
+          
+          // Apply offset if there are multiple donors at this position
+          final markerPosition = donorsAtPosition.length > 1
+              ? _getOffsetPosition(basePosition, i)
+              : basePosition;
+          
           newMarkers.add(
             Marker(
               markerId: MarkerId('donor_${donor.id}'),
-              position: LatLng(donor.latitude!, donor.longitude!),
+              position: markerPosition,
               icon: BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueGreen,
               ),
               infoWindow: InfoWindow(
                 title: '🩸 ${donor.name} (${donor.bloodGroup})',
                 snippet:
-                    'Available Donor • ${donor.totalDonations} donations\nTap marker for options',
+                    'Available Donor • ${donor.totalDonations} donations\\nTap marker for options',
               ),
               onTap: () {
                 _showDonorOptions(donor);

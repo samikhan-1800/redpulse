@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/constants/app_colors.dart';
@@ -26,30 +27,28 @@ class RequestCard extends StatefulWidget {
   State<RequestCard> createState() => _RequestCardState();
 }
 
-class _RequestCardState extends State<RequestCard>
-    with SingleTickerProviderStateMixin {
-  AnimationController? _animationController;
-  Animation<double>? _animation;
+class _RequestCardState extends State<RequestCard> {
+  bool _showBorder = true;
+  Timer? _blinkTimer;
 
   @override
   void initState() {
     super.initState();
-    // Create blinking animation for emergency/SOS cards
+    // Start blinking timer for emergency/SOS cards
     if (widget.request.isEmergency || widget.request.isSOS) {
-      _animationController = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 1000),
-      );
-      _animation = Tween<double>(begin: 0.3, end: 1.0).animate(
-        CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
-      );
-      _animationController!.repeat(reverse: true);
+      _blinkTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
+        if (mounted) {
+          setState(() {
+            _showBorder = !_showBorder;
+          });
+        }
+      });
     }
   }
 
   @override
   void dispose() {
-    _animationController?.dispose();
+    _blinkTimer?.cancel();
     super.dispose();
   }
 
@@ -57,276 +56,143 @@ class _RequestCardState extends State<RequestCard>
   Widget build(BuildContext context) {
     final isEmergency = widget.request.isEmergency || widget.request.isSOS;
 
-    // Build card with animated border for emergency requests
-    if (isEmergency && _animation != null) {
-      return AnimatedBuilder(
-        animation: _animation!,
-        builder: (context, _) {
-          return Card(
-            margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              side: BorderSide(
-                color: AppColors.emergency.withOpacity(_animation!.value),
-                width: 2.5,
-              ),
-            ),
-            elevation: 4,
-            shadowColor: AppColors.emergency.withOpacity(
-              _animation!.value * 0.4,
-            ),
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(12.r),
-              child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return RepaintBoundary(
+      child: Card(
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          side: isEmergency
+              ? BorderSide(
+                  color: _showBorder
+                      ? (widget.request.isSOS ? AppColors.sos : AppColors.emergency)
+                      : (widget.request.isSOS ? AppColors.sos : AppColors.emergency)
+                          .withValues(alpha: 0.3),
+                  width: 2.5,
+                )
+              : BorderSide.none,
+        ),
+        elevation: isEmergency ? 4 : 1,
+        shadowColor: isEmergency
+            ? (widget.request.isSOS ? AppColors.sos : AppColors.emergency)
+                .withValues(alpha: 0.3)
+            : Colors.black.withValues(alpha: 0.1),
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(12.r),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
                   children: [
-                    // Header row
-                    Row(
-                      children: [
-                        // Blood group badge
-                        BloodGroupBadge(
-                          bloodGroup: widget.request.bloodGroup,
-                          size: 48,
-                        ),
-                        SizedBox(width: 12.w),
-                        // Request info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    // Blood group badge
+                    BloodGroupBadge(
+                      bloodGroup: widget.request.bloodGroup,
+                      size: 48,
+                    ),
+                    SizedBox(width: 12.w),
+                    // Request info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  if (widget.request.isEmergency ||
-                                      widget.request.isSOS)
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 8.w,
-                                        vertical: 2.h,
-                                      ),
-                                      margin: EdgeInsets.only(right: 8.w),
-                                      decoration: BoxDecoration(
-                                        color: widget.request.isSOS
-                                            ? AppColors.sos
-                                            : AppColors.emergency,
-                                        borderRadius: BorderRadius.circular(
-                                          4.r,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        widget.request.isSOS
-                                            ? 'SOS'
-                                            : 'EMERGENCY',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10.sp,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  Expanded(
-                                    child: Text(
-                                      widget.request.patientName,
-                                      style: TextStyle(
-                                        fontSize: 16.sp,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                              if (isEmergency)
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8.w,
+                                    vertical: 2.h,
+                                  ),
+                                  margin: EdgeInsets.only(right: 8.w),
+                                  decoration: BoxDecoration(
+                                    color: widget.request.isSOS
+                                        ? AppColors.sos
+                                        : AppColors.emergency,
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Text(
+                                    widget.request.isSOS ? 'SOS' : 'EMERGENCY',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10.sp,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                ],
-                              ),
-                              SizedBox(height: 4.h),
-                              Text(
-                                widget.request.hospitalName,
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  color: AppColors.textSecondary,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              Expanded(
+                                child: Text(
+                                  widget.request.patientName,
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                        // Urgency indicator
-                        UrgencyBadge(urgency: widget.request.urgencyLevel),
-                      ],
-                    ),
-                    SizedBox(height: 12.h),
-                    // Details row
-                    Row(
-                      children: [
-                        _buildDetailChip(
-                          Icons.water_drop,
-                          widget.request.unitsAccepted > 0
-                              ? '${widget.request.unitsAccepted}/${widget.request.unitsRequired} Units'
-                              : '${widget.request.unitsRequired} Units',
-                        ),
-                        SizedBox(width: 12.w),
-                        _buildDetailChip(
-                          Icons.access_time,
-                          widget.request.requiredBy.formattedDate,
-                        ),
-                        if (widget.distance != null) ...[
-                          SizedBox(width: 12.w),
-                          _buildDetailChip(
-                            Icons.location_on,
-                            widget.distance!.asDistance,
+                          SizedBox(height: 4.h),
+                          Text(
+                            widget.request.hospitalName,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
-                      ],
+                      ),
                     ),
-                    SizedBox(height: 8.h),
-                    // Status and time
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        StatusBadge(status: widget.request.status),
-                        Text(
-                          widget.request.createdAt.timeAgo,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppColors.textHint,
-                          ),
-                        ),
-                      ],
+                    // Urgency indicator
+                    UrgencyBadge(urgency: widget.request.urgencyLevel),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                // Details row
+                Row(
+                  children: [
+                    _buildDetailChip(
+                      Icons.water_drop,
+                      widget.request.unitsAccepted > 0
+                          ? '${widget.request.unitsAccepted}/${widget.request.unitsRequired} Units'
+                          : '${widget.request.unitsRequired} Units',
+                    ),
+                    SizedBox(width: 12.w),
+                    _buildDetailChip(
+                      Icons.access_time,
+                      widget.request.requiredBy.formattedDate,
+                    ),
+                    if (widget.distance != null) ...[
+                      SizedBox(width: 12.w),
+                      _buildDetailChip(
+                        Icons.location_on,
+                        widget.distance!.asDistance,
+                      ),
+                    ],
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                // Status and time
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    StatusBadge(status: widget.request.status),
+                    Text(
+                      widget.request.createdAt.timeAgo,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.textHint,
+                      ),
                     ),
                   ],
                 ),
-              ),
+              ],
             ),
-          );
-        },
-      );
-    }
-
-    // Regular card without animation
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.1),
-      child: InkWell(
-        onTap: widget.onTap,
-        borderRadius: BorderRadius.circular(12.r),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                children: [
-                  // Blood group badge
-                  BloodGroupBadge(
-                    bloodGroup: widget.request.bloodGroup,
-                    size: 48,
-                  ),
-                  SizedBox(width: 12.w),
-                  // Request info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            if (widget.request.isEmergency ||
-                                widget.request.isSOS)
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w,
-                                  vertical: 2.h,
-                                ),
-                                margin: EdgeInsets.only(right: 8.w),
-                                decoration: BoxDecoration(
-                                  color: widget.request.isSOS
-                                      ? AppColors.sos
-                                      : AppColors.emergency,
-                                  borderRadius: BorderRadius.circular(4.r),
-                                ),
-                                child: Text(
-                                  widget.request.isSOS ? 'SOS' : 'EMERGENCY',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10.sp,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            Expanded(
-                              child: Text(
-                                widget.request.patientName,
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          widget.request.hospitalName,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Urgency indicator
-                  UrgencyBadge(urgency: widget.request.urgencyLevel),
-                ],
-              ),
-              SizedBox(height: 12.h),
-              // Details row
-              Row(
-                children: [
-                  _buildDetailChip(
-                    Icons.water_drop,
-                    widget.request.unitsAccepted > 0
-                        ? '${widget.request.unitsAccepted}/${widget.request.unitsRequired} Units'
-                        : '${widget.request.unitsRequired} Units',
-                  ),
-                  SizedBox(width: 12.w),
-                  _buildDetailChip(
-                    Icons.access_time,
-                    widget.request.requiredBy.formattedDate,
-                  ),
-                  if (widget.distance != null) ...[
-                    SizedBox(width: 12.w),
-                    _buildDetailChip(
-                      Icons.location_on,
-                      widget.distance!.asDistance,
-                    ),
-                  ],
-                ],
-              ),
-              SizedBox(height: 8.h),
-              // Status and time
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  StatusBadge(status: widget.request.status),
-                  Text(
-                    widget.request.createdAt.timeAgo,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.textHint,
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ),
         ),
       ),
