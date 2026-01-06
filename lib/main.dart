@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_strings.dart';
+import 'core/utils/responsive_utils.dart';
 import 'data/providers/auth_provider.dart';
 import 'data/providers/notification_provider.dart';
 import 'data/providers/theme_provider.dart';
@@ -71,41 +72,76 @@ class RedPulseApp extends ConsumerWidget {
     return MaterialApp(
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme.copyWith(
+        appBarTheme: AppTheme.lightTheme.appBarTheme.copyWith(
+          toolbarHeight: 56, // Fixed app bar height
+        ),
+      ),
+      darkTheme: AppTheme.darkTheme.copyWith(
+        appBarTheme: AppTheme.darkTheme.appBarTheme.copyWith(
+          toolbarHeight: 56, // Fixed app bar height
+        ),
+      ),
       themeMode: themeMode,
+      builder: (context, child) {
+        // Initialize responsive utils
+        ResponsiveUtils.init(context);
+        return child ?? const SizedBox.shrink();
+      },
       home: const ResponsiveWrapper(),
     );
   }
 }
 
 /// Responsive wrapper that handles orientation changes smoothly
-class ResponsiveWrapper extends StatelessWidget {
+class ResponsiveWrapper extends StatefulWidget {
   const ResponsiveWrapper({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isLandscape = constraints.maxWidth > constraints.maxHeight;
+  State<ResponsiveWrapper> createState() => _ResponsiveWrapperState();
+}
 
-        // Use different design size based on orientation
+class _ResponsiveWrapperState extends State<ResponsiveWrapper> {
+  Orientation? _lastOrientation;
+
+  @override
+  Widget build(BuildContext context) {
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        // Update responsive utils on orientation change
+        ResponsiveUtils.init(context);
+
+        final isLandscape = orientation == Orientation.landscape;
+
+        // Use fixed design sizes that work well
         final designSize = isLandscape
-            ? const Size(812, 375) // Landscape
-            : const Size(375, 812); // Portrait
+            ? const Size(844, 390) // Landscape (iPhone 12 Pro Max landscape)
+            : const Size(390, 844); // Portrait
+
+        // Detect orientation change for smooth animation
+        final orientationChanged =
+            _lastOrientation != null && _lastOrientation != orientation;
+        _lastOrientation = orientation;
 
         return ScreenUtilInit(
+          key: ValueKey(orientation), // Force rebuild on orientation change
           designSize: designSize,
           minTextAdapt: true,
           splitScreenMode: true,
+          useInheritedMediaQuery: true,
           builder: (context, child) {
             return MediaQuery(
               data: MediaQuery.of(
                 context,
               ).copyWith(textScaler: const TextScaler.linear(1.0)),
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: const AuthWrapper(),
+                duration: Duration(milliseconds: orientationChanged ? 300 : 0),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+                child: AuthWrapper(key: ValueKey(orientation)),
               ),
             );
           },

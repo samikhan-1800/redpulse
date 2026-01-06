@@ -1,5 +1,5 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 
@@ -67,8 +67,24 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenSize = mediaQuery.size;
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+    final shortestSide = min(screenSize.width, screenSize.height);
+    
+    // Responsive sizing based on shortest side (consistent across orientations)
+    final scaleFactor = (shortestSide / 375).clamp(0.7, 1.3);
+    
+    final logoSize = (isLandscape ? 50 : 70) * scaleFactor;
+    final logoPadding = (isLandscape ? 18 : 28) * scaleFactor;
+    final titleSize = (isLandscape ? 26 : 36) * scaleFactor;
+    final taglineSize = (isLandscape ? 12 : 14) * scaleFactor;
+    final loadingSize = (isLandscape ? 28 : 35) * scaleFactor;
+    
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -82,196 +98,206 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ),
         child: SafeArea(
-          child: Stack(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isLandscape ? 40 : 24,
+                        vertical: isLandscape ? 16 : 24,
+                      ),
+                      child: isLandscape
+                          ? _buildLandscapeLayout(
+                              logoSize: logoSize,
+                              logoPadding: logoPadding,
+                              titleSize: titleSize,
+                              taglineSize: taglineSize,
+                              loadingSize: loadingSize,
+                              scaleFactor: scaleFactor,
+                            )
+                          : _buildPortraitLayout(
+                              logoSize: logoSize,
+                              logoPadding: logoPadding,
+                              titleSize: titleSize,
+                              taglineSize: taglineSize,
+                              loadingSize: loadingSize,
+                              scaleFactor: scaleFactor,
+                            ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPortraitLayout({
+    required double logoSize,
+    required double logoPadding,
+    required double titleSize,
+    required double taglineSize,
+    required double loadingSize,
+    required double scaleFactor,
+  }) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildAnimatedLogo(logoSize, logoPadding),
+        SizedBox(height: 32 * scaleFactor),
+        _buildAppName(titleSize),
+        SizedBox(height: 10 * scaleFactor),
+        _buildTagline(taglineSize),
+        SizedBox(height: 48 * scaleFactor),
+        _buildLoadingIndicator(loadingSize),
+        SizedBox(height: 12 * scaleFactor),
+        _buildLoadingText(taglineSize * 0.85),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeLayout({
+    required double logoSize,
+    required double logoPadding,
+    required double titleSize,
+    required double taglineSize,
+    required double loadingSize,
+    required double scaleFactor,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Logo on left
+        _buildAnimatedLogo(logoSize, logoPadding),
+        SizedBox(width: 40 * scaleFactor),
+        // Text content on right
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Animated background circles
-              Positioned(
-                top: -100,
-                right: -100,
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: 0.1,
-                      child: Container(
-                        width: 300.w,
-                        height: 300.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              Positioned(
-                bottom: -80,
-                left: -80,
-                child: Opacity(
-                  opacity: 0.1,
-                  child: Container(
-                    width: 250.w,
-                    height: 250.w,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              // Main content
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Animated logo
-                    AnimatedBuilder(
-                      animation: _controller,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _scaleAnimation.value * _pulseAnimation.value,
-                          child: FadeTransition(
-                            opacity: _fadeAnimation,
-                            child: Container(
-                              padding: EdgeInsets.all(32.w),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 30,
-                                    spreadRadius: 5,
-                                    offset: const Offset(0, 15),
-                                  ),
-                                  BoxShadow(
-                                    color: AppColors.accent.withOpacity(0.3),
-                                    blurRadius: 40,
-                                    spreadRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.water_drop,
-                                size: 80.sp,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    SizedBox(height: 40.h),
-                    // App name
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Text(
-                        AppStrings.appName,
-                        style: TextStyle(
-                          fontSize: 42.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 2.5,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.3),
-                              offset: const Offset(0, 4),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    // Tagline
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Text(
-                        AppStrings.appTagline,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          color: Colors.white.withOpacity(0.95),
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 60.h),
-                    // Loading indicator
-                    AnimatedBuilder(
-                      animation: _controller,
-                      builder: (context, child) {
-                        return Opacity(
-                          opacity: _fadeAnimation.value,
-                          child: SizedBox(
-                            width: 40.w,
-                            height: 40.w,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 3,
-                              valueColor: AlwaysStoppedAnimation(Colors.white),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    SizedBox(height: 16.h),
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Text(
-                        'Loading...',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: Colors.white.withOpacity(0.8),
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Footer
-              Positioned(
-                bottom: 30.h,
-                left: 0,
-                right: 0,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Column(
-                    children: [
-                      Text(
-                        'Connecting lives through blood donation',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.white.withOpacity(0.7),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.favorite,
-                            size: 14.sp,
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'Made with care for humanity',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Colors.white.withOpacity(0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+              _buildAppName(titleSize),
+              SizedBox(height: 6 * scaleFactor),
+              _buildTagline(taglineSize),
+              SizedBox(height: 20 * scaleFactor),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildLoadingIndicator(loadingSize * 0.7),
+                  SizedBox(width: 12 * scaleFactor),
+                  _buildLoadingText(taglineSize * 0.85),
+                ],
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnimatedLogo(double size, double padding) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value * _pulseAnimation.value,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: Container(
+              padding: EdgeInsets.all(padding),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 20,
+                    spreadRadius: 3,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.water_drop,
+                size: size,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAppName(double fontSize) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Text(
+        AppStrings.appName,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          letterSpacing: 2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTagline(double fontSize) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Text(
+        AppStrings.appTagline,
+        style: TextStyle(
+          fontSize: fontSize,
+          color: Colors.white.withOpacity(0.9),
+          letterSpacing: 1,
+          fontWeight: FontWeight.w400,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator(double size) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _fadeAnimation.value,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: const CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor: AlwaysStoppedAnimation(Colors.white),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadingText(double fontSize) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Text(
+        'Loading...',
+        style: TextStyle(
+          fontSize: fontSize,
+          color: Colors.white.withOpacity(0.8),
+          letterSpacing: 0.8,
         ),
       ),
     );
