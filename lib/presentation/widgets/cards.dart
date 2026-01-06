@@ -64,9 +64,13 @@ class _RequestCardState extends State<RequestCard> {
           side: isEmergency
               ? BorderSide(
                   color: _showBorder
-                      ? (widget.request.isSOS ? AppColors.sos : AppColors.emergency)
-                      : (widget.request.isSOS ? AppColors.sos : AppColors.emergency)
-                          .withValues(alpha: 0.3),
+                      ? (widget.request.isSOS
+                            ? AppColors.sos
+                            : AppColors.emergency)
+                      : (widget.request.isSOS
+                                ? AppColors.sos
+                                : AppColors.emergency)
+                            .withValues(alpha: 0.3),
                   width: 2.5,
                 )
               : BorderSide.none,
@@ -74,7 +78,7 @@ class _RequestCardState extends State<RequestCard> {
         elevation: isEmergency ? 4 : 1,
         shadowColor: isEmergency
             ? (widget.request.isSOS ? AppColors.sos : AppColors.emergency)
-                .withValues(alpha: 0.3)
+                  .withValues(alpha: 0.3)
             : Colors.black.withValues(alpha: 0.1),
         child: InkWell(
           onTap: widget.onTap,
@@ -529,6 +533,12 @@ class StatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cardColor = color ?? AppColors.primary;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final padding = isLandscape ? EdgeInsets.all(12.w) : EdgeInsets.all(16.w);
+    final iconSize = isLandscape ? 20.sp : 24.sp;
+    final valueSize = isLandscape ? 20.sp : 24.sp;
+    final titleSize = isLandscape ? 10.sp : 12.sp;
 
     return Container(
       decoration: BoxDecoration(
@@ -544,34 +554,40 @@ class StatsCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16.r),
         child: Padding(
-          padding: EdgeInsets.all(16.w),
+          padding: padding,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: EdgeInsets.all(8.w),
+                padding: EdgeInsets.all(isLandscape ? 6.w : 8.w),
                 decoration: BoxDecoration(
                   color: cardColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: Icon(icon, color: cardColor, size: 24.sp),
+                child: Icon(icon, color: cardColor, size: iconSize),
               ),
-              SizedBox(height: 12.h),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                  color: cardColor,
+              SizedBox(height: isLandscape ? 8.h : 12.h),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: valueSize,
+                    fontWeight: FontWeight.bold,
+                    color: cardColor,
+                  ),
                 ),
               ),
               SizedBox(height: 4.h),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 12.sp,
+                  fontSize: titleSize,
                   color: AppColors.textSecondary,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

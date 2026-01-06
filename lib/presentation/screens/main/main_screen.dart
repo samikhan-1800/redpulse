@@ -215,19 +215,20 @@ class _NavBarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     final color = isSelected
         ? (isDark ? AppColors.primary : Colors.white)
         : (isDark
               ? Colors.white.withOpacity(0.6)
               : Colors.white.withOpacity(0.6));
-    
-    final iconSize = isLandscape 
-        ? (isPrimary ? 22.0 : 20.0) 
+
+    final iconSize = isLandscape
+        ? (isPrimary ? 22.0 : 20.0)
         : (isPrimary ? 26.sp : 22.sp);
     final labelSize = isLandscape ? 8.0 : 9.5.sp;
-    final iconPadding = isLandscape 
-        ? (isPrimary ? 6.0 : 4.0) 
+    final iconPadding = isLandscape
+        ? (isPrimary ? 6.0 : 4.0)
         : (isPrimary ? 8.w : 6.w);
 
     return Expanded(
@@ -257,11 +258,7 @@ class _NavBarItem extends StatelessWidget {
                         isPrimary ? 14.r : 10.r,
                       ),
                     ),
-                    child: Icon(
-                      icon,
-                      size: iconSize,
-                      color: color,
-                    ),
+                    child: Icon(icon, size: iconSize, color: color),
                   ),
                   // Badge
                   if (badgeCount != null && badgeCount! > 0)

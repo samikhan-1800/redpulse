@@ -44,7 +44,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // If editing, pre-fill form fields
     if (widget.requestToEdit != null) {
       final request = widget.requestToEdit!;
@@ -65,7 +65,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         _urgencyLevel = 'high';
       }
     }
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(locationNotifierProvider.notifier).getCurrentLocation();
     });
@@ -212,8 +212,8 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
 
       if (mounted) {
         final dialog = SuccessDialog(
-          title: widget.requestToEdit != null 
-              ? 'Request Updated' 
+          title: widget.requestToEdit != null
+              ? 'Request Updated'
               : AppStrings.requestCreated,
           message: widget.requestToEdit != null
               ? 'Your blood request has been updated successfully.'
@@ -252,8 +252,8 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           widget.requestToEdit != null
               ? 'Edit Request'
               : (_requestType == 'sos'
-                  ? AppStrings.sosAlert
-                  : AppStrings.createRequest),
+                    ? AppStrings.sosAlert
+                    : AppStrings.createRequest),
         ),
       ),
       body: SingleChildScrollView(
@@ -408,17 +408,15 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                       child: child,
                     );
                   },
-                  constraints: BoxConstraints(
-                    maxHeight: 200.h,
-                  ),
+                  constraints: BoxConstraints(maxHeight: 200.h),
                   direction: VerticalDirection.up,
                   suggestionsCallback: (pattern) async {
                     if (pattern.length < 3) return [];
-                    
+
                     try {
                       // Get location suggestions from geocoding
                       final locations = await locationFromAddress(pattern);
-                      
+
                       // Convert locations to readable addresses
                       final suggestions = <String>[];
                       for (var location in locations.take(5)) {
@@ -431,47 +429,55 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                             final place = placemarks.first;
                             // Build readable address from placemark
                             final addressParts = <String>[];
-                            
+
                             // Add name if it's meaningful (not a code)
-                            if (place.name != null && 
-                                place.name!.isNotEmpty && 
+                            if (place.name != null &&
+                                place.name!.isNotEmpty &&
                                 place.name!.length > 3 &&
-                                !place.name!.contains(RegExp(r'^[A-Z0-9]{1,4}$'))) {
+                                !place.name!.contains(
+                                  RegExp(r'^[A-Z0-9]{1,4}$'),
+                                )) {
                               addressParts.add(place.name!);
                             }
-                            
+
                             // Add thoroughfare (street name)
-                            if (place.thoroughfare != null && place.thoroughfare!.isNotEmpty) {
+                            if (place.thoroughfare != null &&
+                                place.thoroughfare!.isNotEmpty) {
                               addressParts.add(place.thoroughfare!);
                             }
-                            
+
                             // Add sub-thoroughfare (street number)
-                            if (place.subThoroughfare != null && place.subThoroughfare!.isNotEmpty) {
+                            if (place.subThoroughfare != null &&
+                                place.subThoroughfare!.isNotEmpty) {
                               if (addressParts.isEmpty) {
                                 addressParts.add(place.subThoroughfare!);
                               }
                             }
-                            
+
                             // Add subLocality
-                            if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+                            if (place.subLocality != null &&
+                                place.subLocality!.isNotEmpty) {
                               addressParts.add(place.subLocality!);
                             }
-                            
+
                             // Add locality (city)
-                            if (place.locality != null && place.locality!.isNotEmpty) {
+                            if (place.locality != null &&
+                                place.locality!.isNotEmpty) {
                               addressParts.add(place.locality!);
                             }
-                            
+
                             // Add administrative area (state)
-                            if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+                            if (place.administrativeArea != null &&
+                                place.administrativeArea!.isNotEmpty) {
                               addressParts.add(place.administrativeArea!);
                             }
-                            
+
                             // Add postal code if available
-                            if (place.postalCode != null && place.postalCode!.isNotEmpty) {
+                            if (place.postalCode != null &&
+                                place.postalCode!.isNotEmpty) {
                               addressParts.add(place.postalCode!);
                             }
-                            
+
                             if (addressParts.isNotEmpty) {
                               suggestions.add(addressParts.join(', '));
                             } else if (pattern.isNotEmpty) {
@@ -483,11 +489,13 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                           // Skip this location if reverse geocoding fails
                         }
                       }
-                      
+
                       // Remove duplicates
                       final uniqueSuggestions = suggestions.toSet().toList();
-                      
-                      return uniqueSuggestions.isEmpty ? ['No results found'] : uniqueSuggestions;
+
+                      return uniqueSuggestions.isEmpty
+                          ? ['No results found']
+                          : uniqueSuggestions;
                     } catch (e) {
                       return ['No results found'];
                     }
@@ -574,8 +582,8 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                       isLoading: _isLoading,
                     )
                   : PrimaryButton(
-                      text: widget.requestToEdit != null 
-                          ? 'Update Request' 
+                      text: widget.requestToEdit != null
+                          ? 'Update Request'
                           : AppStrings.createRequest,
                       onPressed: _createRequest,
                       isLoading: _isLoading,
@@ -590,6 +598,8 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
 
   Widget _buildTypeChip(String type, String label, IconData icon) {
     final isSelected = _requestType == type;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     Color color;
     switch (type) {
       case 'emergency':
@@ -617,7 +627,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           });
         },
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 12.h),
+          padding: EdgeInsets.symmetric(vertical: isLandscape ? 8.h : 12.h),
           decoration: BoxDecoration(
             color: isSelected
                 ? color.withValues(alpha: 0.1)
@@ -629,15 +639,25 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
             ),
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: isSelected ? color : AppColors.textHint),
+              Icon(
+                icon,
+                color: isSelected ? color : AppColors.textHint,
+                size: isLandscape ? 20.sp : 24.sp,
+              ),
               SizedBox(height: 4.h),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: isSelected ? color : AppColors.textHint,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: isLandscape ? 10.sp : 12.sp,
+                    color: isSelected ? color : AppColors.textHint,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
                 ),
               ),
             ],

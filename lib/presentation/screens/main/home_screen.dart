@@ -42,243 +42,246 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: userAsync.when(
-        loading: () => const LoadingPage(),
-        error: (error, _) => ErrorState(
-          message: error.toString(),
-          onRetry: () => ref.refresh(currentUserProfileProvider),
-        ),
-        data: (user) {
-          if (user == null) {
-            return const Center(child: Text('Please login'));
-          }
+      body: RepaintBoundary(
+        child: userAsync.when(
+          loading: () => const LoadingPage(),
+          error: (error, _) => ErrorState(
+            message: error.toString(),
+            onRetry: () => ref.refresh(currentUserProfileProvider),
+          ),
+          data: (user) {
+            if (user == null) {
+              return const Center(child: Text('Please login'));
+            }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(currentUserProfileProvider);
-              await ref
-                  .read(locationNotifierProvider.notifier)
-                  .getCurrentLocation();
-            },
-            child: CustomScrollView(
-              slivers: [
-                // App bar
-                SliverAppBar(
-                  floating: true,
-                  elevation: 0,
-                  expandedHeight: 0,
-                  leading: Padding(
-                    padding: EdgeInsets.all(8.w),
-                    child: GestureDetector(
-                      onTap: () {
-                        ref.read(bottomNavIndexProvider.notifier).state = 4;
-                      },
-                      child: UserAvatar(
-                        imageUrl: user.profileImageUrl,
-                        name: user.name,
-                        size: 40,
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(currentUserProfileProvider);
+                await ref
+                    .read(locationNotifierProvider.notifier)
+                    .getCurrentLocation();
+              },
+              child: CustomScrollView(
+                slivers: [
+                  // App bar
+                  SliverAppBar(
+                    floating: true,
+                    elevation: 0,
+                    expandedHeight: 0,
+                    leading: Padding(
+                      padding: EdgeInsets.all(8.w),
+                      child: GestureDetector(
+                        onTap: () {
+                          ref.read(bottomNavIndexProvider.notifier).state = 4;
+                        },
+                        child: UserAvatar(
+                          imageUrl: user.profileImageUrl,
+                          name: user.name,
+                          size: 40,
+                        ),
                       ),
                     ),
-                  ),
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${AppStrings.hello}, ${user.name.split(' ').first}! 👋',
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (user.city != null)
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          user.city!,
+                          '${AppStrings.hello}, ${user.name.split(' ').first}! 👋',
                           style: TextStyle(
-                            fontSize: 11.sp,
-                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        if (user.city != null)
+                          Text(
+                            user.city!,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                      ],
+                    ),
+                    actions: [
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationsScreen(),
+                            ),
+                          );
+                        },
+                        icon: BadgeCounter(
+                          count: unreadCount,
+                          child: const Icon(Icons.notifications_outlined),
+                        ),
+                      ),
                     ],
                   ),
-                  actions: [
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const NotificationsScreen(),
-                          ),
-                        );
-                      },
-                      icon: BadgeCounter(
-                        count: unreadCount,
-                        child: const Icon(Icons.notifications_outlined),
-                      ),
-                    ),
-                  ],
-                ),
-                // Content
-                SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Availability toggle
-                      Padding(
-                        padding: EdgeInsets.all(16.w),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: AvailabilityToggle(
-                                isAvailable: user.isAvailable,
-                                onChanged: (value) {
-                                  ref
-                                      .read(
-                                        userProfileNotifierProvider.notifier,
-                                      )
-                                      .toggleAvailability(value);
-                                },
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            BloodGroupBadge(
-                              bloodGroup: user.bloodGroup,
-                              size: 48,
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Stats cards
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: StatsCard(
-                                title: AppStrings.totalDonations,
-                                value: donationStats.totalDonations.toString(),
-                                icon: Icons.volunteer_activism,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: StatsCard(
-                                title: AppStrings.livesSaved,
-                                value: donationStats.livesSaved.toString(),
-                                icon: Icons.favorite,
-                                color: AppColors.success,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 24.h),
-                      // Quick actions
-                      const SectionHeader(title: AppStrings.quickActions),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final isLandscape =
-                                MediaQuery.of(context).orientation ==
-                                Orientation.landscape;
-                            final cardHeight = isLandscape ? 80.0 : 110.0;
-
-                            return SizedBox(
-                              height: cardHeight,
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: _QuickActionCard(
-                                      icon: Icons.add_circle,
-                                      title: AppStrings.createRequest,
-                                      color: AppColors.primary,
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const CreateRequestScreen(),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  SizedBox(width: 12.w),
-                                  Expanded(
-                                    child: _QuickActionCard(
-                                      icon: Icons.emergency,
-                                      title: AppStrings.sosAlert,
-                                      color: AppColors.emergency,
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const CreateRequestScreen(
-                                                  requestType: 'sos',
-                                                ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  SizedBox(width: 12.w),
-                                  Expanded(
-                                    child: _QuickActionCard(
-                                      icon: Icons.search,
-                                      title: AppStrings.findDonors,
-                                      color: AppColors.primary,
-                                      onTap: () {
-                                        ref
-                                                .read(
-                                                  bottomNavIndexProvider
-                                                      .notifier,
-                                                )
-                                                .state =
-                                            1;
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 24.h),
-                      // Nearby requests
-                      SectionHeader(
-                        title: AppStrings.nearbyRequests,
-                        actionText: 'See All',
-                        onActionPressed: () {
-                          ref.read(bottomNavIndexProvider.notifier).state = 2;
-                        },
-                      ),
-                      // Requests list
-                      Container(
-                        constraints: BoxConstraints(minHeight: 100.h),
-                        child: locationState.position != null
-                            ? _NearbyRequestsList(
-                                latitude: locationState.position!.latitude,
-                                longitude: locationState.position!.longitude,
-                              )
-                            : Padding(
-                                padding: EdgeInsets.all(16.w),
-                                child: const EmptyState(
-                                  icon: Icons.location_off,
-                                  title: 'Location not available',
-                                  subtitle:
-                                      'Enable location to see nearby requests',
+                  // Content
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Availability toggle
+                        Padding(
+                          padding: EdgeInsets.all(16.w),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: AvailabilityToggle(
+                                  isAvailable: user.isAvailable,
+                                  onChanged: (value) {
+                                    ref
+                                        .read(
+                                          userProfileNotifierProvider.notifier,
+                                        )
+                                        .toggleAvailability(value);
+                                  },
                                 ),
                               ),
-                      ),
-                      SizedBox(height: 24.h),
-                    ],
+                              SizedBox(width: 12.w),
+                              BloodGroupBadge(
+                                bloodGroup: user.bloodGroup,
+                                size: 48,
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Stats cards
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: StatsCard(
+                                  title: AppStrings.totalDonations,
+                                  value: donationStats.totalDonations
+                                      .toString(),
+                                  icon: Icons.volunteer_activism,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: StatsCard(
+                                  title: AppStrings.livesSaved,
+                                  value: donationStats.livesSaved.toString(),
+                                  icon: Icons.favorite,
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 24.h),
+                        // Quick actions
+                        const SectionHeader(title: AppStrings.quickActions),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isLandscape =
+                                  MediaQuery.of(context).orientation ==
+                                  Orientation.landscape;
+                              final cardHeight = isLandscape ? 80.0 : 110.0;
+
+                              return SizedBox(
+                                height: cardHeight,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: _QuickActionCard(
+                                        icon: Icons.add_circle,
+                                        title: AppStrings.createRequest,
+                                        color: AppColors.primary,
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const CreateRequestScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    Expanded(
+                                      child: _QuickActionCard(
+                                        icon: Icons.emergency,
+                                        title: AppStrings.sosAlert,
+                                        color: AppColors.emergency,
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const CreateRequestScreen(
+                                                    requestType: 'sos',
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    Expanded(
+                                      child: _QuickActionCard(
+                                        icon: Icons.search,
+                                        title: AppStrings.findDonors,
+                                        color: AppColors.primary,
+                                        onTap: () {
+                                          ref
+                                                  .read(
+                                                    bottomNavIndexProvider
+                                                        .notifier,
+                                                  )
+                                                  .state =
+                                              1;
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 24.h),
+                        // Nearby requests
+                        SectionHeader(
+                          title: AppStrings.nearbyRequests,
+                          actionText: 'See All',
+                          onActionPressed: () {
+                            ref.read(bottomNavIndexProvider.notifier).state = 2;
+                          },
+                        ),
+                        // Requests list
+                        Container(
+                          constraints: BoxConstraints(minHeight: 100.h),
+                          child: locationState.position != null
+                              ? _NearbyRequestsList(
+                                  latitude: locationState.position!.latitude,
+                                  longitude: locationState.position!.longitude,
+                                )
+                              : Padding(
+                                  padding: EdgeInsets.all(16.w),
+                                  child: const EmptyState(
+                                    icon: Icons.location_off,
+                                    title: 'Location not available',
+                                    subtitle:
+                                        'Enable location to see nearby requests',
+                                  ),
+                                ),
+                        ),
+                        SizedBox(height: 24.h),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

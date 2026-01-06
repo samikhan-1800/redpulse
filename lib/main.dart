@@ -68,32 +68,47 @@ class RedPulseApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
 
-    return ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      useInheritedMediaQuery: true,
-      rebuildFactor: (old, data) => true,
-      builder: (context, child) {
-        return MaterialApp(
-          title: AppStrings.appName,
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
+    return MaterialApp(
+      title: AppStrings.appName,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
+      home: const ResponsiveWrapper(),
+    );
+  }
+}
+
+/// Responsive wrapper that handles orientation changes smoothly
+class ResponsiveWrapper extends StatelessWidget {
+  const ResponsiveWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isLandscape = constraints.maxWidth > constraints.maxHeight;
+
+        // Use different design size based on orientation
+        final designSize = isLandscape
+            ? const Size(812, 375) // Landscape
+            : const Size(375, 812); // Portrait
+
+        return ScreenUtilInit(
+          designSize: designSize,
+          minTextAdapt: true,
+          splitScreenMode: true,
           builder: (context, child) {
-            // Clamp text scaling for better responsiveness
-            final mediaQuery = MediaQuery.of(context);
-            final scale = mediaQuery.textScaler.clamp(
-              minScaleFactor: 0.8,
-              maxScaleFactor: 1.2,
-            );
             return MediaQuery(
-              data: mediaQuery.copyWith(textScaler: scale),
-              child: child!,
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.0)),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: const AuthWrapper(),
+              ),
             );
           },
-          darkTheme: AppTheme.darkTheme,
-          themeMode: themeMode,
-          home: const AuthWrapper(),
         );
       },
     );
