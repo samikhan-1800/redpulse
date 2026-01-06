@@ -116,6 +116,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       const ProfileScreen(),
     ];
 
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final navBarHeight = isLandscape ? 56.0 : 70.h;
+
     return Scaffold(
       resizeToAvoidBottomInset:
           false, // Prevent keyboard from pushing bottom nav
@@ -137,8 +141,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ),
         child: SafeArea(
           child: Container(
-            height: 70.h,
-            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 6.h),
+            height: navBarHeight,
+            padding: EdgeInsets.symmetric(
+              horizontal: 4.w,
+              vertical: isLandscape ? 4 : 6.h,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -208,18 +215,27 @@ class _NavBarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final color = isSelected
         ? (isDark ? AppColors.primary : Colors.white)
         : (isDark
               ? Colors.white.withOpacity(0.6)
               : Colors.white.withOpacity(0.6));
+    
+    final iconSize = isLandscape 
+        ? (isPrimary ? 22.0 : 20.0) 
+        : (isPrimary ? 26.sp : 22.sp);
+    final labelSize = isLandscape ? 8.0 : 9.5.sp;
+    final iconPadding = isLandscape 
+        ? (isPrimary ? 6.0 : 4.0) 
+        : (isPrimary ? 8.w : 6.w);
 
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          padding: EdgeInsets.symmetric(vertical: 2.h),
+          padding: EdgeInsets.symmetric(vertical: isLandscape ? 2 : 2.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -230,7 +246,7 @@ class _NavBarItem extends StatelessWidget {
                   // Icon container with background
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.all(isPrimary ? 8.w : 6.w),
+                    padding: EdgeInsets.all(iconPadding),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? (Theme.of(context).brightness == Brightness.dark
@@ -243,7 +259,7 @@ class _NavBarItem extends StatelessWidget {
                     ),
                     child: Icon(
                       icon,
-                      size: isPrimary ? 26.sp : 22.sp,
+                      size: iconSize,
                       color: color,
                     ),
                   ),
@@ -253,22 +269,22 @@ class _NavBarItem extends StatelessWidget {
                       right: -2,
                       top: -2,
                       child: Container(
-                        padding: EdgeInsets.all(3.w),
+                        padding: EdgeInsets.all(isLandscape ? 2 : 3.w),
                         decoration: BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 1.5),
                         ),
                         constraints: BoxConstraints(
-                          minWidth: 16.w,
-                          minHeight: 16.w,
+                          minWidth: isLandscape ? 14 : 16.w,
+                          minHeight: isLandscape ? 14 : 16.w,
                         ),
                         child: Center(
                           child: Text(
                             badgeCount! > 99 ? '99+' : badgeCount.toString(),
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 8.sp,
+                              fontSize: isLandscape ? 7 : 8.sp,
                               fontWeight: FontWeight.bold,
                               height: 1,
                             ),
@@ -278,12 +294,12 @@ class _NavBarItem extends StatelessWidget {
                     ),
                 ],
               ),
-              SizedBox(height: 3.h),
+              SizedBox(height: isLandscape ? 2 : 3.h),
               // Label
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 style: TextStyle(
-                  fontSize: 9.5.sp,
+                  fontSize: labelSize,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: color,
                   height: 1,

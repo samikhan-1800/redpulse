@@ -72,16 +72,22 @@ class RedPulseApp extends ConsumerWidget {
       designSize: const Size(375, 812),
       minTextAdapt: true,
       splitScreenMode: true,
+      useInheritedMediaQuery: true,
+      rebuildFactor: (old, data) => true,
       builder: (context, child) {
         return MaterialApp(
           title: AppStrings.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           builder: (context, child) {
+            // Clamp text scaling for better responsiveness
+            final mediaQuery = MediaQuery.of(context);
+            final scale = mediaQuery.textScaler.clamp(
+              minScaleFactor: 0.8,
+              maxScaleFactor: 1.2,
+            );
             return MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(1.0)),
+              data: mediaQuery.copyWith(textScaler: scale),
               child: child!,
             );
           },

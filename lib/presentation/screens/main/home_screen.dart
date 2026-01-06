@@ -177,56 +177,71 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SectionHeader(title: AppStrings.quickActions),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Expanded(
-                              child: _QuickActionCard(
-                                icon: Icons.add_circle,
-                                title: AppStrings.createRequest,
-                                color: AppColors.primary,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const CreateRequestScreen(),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isLandscape =
+                                MediaQuery.of(context).orientation ==
+                                Orientation.landscape;
+                            final cardHeight = isLandscape ? 80.0 : 110.0;
+
+                            return SizedBox(
+                              height: cardHeight,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: _QuickActionCard(
+                                      icon: Icons.add_circle,
+                                      title: AppStrings.createRequest,
+                                      color: AppColors.primary,
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const CreateRequestScreen(),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  );
-                                },
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: _QuickActionCard(
-                                icon: Icons.emergency,
-                                title: AppStrings.sosAlert,
-                                color: AppColors.emergency,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => const CreateRequestScreen(
-                                        requestType: 'sos',
-                                      ),
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: _QuickActionCard(
+                                      icon: Icons.emergency,
+                                      title: AppStrings.sosAlert,
+                                      color: AppColors.emergency,
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const CreateRequestScreen(
+                                                  requestType: 'sos',
+                                                ),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  );
-                                },
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: _QuickActionCard(
+                                      icon: Icons.search,
+                                      title: AppStrings.findDonors,
+                                      color: AppColors.primary,
+                                      onTap: () {
+                                        ref
+                                                .read(
+                                                  bottomNavIndexProvider
+                                                      .notifier,
+                                                )
+                                                .state =
+                                            1;
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: _QuickActionCard(
-                                icon: Icons.search,
-                                title: AppStrings.findDonors,
-                                color: AppColors.primary,
-                                onTap: () {
-                                  ref
-                                          .read(bottomNavIndexProvider.notifier)
-                                          .state =
-                                      1;
-                                },
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                       ),
                       SizedBox(height: 24.h),
@@ -284,6 +299,15 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final cardPadding = isLandscape
+        ? EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w)
+        : EdgeInsets.symmetric(vertical: 20.h, horizontal: 12.w);
+    final iconSize = isLandscape ? 20.sp : 24.sp;
+    final fontSize = isLandscape ? 10.sp : 11.sp;
+    final iconPadding = isLandscape ? 8.w : 12.w;
+
     return Card(
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -297,24 +321,30 @@ class _QuickActionCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: color.withOpacity(0.2), width: 1),
           ),
-          padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 12.w),
+          padding: cardPadding,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: EdgeInsets.all(12.w),
+                padding: EdgeInsets.all(iconPadding),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 24.sp),
+                child: Icon(icon, color: color, size: iconSize),
               ),
-              SizedBox(height: 8.h),
-              Text(
-                title,
-                style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              SizedBox(height: isLandscape ? 4.h : 8.h),
+              Flexible(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
