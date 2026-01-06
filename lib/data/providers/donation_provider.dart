@@ -4,7 +4,6 @@ import '../services/database_service.dart';
 import '../models/donation_model.dart';
 import 'auth_provider.dart';
 
-/// Donation notifier for managing donations
 class DonationNotifier extends StateNotifier<AsyncValue<void>> {
   final DatabaseService _databaseService;
   final String? _userId;
@@ -12,7 +11,6 @@ class DonationNotifier extends StateNotifier<AsyncValue<void>> {
   DonationNotifier(this._databaseService, this._userId)
     : super(const AsyncValue.data(null));
 
-  /// Record a new donation
   Future<String?> recordDonation({
     required String recipientId,
     required String recipientName,
@@ -47,7 +45,6 @@ class DonationNotifier extends StateNotifier<AsyncValue<void>> {
 
       final donationId = await _databaseService.createDonation(donation);
 
-      // Update user's last donation date
       await _databaseService.updateUser(_userId, {
         'lastDonationDate': Timestamp.fromDate(donationDate),
         'totalDonations': FieldValue.increment(1),
@@ -62,7 +59,6 @@ class DonationNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-/// Donation notifier provider
 final donationNotifierProvider =
     StateNotifierProvider<DonationNotifier, AsyncValue<void>>((ref) {
       return DonationNotifier(
@@ -71,7 +67,6 @@ final donationNotifierProvider =
       );
     });
 
-/// User's donations stream provider
 final userDonationsProvider = StreamProvider<List<Donation>>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
@@ -80,9 +75,7 @@ final userDonationsProvider = StreamProvider<List<Donation>>((ref) {
   return databaseService.userDonationsStream(userId);
 });
 
-/// Donation statistics provider
 final donationStatsProvider = Provider<DonationStats>((ref) {
-  // Handle errors gracefully - return empty stats if query fails
   final donationsAsync = ref.watch(userDonationsProvider);
   final donations = donationsAsync.whenOrNull(data: (data) => data) ?? [];
 
@@ -94,7 +87,6 @@ final donationStatsProvider = Provider<DonationStats>((ref) {
   );
 });
 
-/// Group donations by month for analytics
 Map<String, int> _groupDonationsByMonth(List<Donation> donations) {
   final Map<String, int> grouped = {};
 
@@ -107,7 +99,6 @@ Map<String, int> _groupDonationsByMonth(List<Donation> donations) {
   return grouped;
 }
 
-/// Donation statistics class
 class DonationStats {
   final int totalDonations;
   final int totalUnits;
@@ -121,6 +112,5 @@ class DonationStats {
     required this.donationsByMonth,
   });
 
-  /// Lives saved count (1 donation = 1 life saved)
   int get livesSaved => totalDonations;
 }

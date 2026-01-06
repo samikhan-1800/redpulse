@@ -4,7 +4,6 @@ import '../services/notification_service.dart';
 import '../models/notification_model.dart';
 import 'auth_provider.dart';
 
-/// Notifications stream provider
 final notificationsProvider = StreamProvider<List<NotificationModel>>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
@@ -13,16 +12,13 @@ final notificationsProvider = StreamProvider<List<NotificationModel>>((ref) {
   return databaseService.notificationsStream(userId);
 });
 
-/// Unread notifications count provider
 final unreadNotificationsCountProvider = Provider<int>((ref) {
-  // Handle errors gracefully - return 0 if query fails
   final notificationsAsync = ref.watch(notificationsProvider);
   final notifications =
       notificationsAsync.whenOrNull(data: (data) => data) ?? [];
   return notifications.where((n) => !n.isRead).length;
 });
 
-/// Notification notifier for handling FCM initialization
 class NotificationNotifier extends StateNotifier<AsyncValue<void>> {
   final NotificationService _notificationService;
   final String? _userId;
@@ -30,7 +26,6 @@ class NotificationNotifier extends StateNotifier<AsyncValue<void>> {
   NotificationNotifier(this._notificationService, this._userId)
     : super(const AsyncValue.data(null));
 
-  /// Initialize notifications
   Future<void> initialize() async {
     if (_userId == null) return;
 
@@ -45,7 +40,6 @@ class NotificationNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-/// Notification notifier provider
 final notificationNotifierProvider =
     StateNotifierProvider<NotificationNotifier, AsyncValue<void>>((ref) {
       return NotificationNotifier(
@@ -54,7 +48,6 @@ final notificationNotifierProvider =
       );
     });
 
-/// Notification actions notifier
 class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final DatabaseService _databaseService;
   final String? _userId;
@@ -62,7 +55,6 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
   NotificationActionsNotifier(this._databaseService, this._userId)
     : super(const AsyncValue.data(null));
 
-  /// Mark a notification as read
   Future<void> markAsRead(String notificationId) async {
     try {
       await _databaseService.markNotificationAsRead(notificationId);
@@ -71,7 +63,6 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Mark all notifications as read
   Future<void> markAllAsRead() async {
     if (_userId == null) return;
 
@@ -85,7 +76,6 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-/// Notification actions provider
 final notificationActionsProvider =
     StateNotifierProvider<NotificationActionsNotifier, AsyncValue<void>>((ref) {
       return NotificationActionsNotifier(

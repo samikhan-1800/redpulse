@@ -1,11 +1,9 @@
 import '../constants/app_constants.dart';
 import '../constants/app_strings.dart';
 
-/// Form validation utilities
 class Validators {
   Validators._();
 
-  /// Validate email address
   static String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return AppStrings.fieldRequired;
@@ -19,7 +17,6 @@ class Validators {
     return null;
   }
 
-  /// Validate password
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return AppStrings.fieldRequired;
@@ -30,7 +27,6 @@ class Validators {
     return null;
   }
 
-  /// Validate password confirmation
   static String? validateConfirmPassword(String? value, String password) {
     if (value == null || value.isEmpty) {
       return AppStrings.fieldRequired;
@@ -41,7 +37,6 @@ class Validators {
     return null;
   }
 
-  /// Validate required field
   static String? validateRequired(String? value) {
     if (value == null || value.trim().isEmpty) {
       return AppStrings.fieldRequired;
@@ -49,7 +44,6 @@ class Validators {
     return null;
   }
 
-  /// Validate name
   static String? validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
       return AppStrings.fieldRequired;
@@ -64,7 +58,6 @@ class Validators {
     return null;
   }
 
-  /// Validate phone number
   static String? validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
       return AppStrings.fieldRequired;
@@ -76,7 +69,6 @@ class Validators {
     return null;
   }
 
-  /// Validate age
   static String? validateAge(int? age) {
     if (age == null) {
       return AppStrings.fieldRequired;
@@ -90,7 +82,6 @@ class Validators {
     return null;
   }
 
-  /// Validate blood group
   static String? validateBloodGroup(String? value) {
     if (value == null || value.isEmpty) {
       return AppStrings.fieldRequired;
@@ -101,7 +92,6 @@ class Validators {
     return null;
   }
 
-  /// Validate units required
   static String? validateUnitsRequired(String? value) {
     if (value == null || value.isEmpty) {
       return AppStrings.fieldRequired;
@@ -116,7 +106,6 @@ class Validators {
     return null;
   }
 
-  /// Validate date (for required by date)
   static String? validateFutureDate(DateTime? date) {
     if (date == null) {
       return AppStrings.fieldRequired;
@@ -127,7 +116,6 @@ class Validators {
     return null;
   }
 
-  /// Validate bio
   static String? validateBio(String? value) {
     if (value != null && value.length > AppConstants.maxBioLength) {
       return 'Bio must be less than ${AppConstants.maxBioLength} characters';

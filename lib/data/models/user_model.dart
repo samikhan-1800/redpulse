@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// User model representing a blood donor/recipient
 class UserModel {
   final String id;
   final String email;
@@ -48,11 +47,9 @@ class UserModel {
     this.useBiometric = false,
   });
 
-  /// Create from Firestore document
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
-    // Handle both base64 and URL formats for profile image
     String? imageUrl = data['profileImageUrl'];
     final base64Image = data['profileImageBase64'];
     if (base64Image != null && base64Image.isNotEmpty) {
@@ -85,8 +82,6 @@ class UserModel {
       useBiometric: data['useBiometric'] ?? false,
     );
   }
-
-  /// Convert to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
       'email': email,
@@ -114,7 +109,6 @@ class UserModel {
     };
   }
 
-  /// Copy with modified fields
   UserModel copyWith({
     String? id,
     String? email,
@@ -163,7 +157,6 @@ class UserModel {
     );
   }
 
-  /// Calculate age from date of birth
   int get age {
     final now = DateTime.now();
     int age = now.year - dateOfBirth.year;
@@ -174,25 +167,21 @@ class UserModel {
     return age;
   }
 
-  /// Check if user can donate based on last donation date and gender
   bool get canDonate {
     if (lastDonationDate == null) return true;
     final daysSinceLastDonation = DateTime.now()
         .difference(lastDonationDate!)
         .inDays;
-    // Males can donate every 90 days, females every 120 days
     final cooldownDays = gender.toLowerCase() == 'male' ? 90 : 120;
     return daysSinceLastDonation >= cooldownDays;
   }
 
-  /// Get next eligible donation date
   DateTime? get nextEligibleDate {
     if (lastDonationDate == null) return null;
     final cooldownDays = gender.toLowerCase() == 'male' ? 90 : 120;
     return lastDonationDate!.add(Duration(days: cooldownDays));
   }
 
-  /// Check if user has location set
   bool get hasLocation => latitude != null && longitude != null;
 
   @override

@@ -2,7 +2,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/app_constants.dart';
 
-/// FCM Notification Service
 class NotificationService {
   final FirebaseMessaging _messaging;
   final FirebaseFirestore _firestore;
@@ -13,10 +12,8 @@ class NotificationService {
   }) : _messaging = messaging ?? FirebaseMessaging.instance,
        _firestore = firestore ?? FirebaseFirestore.instance;
 
-  /// Initialize FCM and get token
   Future<String?> initialize() async {
     try {
-      // Request permission for iOS
       final settings = await _messaging.requestPermission(
         alert: true,
         announcement: false,
@@ -28,7 +25,6 @@ class NotificationService {
       );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        // Get FCM token
         final token = await _messaging.getToken();
         return token;
       }
@@ -40,7 +36,6 @@ class NotificationService {
     }
   }
 
-  /// Save FCM token to user document
   Future<void> saveToken(String userId, String token) async {
     try {
       await _firestore
@@ -52,52 +47,34 @@ class NotificationService {
     }
   }
 
-  /// Listen for token refresh
   void onTokenRefresh(String userId) {
     _messaging.onTokenRefresh.listen((token) {
       saveToken(userId, token);
     });
   }
 
-  /// Subscribe to topic
   Future<void> subscribeToTopic(String topic) async {
     await _messaging.subscribeToTopic(topic);
   }
 
-  /// Unsubscribe from topic
   Future<void> unsubscribeFromTopic(String topic) async {
     await _messaging.unsubscribeFromTopic(topic);
   }
 
-  /// Handle foreground messages
-  /// NOTE: Listeners are now in main_screen.dart to avoid duplicate notifications
-  void onForegroundMessage(Function(RemoteMessage) callback) {
-    // Removed to prevent duplicate listeners - handled in main_screen.dart
-    // FirebaseMessaging.onMessage.listen(callback);
-  }
+  void onForegroundMessage(Function(RemoteMessage) callback) {}
 
-  /// Handle background/terminated message tap
-  /// NOTE: Listeners are now in main_screen.dart to avoid duplicate notifications
-  void onMessageOpenedApp(Function(RemoteMessage) callback) {
-    // Removed to prevent duplicate listeners - handled in main_screen.dart
-    // FirebaseMessaging.onMessageOpenedApp.listen(callback);
-  }
+  void onMessageOpenedApp(Function(RemoteMessage) callback) {}
 
-  /// Check for initial message (app opened from terminated state)
   Future<RemoteMessage?> getInitialMessage() async {
     return await _messaging.getInitialMessage();
   }
 
-  /// Send notification to specific user (server-side function would handle this)
-  /// This is a placeholder - actual sending should be done via Cloud Functions
   Future<void> sendNotificationToUser({
     required String userId,
     required String title,
     required String body,
     Map<String, dynamic>? data,
   }) async {
-    // Store notification in Firestore
-    // A Cloud Function would listen to this and send the actual push notification
     await _firestore.collection(AppConstants.notificationsCollection).add({
       'userId': userId,
       'title': title,
@@ -109,7 +86,6 @@ class NotificationService {
     });
   }
 
-  /// Send notification to nearby donors
   Future<void> notifyNearbyDonors({
     required String requestId,
     required String bloodGroup,
@@ -119,7 +95,6 @@ class NotificationService {
   }) async {
     final batch = _firestore.batch();
 
-    // Determine notification title based on request type
     final title = requestType == 'sos'
         ? '🚨 SOS: Blood Needed Urgently!'
         : requestType == 'emergency'
@@ -127,8 +102,6 @@ class NotificationService {
         : '🩸 Blood Request Nearby';
 
     final body = '$bloodGroup blood needed at $hospitalName';
-
-    // Create notification records for each donor
     for (final donorId in donorIds) {
       final notificationRef = _firestore
           .collection(AppConstants.notificationsCollection)

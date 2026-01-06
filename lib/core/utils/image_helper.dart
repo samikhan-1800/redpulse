@@ -3,14 +3,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-/// Helper to display images from URL or base64 data
 class ImageHelper {
-  /// Check if URL is a base64 data URL
   static bool isBase64Image(String? url) {
     return url?.startsWith('data:image') ?? false;
   }
 
-  /// Decode base64 data URL to bytes
   static Uint8List? decodeBase64Image(String dataUrl) {
     try {
       final base64String = dataUrl.split(',').last;
@@ -20,7 +17,6 @@ class ImageHelper {
     }
   }
 
-  /// Get ImageProvider for URL or base64
   static ImageProvider getImageProvider(String url) {
     if (isBase64Image(url)) {
       final bytes = decodeBase64Image(url);
@@ -31,7 +27,6 @@ class ImageHelper {
     return CachedNetworkImageProvider(url);
   }
 
-  /// Build profile image widget
   static Widget buildProfileImage({
     required String? imageUrl,
     required double size,

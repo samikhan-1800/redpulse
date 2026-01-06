@@ -13,7 +13,6 @@ import '../../widgets/buttons.dart';
 import '../../widgets/cards.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dialogs.dart';
-import '../chat/chat_screen.dart';
 import '../main/main_screen.dart';
 import 'create_request_screen.dart';
 
@@ -245,7 +244,8 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
     final confirmed = await ConfirmationDialog.show(
       context,
       title: 'Delete Request',
-      message: 'Are you sure you want to permanently delete this request? This action cannot be undone.',
+      message:
+          'Are you sure you want to permanently delete this request? This action cannot be undone.',
       confirmText: 'Delete',
       isDangerous: true,
     );
@@ -258,9 +258,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
           .deleteRequest(widget.request.id);
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Request deleted successfully'),
             backgroundColor: AppColors.success,
@@ -287,15 +285,16 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
       appBar: AppBar(
         title: const Text(AppStrings.requestDetails),
         actions: [
-          if (isOwner && widget.request.status != 'completed' && widget.request.status != 'cancelled')
+          if (isOwner &&
+              widget.request.status != 'completed' &&
+              widget.request.status != 'cancelled')
             PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'edit') {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => CreateRequestScreen(
-                        requestToEdit: widget.request,
-                      ),
+                      builder: (_) =>
+                          CreateRequestScreen(requestToEdit: widget.request),
                     ),
                   );
                 } else if (value == 'completed') {

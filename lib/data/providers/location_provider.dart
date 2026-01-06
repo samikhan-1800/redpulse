@@ -3,7 +3,6 @@ import 'package:geolocator/geolocator.dart';
 import '../services/location_service.dart';
 import 'auth_provider.dart';
 
-/// Location state
 class LocationState {
   final Position? position;
   final String? address;
@@ -36,13 +35,11 @@ class LocationState {
   }
 }
 
-/// Location notifier for managing user location
 class LocationNotifier extends StateNotifier<LocationState> {
   final LocationService _locationService;
 
   LocationNotifier(this._locationService) : super(const LocationState());
 
-  /// Check and request location permission
   Future<bool> checkPermission() async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -83,7 +80,6 @@ class LocationNotifier extends StateNotifier<LocationState> {
     return true;
   }
 
-  /// Get current location
   Future<Position?> getCurrentLocation() async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -107,16 +103,13 @@ class LocationNotifier extends StateNotifier<LocationState> {
         permissionGranted: true,
       );
 
-      // Try to get address
       try {
         final addr = await _locationService.getAddressFromCoordinates(
           position.latitude,
           position.longitude,
         );
         state = state.copyWith(address: addr);
-      } catch (_) {
-        // Address lookup failed, but we have position
-      }
+      } catch (_) {}
 
       return position;
     } catch (e) {
@@ -128,7 +121,6 @@ class LocationNotifier extends StateNotifier<LocationState> {
     }
   }
 
-  /// Calculate distance to a point
   double? distanceTo(double latitude, double longitude) {
     if (state.position == null) return null;
     return _locationService.calculateDistance(
@@ -139,29 +131,24 @@ class LocationNotifier extends StateNotifier<LocationState> {
     );
   }
 
-  /// Open location settings
   Future<void> openSettings() async {
     await _locationService.openLocationSettings();
   }
 
-  /// Open app settings
   Future<void> openAppSettings() async {
     await _locationService.openAppSettings();
   }
 }
 
-/// Location notifier provider
 final locationNotifierProvider =
     StateNotifierProvider<LocationNotifier, LocationState>((ref) {
       return LocationNotifier(ref.watch(locationServiceProvider));
     });
 
-/// Current position provider (convenience)
 final currentPositionProvider = Provider<Position?>((ref) {
   return ref.watch(locationNotifierProvider).position;
 });
 
-/// Position stream provider for real-time updates
 final positionStreamProvider = StreamProvider<Position>((ref) {
   final locationService = ref.watch(locationServiceProvider);
   return locationService.getPositionStream();

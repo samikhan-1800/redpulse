@@ -81,26 +81,22 @@ class AppStrings {
   static const String useCurrentLocation = 'Use Current Location';
   static const String call = 'Call';
 
-  // Status Strings
   static const String pending = 'Pending';
   static const String accepted = 'Accepted';
   static const String completed = 'Completed';
   static const String cancelled = 'Cancelled';
   static const String expired = 'Expired';
 
-  // Urgency Strings
   static const String low = 'Low';
   static const String medium = 'Medium';
   static const String high = 'High';
   static const String critical = 'Critical';
 
-  // Chat Strings
   static const String messages = 'Messages';
   static const String noMessages = 'No messages yet';
   static const String typeMessage = 'Type a message...';
   static const String send = 'Send';
 
-  // Map Strings
   static const String findDonors = 'Find Donors';
   static const String nearbyDonors = 'Nearby Donors';
   static const String searchRadius = 'Search Radius';
@@ -109,7 +105,6 @@ class AppStrings {
   static const String myLocation = 'My Location';
   static const String directions = 'Directions';
 
-  // Donation Strings
   static const String donationHistory = 'Donation History';
   static const String noDonations = 'No donations yet';
   static const String lastDonation = 'Last Donation';
@@ -117,12 +112,10 @@ class AppStrings {
   static const String donate = 'Donate';
   static const String donateNow = 'Donate Now';
 
-  // Notification Strings
   static const String notifications = 'Notifications';
   static const String noNotifications = 'No notifications';
   static const String markAllRead = 'Mark all as read';
 
-  // Error Strings
   static const String error = 'Error';
   static const String somethingWentWrong = 'Something went wrong';
   static const String noInternetConnection = 'No internet connection';
@@ -134,7 +127,6 @@ class AppStrings {
   static const String fieldRequired = 'This field is required';
   static const String invalidPhoneNumber = 'Invalid phone number';
 
-  // Success Strings
   static const String success = 'Success';
   static const String profileUpdated = 'Profile updated successfully';
   static const String requestCreated = 'Request created successfully';
@@ -142,7 +134,6 @@ class AppStrings {
   static const String requestCancelled = 'Request cancelled';
   static const String passwordResetSent = 'Password reset email sent';
 
-  // Confirmation Strings
   static const String areYouSure = 'Are you sure?';
   static const String confirmLogout = 'Are you sure you want to logout?';
   static const String confirmCancel =
@@ -153,18 +144,15 @@ class AppStrings {
   static const String cancel = 'Cancel';
   static const String confirm = 'Confirm';
 
-  // Loading Strings
   static const String loading = 'Loading...';
   static const String pleaseWait = 'Please wait...';
   static const String processing = 'Processing...';
 
-  // Empty State Strings
   static const String noData = 'No data available';
   static const String noRequests = 'No requests found';
   static const String noDonors = 'No donors found nearby';
   static const String noChats = 'No conversations yet';
 
-  // Permission Strings
   static const String locationPermission = 'Location Permission';
   static const String locationPermissionMessage =
       'We need location permission to find nearby donors and requests';

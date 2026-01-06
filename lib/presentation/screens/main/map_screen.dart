@@ -277,7 +277,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Create a circular offset pattern around the original position
     const offsetDistance = 0.0002; // Approximately 20-25 meters
     final angle = (offsetIndex * 60) * (3.14159 / 180); // 60 degrees apart
-    
+
     return LatLng(
       original.latitude + (offsetDistance * math.cos(angle)),
       original.longitude + (offsetDistance * math.sin(angle)),
@@ -409,12 +409,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
     if (filter.showDonors) {
       // Track positions to detect overlaps
       final positionMap = <LatLng, List<UserModel>>{};
-      
+
       // Group donors by position
       for (final donor in donors) {
         if (donor.hasLocation) {
           final position = LatLng(donor.latitude!, donor.longitude!);
-          
+
           // Check if this position is too close to any existing position
           LatLng? closePosition;
           for (final existingPos in positionMap.keys) {
@@ -423,7 +423,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               break;
             }
           }
-          
+
           if (closePosition != null) {
             // Add to existing position group
             positionMap[closePosition]!.add(donor);
@@ -433,20 +433,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
           }
         }
       }
-      
+
       // Create markers with offsets for overlapping positions
       for (final entry in positionMap.entries) {
         final basePosition = entry.key;
         final donorsAtPosition = entry.value;
-        
+
         for (int i = 0; i < donorsAtPosition.length; i++) {
           final donor = donorsAtPosition[i];
-          
+
           // Apply offset if there are multiple donors at this position
           final markerPosition = donorsAtPosition.length > 1
               ? _getOffsetPosition(basePosition, i)
               : basePosition;
-          
+
           newMarkers.add(
             Marker(
               markerId: MarkerId('donor_${donor.id}'),
@@ -480,7 +480,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
     final locationState = ref.watch(locationNotifierProvider);
-    final mapFilter = ref.watch(mapFilterProvider);
+
+    // Watch map filter to trigger rebuild when filter changes
+    ref.watch(mapFilterProvider);
 
     // Use ref.listen instead of ref.watch to prevent rebuild on every change
     // This improves performance by only updating markers, not rebuilding entire widget
@@ -503,6 +505,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     });
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text(AppStrings.map),
         actions: [

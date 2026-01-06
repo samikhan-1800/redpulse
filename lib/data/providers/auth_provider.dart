@@ -8,65 +8,47 @@ import '../services/notification_service.dart';
 import '../services/biometric_service.dart';
 import '../models/user_model.dart';
 
-// ============ Service Providers ============
-
-/// Auth service provider
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
 });
 
-/// Database service provider
 final databaseServiceProvider = Provider<DatabaseService>((ref) {
   return DatabaseService();
 });
 
-/// Location service provider
 final locationServiceProvider = Provider<LocationService>((ref) {
   return LocationService();
 });
 
-/// Storage service provider
 final storageServiceProvider = Provider<StorageService>((ref) {
   return StorageService();
 });
 
-/// Biometric service provider
 final biometricServiceProvider = Provider<BiometricService>((ref) {
   return BiometricService();
 });
 
-/// Notification service provider
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService();
 });
 
-// ============ Auth State Providers ============
-
-/// Firebase auth state stream provider
 final authStateProvider = StreamProvider<User?>((ref) {
   final authService = ref.watch(authServiceProvider);
   return authService.authStateChanges;
 });
 
-/// Auth state changes provider (alias for authStateProvider)
 final authStateChangesProvider = StreamProvider<User?>((ref) {
   final authService = ref.watch(authServiceProvider);
   return authService.authStateChanges;
 });
 
-/// Current firebase user provider
 final currentFirebaseUserProvider = Provider<User?>((ref) {
   return ref.watch(authStateProvider).value;
 });
 
-/// Current user ID provider
 final currentUserIdProvider = Provider<String?>((ref) {
   return ref.watch(currentFirebaseUserProvider)?.uid;
 });
-
-// ============ User Profile Providers ============
-
-/// Current user profile stream provider
 final currentUserProfileProvider = StreamProvider<UserModel?>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value(null);
@@ -75,7 +57,6 @@ final currentUserProfileProvider = StreamProvider<UserModel?>((ref) {
   return databaseService.userStream(userId);
 });
 
-/// User profile by ID provider
 final userProfileProvider = FutureProvider.family<UserModel?, String>((
   ref,
   userId,
@@ -84,9 +65,6 @@ final userProfileProvider = FutureProvider.family<UserModel?, String>((
   return await databaseService.getUser(userId);
 });
 
-// ============ Auth Notifier ============
-
-/// Auth state notifier for handling authentication actions
 class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   final AuthService _authService;
   final DatabaseService _databaseService;
@@ -98,13 +76,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     this._notificationService,
   ) : super(const AsyncValue.data(null));
 
-  /// Sign in with email and password
   Future<void> signIn(String email, String password) async {
     state = const AsyncValue.loading();
     try {
       await _authService.signInWithEmail(email, password);
-
-      // Initialize notifications (don't fail login if this fails)
       try {
         final userId = _authService.currentUser?.uid;
         if (userId != null) {
@@ -114,7 +89,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
           }
         }
       } catch (notificationError) {
-        // Log but don't fail login
         print('Notification setup failed: $notificationError');
       }
 
@@ -124,7 +98,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Sign up with email and password
   Future<void> signUp({
     required String email,
     required String password,
@@ -136,11 +109,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncValue.loading();
     try {
-      // Create auth user
       final credential = await _authService.signUpWithEmail(email, password);
       final userId = credential.user!.uid;
 
-      // Create user profile
       final now = DateTime.now();
       final user = UserModel(
         id: userId,
@@ -156,7 +127,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
 
       await _databaseService.createUser(user);
 
-      // Initialize notifications
       final token = await _notificationService.initialize();
       if (token != null) {
         await _notificationService.saveToken(userId, token);
@@ -168,7 +138,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Sign out
   Future<void> signOut() async {
     state = const AsyncValue.loading();
     try {
@@ -179,7 +148,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Send password reset email
   Future<void> sendPasswordReset(String email) async {
     state = const AsyncValue.loading();
     try {
@@ -191,7 +159,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-/// Auth notifier provider
 final authNotifierProvider =
     StateNotifierProvider<AuthNotifier, AsyncValue<void>>((ref) {
       return AuthNotifier(

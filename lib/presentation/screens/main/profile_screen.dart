@@ -26,6 +26,7 @@ class ProfileScreen extends ConsumerWidget {
     final donationStats = ref.watch(donationStatsProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text(AppStrings.profile),
         actions: [
@@ -162,11 +163,10 @@ class ProfileScreen extends ConsumerWidget {
 
                             if (value) {
                               // Authenticate before enabling
-                              final result = await biometricService
-                                  .authenticate(
-                                    localizedReason:
-                                        'Authenticate to enable biometric login',
-                                  );
+                              final result = await biometricService.authenticate(
+                                localizedReason:
+                                    'Authenticate to enable biometric login',
+                              );
 
                               if (!result.success) {
                                 if (context.mounted) {
@@ -183,7 +183,9 @@ class ProfileScreen extends ConsumerWidget {
 
                               // Ask user to enter password to save credentials
                               if (context.mounted) {
-                                final password = await _showPasswordDialog(context);
+                                final password = await _showPasswordDialog(
+                                  context,
+                                );
                                 if (password == null || password.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -506,9 +508,7 @@ class ProfileScreen extends ConsumerWidget {
         ),
         child: Container(
           padding: EdgeInsets.all(24.w),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20.r),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.r)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -527,11 +527,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: Icon(
-                  Icons.bloodtype,
-                  size: 48.sp,
-                  color: Colors.white,
-                ),
+                child: Icon(Icons.bloodtype, size: 48.sp, color: Colors.white),
               ),
               SizedBox(height: 20.h),
               // App Name
@@ -572,11 +568,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
               SizedBox(height: 12.h),
               // Developer
-              _buildAboutRow(
-                Icons.code,
-                'Developed by',
-                'Sami Khan',
-              ),
+              _buildAboutRow(Icons.code, 'Developed by', 'Sami Khan'),
               SizedBox(height: 24.h),
               // Tagline
               Text(
@@ -627,11 +619,7 @@ class ProfileScreen extends ConsumerWidget {
             color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8.r),
           ),
-          child: Icon(
-            icon,
-            size: 20.sp,
-            color: AppColors.primary,
-          ),
+          child: Icon(icon, size: 20.sp, color: AppColors.primary),
         ),
         SizedBox(width: 12.w),
         Expanded(
@@ -648,10 +636,7 @@ class ProfileScreen extends ConsumerWidget {
               SizedBox(height: 2.h),
               Text(
                 value,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -662,7 +647,7 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<String?> _showPasswordDialog(BuildContext context) async {
     final passwordController = TextEditingController();
-    
+
     return showDialog<String>(
       context: context,
       barrierDismissible: false,
@@ -674,10 +659,7 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             Text(
               'Enter your password to enable biometric login',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
             ),
             SizedBox(height: 16.h),
             TextField(

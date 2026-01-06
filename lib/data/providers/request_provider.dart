@@ -8,7 +8,6 @@ import '../models/chat_model.dart';
 import '../models/donation_model.dart';
 import 'auth_provider.dart';
 
-/// Blood request notifier for managing requests
 class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
   final DatabaseService _databaseService;
   final NotificationService _notificationService;
@@ -22,7 +21,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     this._currentUser,
   ) : super(const AsyncValue.data(null));
 
-  /// Create a new blood request
   Future<String?> createRequest({
     required String bloodGroup,
     required int unitsRequired,
@@ -42,7 +40,7 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final now = DateTime.now();
       final request = BloodRequest(
-        id: '', // Will be set by Firestore
+        id: '',
         requesterId: _userId,
         requesterName: _currentUser.name,
         requesterPhone: _currentUser.phone,
@@ -65,7 +63,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
 
       final requestId = await _databaseService.createRequest(request);
 
-      // Find and notify nearby donors
       final nearbyDonors = await _databaseService.getNearbyDonors(
         latitude,
         longitude,
@@ -94,7 +91,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Update an existing blood request (only for pending requests)
   Future<void> updateRequest({
     required String requestId,
     required String bloodGroup,
@@ -112,17 +108,15 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
 
     state = const AsyncValue.loading();
     try {
-      // Get the existing request to verify it's pending
       final existingRequest = await _databaseService.getRequest(requestId);
       if (existingRequest == null) {
         throw Exception('Request not found');
       }
-      
+
       if (existingRequest.status != 'pending') {
         throw Exception('Only pending requests can be edited');
       }
 
-      // Update the request
       await _databaseService.updateRequest(requestId, {
         'bloodGroup': bloodGroup,
         'unitsRequired': unitsRequired,
@@ -144,13 +138,11 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Delete a blood request permanently
   Future<void> deleteRequest(String requestId) async {
     if (_userId == null) return;
 
     state = const AsyncValue.loading();
     try {
-      // Get the request to verify ownership
       final request = await _databaseService.getRequest(requestId);
       if (request == null) {
         throw Exception('Request not found');
@@ -160,7 +152,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
         throw Exception('You can only delete your own requests');
       }
 
-      // Delete the request from Firestore
       await _databaseService.deleteRequest(requestId);
 
       state = const AsyncValue.data(null);
@@ -170,16 +161,13 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Accept a blood request
   Future<String?> acceptRequest(BloodRequest request) async {
     if (_userId == null || _currentUser == null) return null;
 
-    // Check if already accepted by this user
     if (request.acceptedByIds.contains(_userId)) {
       throw Exception('You have already accepted this request');
     }
 
-    // Check if all units are already fulfilled
     if (request.isFulfilled) {
       throw Exception('This request has already been fulfilled');
     }
@@ -188,7 +176,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final now = DateTime.now();
 
-      // Create chat between donor and requester
       final chatId = await _databaseService.createChat(
         Chat(
           id: '',
@@ -208,11 +195,9 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
         ),
       );
 
-      // Add this user to acceptedByIds and increment unitsAccepted
       final updatedAcceptedByIds = [...request.acceptedByIds, _userId];
       final updatedUnitsAccepted = request.unitsAccepted + 1;
 
-      // Update request status
       await _databaseService.updateRequest(request.id, {
         'status': updatedUnitsAccepted >= request.unitsRequired
             ? 'fulfilled'
@@ -225,7 +210,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
         'unitsAccepted': updatedUnitsAccepted,
       });
 
-      // Notify requester
       await _notificationService.sendNotificationToUser(
         userId: request.requesterId,
         title: '🎉 Request Accepted!',
@@ -247,7 +231,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Cancel a request
   Future<void> cancelRequest(String requestId) async {
     state = const AsyncValue.loading();
     try {
@@ -258,7 +241,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Complete a request (mark donation as done)
   Future<void> completeRequest(String requestId) async {
     state = const AsyncValue.loading();
     try {
@@ -272,7 +254,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Update request status
   Future<void> updateStatus(
     String requestId,
     String status, {
@@ -296,12 +277,10 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
       if (status == 'completed') {
         updates['completedAt'] = Timestamp.now();
 
-        // Get the request to find donor and requester
         final request = await _databaseService.getRequest(requestId);
         if (request != null && request.acceptedById != null) {
           final now = DateTime.now();
 
-          // Create donation record
           final donation = Donation(
             id: '',
             donorId: request.acceptedById!,
@@ -320,13 +299,11 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
 
           await _databaseService.createDonation(donation);
 
-          // Update donor's profile with last donation date and increment total donations
           await _databaseService.updateUser(request.acceptedById!, {
             'lastDonationDate': Timestamp.fromDate(now),
             'totalDonations': FieldValue.increment(1),
           });
 
-          // Notify donor about completion
           await _notificationService.sendNotificationToUser(
             userId: request.acceptedById!,
             title: '🎉 Donation Completed!',
@@ -334,8 +311,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
                 'Thank you for saving a life! Your donation has been recorded.',
             data: {'type': 'donation_completed', 'requestId': requestId},
           );
-
-          // Delete the chat between donor and requester
           if (request.chatId != null) {
             try {
               await _databaseService.deleteChat(request.chatId!);
@@ -354,7 +329,6 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-/// Blood request notifier provider
 final bloodRequestNotifierProvider =
     StateNotifierProvider<BloodRequestNotifier, AsyncValue<void>>((ref) {
       final currentUser = ref.watch(currentUserProfileProvider).value;
@@ -366,7 +340,6 @@ final bloodRequestNotifierProvider =
       );
     });
 
-/// User's requests stream provider
 final userRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
@@ -375,7 +348,6 @@ final userRequestsProvider = StreamProvider<List<BloodRequest>>((ref) {
   return databaseService.userRequestsStream(userId);
 });
 
-/// Nearby requests stream provider
 final nearbyRequestsProvider =
     StreamProvider.family<List<BloodRequest>, NearbyRequestsParams>((
       ref,
@@ -389,7 +361,6 @@ final nearbyRequestsProvider =
       );
     });
 
-/// Single request provider
 final requestDetailProvider = FutureProvider.family<BloodRequest?, String>((
   ref,
   requestId,
@@ -398,7 +369,6 @@ final requestDetailProvider = FutureProvider.family<BloodRequest?, String>((
   return await databaseService.getRequest(requestId);
 });
 
-/// Parameters for nearby requests query
 class NearbyRequestsParams {
   final double latitude;
   final double longitude;

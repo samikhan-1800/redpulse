@@ -25,6 +25,7 @@ class RequestsScreen extends ConsumerWidget {
       length: 2,
       initialIndex: tabIndex,
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: const Text(AppStrings.requests),
           bottom: TabBar(

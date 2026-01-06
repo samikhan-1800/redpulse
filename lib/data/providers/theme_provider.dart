@@ -48,7 +48,6 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 }
 
-/// Theme mode provider
 final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>(
   (ref) => ThemeModeNotifier(),
 );

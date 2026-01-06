@@ -20,6 +20,7 @@ class ChatListScreen extends ConsumerWidget {
     final chatsAsync = ref.watch(userChatsProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(title: const Text(AppStrings.messages)),
       body: chatsAsync.when(
         loading: () => const ShimmerList(),

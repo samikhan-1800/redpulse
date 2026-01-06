@@ -1,12 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Notification model
 class NotificationModel {
   final String id;
   final String userId;
   final String title;
   final String body;
-  final String type; // request, donation, chat, system
+  final String type;
   final Map<String, dynamic>? data;
   final bool isRead;
   final DateTime createdAt;
@@ -22,7 +21,6 @@ class NotificationModel {
     required this.createdAt,
   });
 
-  /// Create from Firestore document
   factory NotificationModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return NotificationModel(
@@ -37,7 +35,6 @@ class NotificationModel {
     );
   }
 
-  /// Convert to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
       'userId': userId,
@@ -50,7 +47,6 @@ class NotificationModel {
     };
   }
 
-  /// Copy with modified fields
   NotificationModel copyWith({
     String? id,
     String? userId,

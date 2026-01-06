@@ -6,7 +6,6 @@ import '../services/storage_service.dart';
 import '../models/user_model.dart';
 import 'auth_provider.dart';
 
-/// User profile notifier for managing user profile updates
 class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
   final DatabaseService _databaseService;
   final StorageService _storageService;
@@ -15,7 +14,6 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
   UserProfileNotifier(this._databaseService, this._storageService, this._userId)
     : super(const AsyncValue.data(null));
 
-  /// Update user profile
   Future<void> updateProfile({
     String? name,
     String? phone,
@@ -46,10 +44,8 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
       if (city != null) updates['city'] = city;
       if (useBiometric != null) updates['useBiometric'] = useBiometric;
 
-      // Upload profile image if provided
       if (profileImage != null) {
         try {
-          // Verify the file exists before uploading
           if (!await profileImage.exists()) {
             throw 'Selected image file does not exist';
           }
@@ -60,9 +56,7 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
           );
           updates['profileImageUrl'] = imageUrl;
         } catch (uploadError) {
-          // Log the error but don't fail the entire profile update
           print('Profile image upload failed: $uploadError');
-          // Rethrow only if no other updates to save
           if (updates.isEmpty) rethrow;
         }
       }
@@ -77,7 +71,6 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Update user location
   Future<void> updateLocation(double latitude, double longitude) async {
     if (_userId == null) return;
 
@@ -91,7 +84,6 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Toggle availability status
   Future<void> toggleAvailability(bool isAvailable) async {
     if (_userId == null) return;
 
@@ -104,7 +96,6 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Update last donation date
   Future<void> updateLastDonation(DateTime donationDate) async {
     if (_userId == null) return;
 
@@ -119,7 +110,6 @@ class UserProfileNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-/// User profile notifier provider
 final userProfileNotifierProvider =
     StateNotifierProvider<UserProfileNotifier, AsyncValue<void>>((ref) {
       return UserProfileNotifier(
@@ -129,7 +119,6 @@ final userProfileNotifierProvider =
       );
     });
 
-/// Nearby donors provider
 final nearbyDonorsProvider =
     FutureProvider.family<List<UserModel>, NearbyDonorsParams>((
       ref,
@@ -144,7 +133,6 @@ final nearbyDonorsProvider =
       );
     });
 
-/// Parameters for nearby donors query
 class NearbyDonorsParams {
   final double latitude;
   final double longitude;

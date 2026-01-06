@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Chat model for donor-recipient communication
 class Chat {
   final String id;
   final String requestId;
@@ -30,7 +29,6 @@ class Chat {
     this.isActive = true,
   });
 
-  /// Create from Firestore document
   factory Chat.fromFirestore(DocumentSnapshot doc) {
     try {
       final data = doc.data() as Map<String, dynamic>? ?? {};
@@ -60,7 +58,6 @@ class Chat {
       );
     } catch (e) {
       print('Error parsing chat from Firestore: $e');
-      // Return a fallback chat instead of crashing
       return Chat(
         id: doc.id,
         requestId: '',
@@ -74,7 +71,6 @@ class Chat {
     }
   }
 
-  /// Convert to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
       'requestId': requestId,
@@ -93,7 +89,6 @@ class Chat {
     };
   }
 
-  /// Get other participant ID
   String getOtherParticipantId(String currentUserId) {
     return participantIds.firstWhere(
       (id) => id != currentUserId,
@@ -101,24 +96,20 @@ class Chat {
     );
   }
 
-  /// Get other participant name
   String getOtherParticipantName(String currentUserId) {
     final otherId = getOtherParticipantId(currentUserId);
     return participantNames[otherId] ?? 'Unknown';
   }
 
-  /// Get other participant image
   String? getOtherParticipantImage(String currentUserId) {
     final otherId = getOtherParticipantId(currentUserId);
     return participantImages[otherId];
   }
 
-  /// Get unread count for user
   int getUnreadCount(String userId) {
     return unreadCount[userId] ?? 0;
   }
 
-  /// Copy with modified fields
   Chat copyWith({
     String? id,
     String? requestId,

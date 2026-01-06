@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Donation record model
 class Donation {
   final String id;
   final String donorId;
@@ -34,7 +33,6 @@ class Donation {
     this.isVerified = false,
   });
 
-  /// Create from Firestore document
   factory Donation.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Donation(
@@ -55,7 +53,6 @@ class Donation {
     );
   }
 
-  /// Convert to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
       'donorId': donorId,
@@ -74,7 +71,6 @@ class Donation {
     };
   }
 
-  /// Copy with modified fields
   Donation copyWith({
     String? id,
     String? donorId,

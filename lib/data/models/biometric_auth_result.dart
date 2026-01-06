@@ -1,4 +1,3 @@
-/// Result of biometric authentication attempt
 class BiometricAuthResult {
   final bool success;
   final BiometricErrorType? errorType;
@@ -10,12 +9,10 @@ class BiometricAuthResult {
     this.errorMessage,
   });
 
-  /// Success result
   factory BiometricAuthResult.success() {
     return const BiometricAuthResult(success: true);
   }
 
-  /// Failure result with error type and message
   factory BiometricAuthResult.failure({
     required BiometricErrorType errorType,
     String? errorMessage,
@@ -27,7 +24,6 @@ class BiometricAuthResult {
     );
   }
 
-  /// Get user-friendly error message
   String get userMessage {
     if (success) return 'Authentication successful';
 
@@ -52,26 +48,18 @@ class BiometricAuthResult {
   }
 }
 
-/// Types of biometric authentication errors
 enum BiometricErrorType {
-  /// No biometrics enrolled on device
   notEnrolled,
 
-  /// Biometric hardware not available
   notAvailable,
 
-  /// User cancelled the authentication
   userCancelled,
 
-  /// Temporarily locked out due to too many attempts
   lockedOut,
 
-  /// Permanently locked out
   permanentlyLockedOut,
 
-  /// Authentication timed out
   timeout,
 
-  /// Other/unknown error
   other,
 }

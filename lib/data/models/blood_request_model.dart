@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Blood request model
 class BloodRequest {
   final String id;
   final String requesterId;
@@ -9,9 +8,9 @@ class BloodRequest {
   final String? requesterImageUrl;
   final String bloodGroup;
   final int unitsRequired;
-  final String requestType; // emergency, normal, sos
-  final String urgencyLevel; // low, medium, high, critical
-  final String status; // pending, accepted, completed, cancelled, expired
+  final String requestType;
+  final String urgencyLevel;
+  final String status;
   final String patientName;
   final String hospitalName;
   final String hospitalAddress;
@@ -21,13 +20,13 @@ class BloodRequest {
   final DateTime requiredBy;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String? acceptedById; // Deprecated - kept for backward compatibility
-  final String? acceptedByName; // Deprecated - kept for backward compatibility
+  final String? acceptedById;
+  final String? acceptedByName;
   final DateTime? acceptedAt;
   final DateTime? completedAt;
   final String? chatId;
-  final List<String> acceptedByIds; // List of donor IDs who accepted
-  final int unitsAccepted; // Number of units accepted so far
+  final List<String> acceptedByIds;
+  final int unitsAccepted;
 
   BloodRequest({
     required this.id,
@@ -58,7 +57,6 @@ class BloodRequest {
     this.unitsAccepted = 0,
   });
 
-  /// Create from Firestore document
   factory BloodRequest.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return BloodRequest(
@@ -97,7 +95,6 @@ class BloodRequest {
     );
   }
 
-  /// Convert to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
       'requesterId': requesterId,
@@ -130,7 +127,6 @@ class BloodRequest {
     };
   }
 
-  /// Copy with modified fields
   BloodRequest copyWith({
     String? id,
     String? requesterId,
@@ -189,33 +185,26 @@ class BloodRequest {
     );
   }
 
-  /// Check if all units are fulfilled
   bool get isFulfilled {
     return unitsAccepted >= unitsRequired;
   }
 
-  /// Get acceptance progress text (e.g., "2 of 5")
   String get acceptanceProgress {
     return '$unitsAccepted of $unitsRequired';
   }
 
-  /// Check if request is expired
   bool get isExpired {
     return requiredBy.isBefore(DateTime.now()) && status == 'pending';
   }
 
-  /// Check if request is active
   bool get isActive {
     return (status == 'pending' || status == 'accepted') && !isFulfilled;
   }
 
-  /// Check if request is emergency
   bool get isEmergency => requestType == 'emergency';
 
-  /// Check if request is SOS
   bool get isSOS => requestType == 'sos';
 
-  /// Get compatible blood groups for this request
   List<String> get compatibleBloodGroups {
     switch (bloodGroup) {
       case 'A+':

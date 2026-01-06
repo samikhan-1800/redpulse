@@ -117,6 +117,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     ];
 
     return Scaffold(
+      resizeToAvoidBottomInset:
+          false, // Prevent keyboard from pushing bottom nav
+      extendBody: false, // Don't extend body behind bottom nav
       body: IndexedStack(index: currentIndex, children: screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

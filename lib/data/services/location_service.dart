@@ -1,33 +1,26 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
-/// Location service for getting user location
 class LocationService {
-  /// Check if location services are enabled
   Future<bool> isLocationServiceEnabled() async {
     return await Geolocator.isLocationServiceEnabled();
   }
 
-  /// Check and request location permission
   Future<LocationPermission> checkPermission() async {
     return await Geolocator.checkPermission();
   }
 
-  /// Request location permission
   Future<LocationPermission> requestPermission() async {
     return await Geolocator.requestPermission();
   }
 
-  /// Get current position
   Future<Position?> getCurrentPosition() async {
     try {
-      // Check if location services are enabled
       final serviceEnabled = await isLocationServiceEnabled();
       if (!serviceEnabled) {
         return null;
       }
 
-      // Check permission
       LocationPermission permission = await checkPermission();
 
       if (permission == LocationPermission.denied) {
@@ -41,7 +34,6 @@ class LocationService {
         return null;
       }
 
-      // Get position
       return await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
@@ -53,25 +45,22 @@ class LocationService {
     }
   }
 
-  /// Get position stream for real-time updates
   Stream<Position> getPositionStream() {
     return Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 50, // Update every 50 meters
+        distanceFilter: 50,
       ),
     );
   }
 
-  /// Calculate distance between two points in kilometers
   double calculateDistance(
     double startLatitude,
     double startLongitude,
     double endLatitude,
     double endLongitude,
   ) {
-    // Check if coordinates are the same
-    const threshold = 0.0001; // ~11 meters
+    const threshold = 0.0001;
     if ((startLatitude - endLatitude).abs() < threshold &&
         (startLongitude - endLongitude).abs() < threshold) {
       return 0.0;
@@ -86,11 +75,9 @@ class LocationService {
 
     final distanceInKm = distanceInMeters / 1000;
 
-    // Round to 2 decimal places
     return double.parse(distanceInKm.toStringAsFixed(2));
   }
 
-  /// Get address from coordinates (reverse geocoding)
   Future<String?> getAddressFromCoordinates(
     double latitude,
     double longitude,
@@ -112,7 +99,6 @@ class LocationService {
     }
   }
 
-  /// Get coordinates from address (forward geocoding)
   Future<Location?> getCoordinatesFromAddress(String address) async {
     try {
       final locations = await locationFromAddress(address);
@@ -125,12 +111,10 @@ class LocationService {
     }
   }
 
-  /// Open device location settings
   Future<bool> openLocationSettings() async {
     return await Geolocator.openLocationSettings();
   }
 
-  /// Open app settings
   Future<bool> openAppSettings() async {
     return await Geolocator.openAppSettings();
   }

@@ -1,13 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Message model for chat
 class Message {
   final String id;
   final String chatId;
   final String senderId;
   final String senderName;
   final String content;
-  final String type; // text, image, location
+  final String type;
   final DateTime createdAt;
   final bool isRead;
   final Map<String, dynamic>? metadata;
@@ -24,7 +23,6 @@ class Message {
     this.metadata,
   });
 
-  /// Create from Firestore document
   factory Message.fromFirestore(DocumentSnapshot doc) {
     try {
       final data = doc.data() as Map<String, dynamic>? ?? {};
@@ -43,7 +41,6 @@ class Message {
       );
     } catch (e) {
       print('Error parsing message from Firestore: $e');
-      // Return a fallback message instead of crashing
       return Message(
         id: doc.id,
         chatId: '',
@@ -55,7 +52,6 @@ class Message {
     }
   }
 
-  /// Convert to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
       'chatId': chatId,
@@ -69,7 +65,6 @@ class Message {
     };
   }
 
-  /// Copy with modified fields
   Message copyWith({
     String? id,
     String? chatId,
@@ -94,16 +89,12 @@ class Message {
     );
   }
 
-  /// Check if message is from current user
   bool isFromUser(String userId) => senderId == userId;
 
-  /// Check if message is text
   bool get isText => type == 'text';
 
-  /// Check if message is image
   bool get isImage => type == 'image';
 
-  /// Check if message is location
   bool get isLocation => type == 'location';
 
   @override

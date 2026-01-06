@@ -14,13 +14,11 @@ import 'presentation/screens/main/main_screen.dart';
 import 'presentation/screens/splash/splash_screen.dart';
 import 'presentation/widgets/common_widgets.dart';
 
-/// Track Firebase initialization result
 bool _firebaseInitialized = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -30,19 +28,18 @@ void main() async {
     ),
   );
 
-  // Set preferred orientations
+  // Enable all orientations for responsive layout
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
   ]);
 
-  // Initialize Firebase
   try {
     if (kIsWeb) {
-      // Web requires explicit options
       await Firebase.initializeApp(
         options: const FirebaseOptions(
-          // TODO: Replace with your Firebase Web config
           apiKey: 'YOUR_API_KEY',
           authDomain: 'YOUR_AUTH_DOMAIN',
           projectId: 'YOUR_PROJECT_ID',
@@ -52,7 +49,6 @@ void main() async {
         ),
       );
     } else {
-      // Android/iOS uses google-services.json / GoogleService-Info.plist
       await Firebase.initializeApp();
     }
     _firebaseInitialized = true;
@@ -82,7 +78,6 @@ class RedPulseApp extends ConsumerWidget {
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           builder: (context, child) {
-            // Reduce overdraw and improve performance
             return MediaQuery(
               data: MediaQuery.of(
                 context,
@@ -99,7 +94,6 @@ class RedPulseApp extends ConsumerWidget {
   }
 }
 
-/// Wrapper widget that handles authentication state
 class AuthWrapper extends ConsumerStatefulWidget {
   const AuthWrapper({super.key});
 
@@ -113,14 +107,12 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    // Initialize notifications only if Firebase is configured
     if (_firebaseInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(notificationNotifierProvider.notifier).initialize();
       });
     }
 
-    // Show splash screen for minimum 2 seconds
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         setState(() {
@@ -141,7 +133,6 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
       );
     }
 
-    // Show splash screen during initial load
     if (_showSplash) {
       return const SplashScreen();
     }

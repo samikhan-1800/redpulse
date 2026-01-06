@@ -3,12 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 
-/// Application theme configuration
-/// Provides consistent styling throughout the app
 class AppTheme {
   AppTheme._();
 
-  /// Light theme
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -47,7 +44,6 @@ class AppTheme {
     );
   }
 
-  /// Dark theme
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
@@ -86,7 +82,6 @@ class AppTheme {
     );
   }
 
-  // Text Theme
   static TextTheme get _textTheme {
     return GoogleFonts.poppinsTextTheme().copyWith(
       displayLarge: GoogleFonts.poppins(
@@ -247,7 +242,6 @@ class AppTheme {
     );
   }
 
-  // AppBar Theme
   static AppBarTheme get _appBarTheme {
     return AppBarTheme(
       elevation: 0,
@@ -280,7 +274,6 @@ class AppTheme {
     );
   }
 
-  // Elevated Button Theme
   static ElevatedButtonThemeData get _elevatedButtonTheme {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -299,7 +292,6 @@ class AppTheme {
     );
   }
 
-  // Outlined Button Theme
   static OutlinedButtonThemeData get _outlinedButtonTheme {
     return OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
@@ -330,7 +322,6 @@ class AppTheme {
     );
   }
 
-  // Text Button Theme
   static TextButtonThemeData get _textButtonTheme {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
@@ -344,7 +335,6 @@ class AppTheme {
     );
   }
 
-  // Input Decoration Theme
   static InputDecorationTheme get _inputDecorationTheme {
     return InputDecorationTheme(
       filled: true,
@@ -416,7 +406,6 @@ class AppTheme {
     );
   }
 
-  // Card Theme
   static CardThemeData get _cardTheme {
     return CardThemeData(
       elevation: 2,
@@ -437,7 +426,6 @@ class AppTheme {
     );
   }
 
-  // Bottom Navigation Bar Theme
   static BottomNavigationBarThemeData get _bottomNavigationBarTheme {
     return BottomNavigationBarThemeData(
       type: BottomNavigationBarType.fixed,
@@ -474,7 +462,6 @@ class AppTheme {
     );
   }
 
-  // Floating Action Button Theme
   static FloatingActionButtonThemeData get _floatingActionButtonTheme {
     return FloatingActionButtonThemeData(
       backgroundColor: AppColors.primary,
@@ -485,7 +472,6 @@ class AppTheme {
     );
   }
 
-  // Chip Theme
   static ChipThemeData get _chipTheme {
     return ChipThemeData(
       backgroundColor: AppColors.background,
@@ -528,7 +514,6 @@ class AppTheme {
     );
   }
 
-  // SnackBar Theme
   static SnackBarThemeData get _snackBarTheme {
     return SnackBarThemeData(
       backgroundColor: AppColors.textPrimary,
@@ -553,7 +538,6 @@ class AppTheme {
     );
   }
 
-  // Dialog Theme
   static DialogThemeData get _dialogTheme {
     return DialogThemeData(
       backgroundColor: AppColors.surface,

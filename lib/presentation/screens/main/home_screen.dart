@@ -41,6 +41,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final unreadCount = ref.watch(unreadNotificationsCountProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: userAsync.when(
         loading: () => const LoadingPage(),
         error: (error, _) => ErrorState(
@@ -239,9 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       // Requests list
                       Container(
-                        constraints: BoxConstraints(
-                          minHeight: 100.h,
-                        ),
+                        constraints: BoxConstraints(minHeight: 100.h),
                         child: locationState.position != null
                             ? _NearbyRequestsList(
                                 latitude: locationState.position!.latitude,

@@ -1,13 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/database_service.dart';
-import '../services/notification_service.dart';
 import '../models/chat_model.dart';
 import '../models/message_model.dart';
 import '../models/user_model.dart';
 import '../models/blood_request_model.dart';
 import 'auth_provider.dart';
 
-/// Provider for chat messages stream
 final chatMessagesProvider = StreamProvider.family<List<Message>, String>((
   ref,
   chatId,
@@ -16,26 +14,18 @@ final chatMessagesProvider = StreamProvider.family<List<Message>, String>((
   return databaseService.messagesStream(chatId);
 });
 
-/// Chat notifier for managing chat operations
 class ChatNotifier extends StateNotifier<AsyncValue<void>> {
   final DatabaseService _databaseService;
-  final NotificationService _notificationService;
   final String? _userId;
   final UserModel? _currentUser;
 
-  ChatNotifier(
-    this._databaseService,
-    this._notificationService,
-    this._userId,
-    this._currentUser,
-  ) : super(const AsyncValue.data(null));
+  ChatNotifier(this._databaseService, this._userId, this._currentUser)
+    : super(const AsyncValue.data(null));
 
-  /// Start a chat for a blood request
   Future<Chat?> startChatForRequest(BloodRequest request) async {
     if (_userId == null || _currentUser == null) return null;
 
     try {
-      // Create a new chat
       final now = DateTime.now();
       final chat = Chat(
         id: '',
@@ -61,7 +51,6 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  /// Send a text message
   Future<void> sendMessage({
     required String chatId,
     required String content,
@@ -83,12 +72,9 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
       );
 
       await _databaseService.sendMessage(message);
-    } catch (e) {
-      // Handle error silently for chat messages
-    }
+    } catch (e) {}
   }
 
-  /// Send location message
   Future<void> sendLocationMessage({
     required String chatId,
     required double latitude,
@@ -103,32 +89,25 @@ class ChatNotifier extends StateNotifier<AsyncValue<void>> {
     );
   }
 
-  /// Mark messages as read
   Future<void> markAsRead(String chatId, String? userId) async {
     final uid = userId ?? _userId;
     if (uid == null) return;
 
     try {
       await _databaseService.markMessagesAsRead(chatId, uid);
-    } catch (e) {
-      // Handle error silently
-    }
+    } catch (e) {}
   }
 }
 
-/// Chat notifier provider
 final chatNotifierProvider =
     StateNotifierProvider<ChatNotifier, AsyncValue<void>>((ref) {
       final currentUser = ref.watch(currentUserProfileProvider).value;
       return ChatNotifier(
         ref.watch(databaseServiceProvider),
-        ref.watch(notificationServiceProvider),
         ref.watch(currentUserIdProvider),
         currentUser,
       );
     });
-
-/// User's chats stream provider
 final userChatsProvider = StreamProvider<List<Chat>>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value([]);
@@ -137,7 +116,6 @@ final userChatsProvider = StreamProvider<List<Chat>>((ref) {
   return databaseService.userChatsStream(userId);
 });
 
-/// Messages stream provider for a specific chat
 final messagesProvider = StreamProvider.family<List<Message>, String>((
   ref,
   chatId,
@@ -146,7 +124,6 @@ final messagesProvider = StreamProvider.family<List<Message>, String>((
   return databaseService.messagesStream(chatId);
 });
 
-/// Single chat provider
 final chatDetailProvider = FutureProvider.family<Chat?, String>((
   ref,
   chatId,
@@ -155,7 +132,6 @@ final chatDetailProvider = FutureProvider.family<Chat?, String>((
   return await databaseService.getChat(chatId);
 });
 
-/// Unread messages count provider
 final unreadMessagesCountProvider = Provider<int>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   final chats = ref.watch(userChatsProvider).value ?? [];
