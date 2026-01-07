@@ -1,6 +1,6 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/validators.dart';
@@ -158,166 +158,232 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authNotifierProvider);
     final isLoading = authState.isLoading;
 
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+    final shortestSide = min(mediaQuery.size.width, mediaQuery.size.height);
+    final scaleFactor = (shortestSide / 375).clamp(0.7, 1.2);
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(24.w),
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(height: 40.h),
-                // Logo and title
-                Center(
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 80.w,
-                        height: 80.h,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        child: Icon(
-                          Icons.bloodtype,
-                          size: 48.sp,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-                      Text(
-                        'RedPulse',
-                        style: TextStyle(
-                          fontSize: 28.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        'Donate Blood, Save Lives',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 48.h),
-                // Welcome text
-                Text(
-                  AppStrings.welcomeBack,
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  AppStrings.loginToContinue,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                SizedBox(height: 32.h),
-                // Email field
-                CustomTextField(
-                  controller: _emailController,
-                  label: AppStrings.email,
-                  hint: 'Enter your email',
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: Validators.validateEmail,
-                  prefixIcon: Icon(Icons.email_outlined, size: 20.sp),
-                ),
-                SizedBox(height: 16.h),
-                // Password field
-                PasswordTextField(
-                  controller: _passwordController,
-                  label: AppStrings.password,
-                  hint: 'Enter your password',
-                  textInputAction: TextInputAction.done,
-                  validator: Validators.validatePassword,
-                ),
-                SizedBox(height: 8.h),
-                // Forgot password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ForgotPasswordScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(AppStrings.forgotPassword),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                // Login button
-                PrimaryButton(
-                  text: AppStrings.login,
-                  onPressed: _login,
-                  isLoading: isLoading,
-                ),
-                // Biometric login button
-                if (_showBiometricButton) ...[
-                  SizedBox(height: 16.h),
-                  OutlinedButton.icon(
-                    onPressed: _loginWithBiometric,
-                    icon: Icon(
-                      Icons.fingerprint,
-                      size: 24.sp,
-                      color: AppColors.primary,
-                    ),
-                    label: Text(
-                      'Login with Biometric',
-                      style: TextStyle(fontSize: 14.sp),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      side: const BorderSide(color: AppColors.primary),
-                    ),
-                  ),
-                ],
-                SizedBox(height: 24.h),
-                // Sign up link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppStrings.dontHaveAccount,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text(AppStrings.signUp),
-                    ),
-                  ],
-                ),
-              ],
+        child: isLandscape
+            ? _buildLandscapeLayout(isLoading, scaleFactor)
+            : _buildPortraitLayout(isLoading, scaleFactor),
+      ),
+    );
+  }
+
+  Widget _buildPortraitLayout(bool isLoading, double scaleFactor) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 30),
+            _buildHeader(scaleFactor),
+            const SizedBox(height: 36),
+            _buildWelcomeText(scaleFactor),
+            const SizedBox(height: 28),
+            _buildLoginForm(isLoading, scaleFactor),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeLayout(bool isLoading, double scaleFactor) {
+    return Row(
+      children: [
+        // Left side - Logo and title
+        Expanded(
+          flex: 2,
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: _buildHeader(scaleFactor * 0.85),
             ),
           ),
         ),
-      ),
+        // Right side - Form
+        Expanded(
+          flex: 3,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildWelcomeText(scaleFactor * 0.85),
+                  const SizedBox(height: 20),
+                  _buildLoginForm(isLoading, scaleFactor * 0.9),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader(double scaleFactor) {
+    final logoSize = 70 * scaleFactor;
+    final iconSize = 40 * scaleFactor;
+    final titleSize = 24 * scaleFactor;
+    final subtitleSize = 12 * scaleFactor;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: logoSize,
+          height: logoSize,
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            borderRadius: BorderRadius.circular(18 * scaleFactor),
+          ),
+          child: Icon(Icons.bloodtype, size: iconSize, color: Colors.white),
+        ),
+        SizedBox(height: 14 * scaleFactor),
+        Text(
+          'RedPulse',
+          style: TextStyle(
+            fontSize: titleSize,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
+        SizedBox(height: 6 * scaleFactor),
+        Text(
+          'Donate Blood, Save Lives',
+          style: TextStyle(
+            fontSize: subtitleSize,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWelcomeText(double scaleFactor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          AppStrings.welcomeBack,
+          style: TextStyle(
+            fontSize: 22 * scaleFactor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 6 * scaleFactor),
+        Text(
+          AppStrings.loginToContinue,
+          style: TextStyle(
+            fontSize: 13 * scaleFactor,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginForm(bool isLoading, double scaleFactor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Email field
+        CustomTextField(
+          controller: _emailController,
+          label: AppStrings.email,
+          hint: 'Enter your email',
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.next,
+          validator: Validators.validateEmail,
+          prefixIcon: Icon(Icons.email_outlined, size: 18 * scaleFactor),
+        ),
+        SizedBox(height: 14 * scaleFactor),
+        // Password field
+        PasswordTextField(
+          controller: _passwordController,
+          label: AppStrings.password,
+          hint: 'Enter your password',
+          textInputAction: TextInputAction.done,
+          validator: Validators.validatePassword,
+        ),
+        SizedBox(height: 6 * scaleFactor),
+        // Forgot password
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+              );
+            },
+            child: const Text(AppStrings.forgotPassword),
+          ),
+        ),
+        SizedBox(height: 20 * scaleFactor),
+        // Login button
+        PrimaryButton(
+          text: AppStrings.login,
+          onPressed: _login,
+          isLoading: isLoading,
+        ),
+        // Biometric login button
+        if (_showBiometricButton) ...[
+          SizedBox(height: 14 * scaleFactor),
+          OutlinedButton.icon(
+            onPressed: _loginWithBiometric,
+            icon: Icon(
+              Icons.fingerprint,
+              size: 22 * scaleFactor,
+              color: AppColors.primary,
+            ),
+            label: Text(
+              'Login with Biometric',
+              style: TextStyle(fontSize: 13 * scaleFactor),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 14 * scaleFactor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              side: const BorderSide(color: AppColors.primary),
+            ),
+          ),
+        ],
+        SizedBox(height: 20 * scaleFactor),
+        // Sign up link
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              AppStrings.dontHaveAccount,
+              style: TextStyle(
+                fontSize: 13 * scaleFactor,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                );
+              },
+              child: const Text(AppStrings.signUp),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

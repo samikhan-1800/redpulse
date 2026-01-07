@@ -95,7 +95,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'You recently donated blood and must wait until ${nextDate?.formattedDate ?? "your next eligible date"} (${daysRemaining} days remaining) before donating again.',
+            'You recently donated blood and must wait until ${nextDate?.formattedDate ?? "your next eligible date"} ($daysRemaining days remaining) before donating again.',
           ),
           backgroundColor: AppColors.error,
           duration: Duration(seconds: 5),

@@ -6,6 +6,7 @@ import '../services/location_service.dart';
 import '../services/storage_service.dart';
 import '../services/notification_service.dart';
 import '../services/biometric_service.dart';
+import '../services/connectivity_service.dart';
 import '../models/user_model.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
@@ -26,6 +27,10 @@ final storageServiceProvider = Provider<StorageService>((ref) {
 
 final biometricServiceProvider = Provider<BiometricService>((ref) {
   return BiometricService();
+});
+
+final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
+  return ConnectivityService();
 });
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
@@ -55,6 +60,11 @@ final currentUserProfileProvider = StreamProvider<UserModel?>((ref) {
 
   final databaseService = ref.watch(databaseServiceProvider);
   return databaseService.userStream(userId);
+});
+
+final connectivityStatusProvider = StreamProvider<bool>((ref) {
+  final connectivityService = ref.watch(connectivityServiceProvider);
+  return connectivityService.connectionStatusStream;
 });
 
 final userProfileProvider = FutureProvider.family<UserModel?, String>((
@@ -155,6 +165,16 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+    }
+  }
+
+  /// Verify user password (for biometric setup)
+  Future<bool> verifyPassword(String email, String password) async {
+    try {
+      return await _authService.verifyPassword(email, password);
+    } catch (e) {
+      print('Password verification error: $e');
+      return false;
     }
   }
 }

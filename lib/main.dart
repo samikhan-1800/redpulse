@@ -94,57 +94,35 @@ class RedPulseApp extends ConsumerWidget {
 }
 
 /// Responsive wrapper that handles orientation changes smoothly
-class ResponsiveWrapper extends StatefulWidget {
+class ResponsiveWrapper extends StatelessWidget {
   const ResponsiveWrapper({super.key});
 
   @override
-  State<ResponsiveWrapper> createState() => _ResponsiveWrapperState();
-}
-
-class _ResponsiveWrapperState extends State<ResponsiveWrapper> {
-  Orientation? _lastOrientation;
-
-  @override
   Widget build(BuildContext context) {
-    return OrientationBuilder(
-      builder: (context, orientation) {
-        // Update responsive utils on orientation change
-        ResponsiveUtils.init(context);
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
 
-        final isLandscape = orientation == Orientation.landscape;
+    // Update responsive utils
+    ResponsiveUtils.init(context);
 
-        // Use fixed design sizes that work well
-        final designSize = isLandscape
-            ? const Size(844, 390) // Landscape (iPhone 12 Pro Max landscape)
-            : const Size(390, 844); // Portrait
+    // Use fixed design sizes that work well
+    final designSize = isLandscape
+        ? const Size(844, 390) // Landscape
+        : const Size(390, 844); // Portrait
 
-        // Detect orientation change for smooth animation
-        final orientationChanged =
-            _lastOrientation != null && _lastOrientation != orientation;
-        _lastOrientation = orientation;
-
-        return ScreenUtilInit(
-          key: ValueKey(orientation), // Force rebuild on orientation change
-          designSize: designSize,
-          minTextAdapt: true,
-          splitScreenMode: true,
-          useInheritedMediaQuery: true,
-          builder: (context, child) {
-            return MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: const TextScaler.linear(1.0)),
-              child: AnimatedSwitcher(
-                duration: Duration(milliseconds: orientationChanged ? 300 : 0),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-                child: AuthWrapper(key: ValueKey(orientation)),
-              ),
-            );
-          },
+    return ScreenUtilInit(
+      designSize: designSize,
+      minTextAdapt: true,
+      splitScreenMode: true,
+      useInheritedMediaQuery: true,
+      rebuildFactor: (old, data) => false, // Prevent unnecessary rebuilds
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(1.0)),
+          // Wrap in ClipRect to prevent overflow during rotation
+          child: ClipRect(child: const AuthWrapper()),
         );
       },
     );
@@ -160,6 +138,7 @@ class AuthWrapper extends ConsumerStatefulWidget {
 
 class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   bool _showSplash = true;
+  bool _splashCompleted = false;
 
   @override
   void initState() {
@@ -174,6 +153,7 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
       if (mounted) {
         setState(() {
           _showSplash = false;
+          _splashCompleted = true;
         });
       }
     });
@@ -190,14 +170,17 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
       );
     }
 
-    if (_showSplash) {
+    // Only show splash on initial load, never on orientation change
+    if (_showSplash && !_splashCompleted) {
       return const SplashScreen();
     }
 
     final authState = ref.watch(authStateChangesProvider);
 
     return authState.when(
-      loading: () => const SplashScreen(),
+      loading: () => _splashCompleted
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : const SplashScreen(),
       error: (error, _) => Scaffold(
         body: ErrorState(
           message: 'Authentication error: $error',

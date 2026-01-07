@@ -35,7 +35,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   String? _profileImageUrl;
   File? _selectedImageFile;
   bool _isLoading = false;
-  bool _isUploading = false;
+  final bool _isUploading = false;
 
   @override
   void initState() {
@@ -334,7 +334,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               SizedBox(height: 16.h),
               // Gender
               DropdownButtonFormField<String>(
-                value: _selectedGender,
+                initialValue: _selectedGender,
                 decoration: InputDecoration(
                   labelText: AppStrings.gender,
                   prefixIcon: const Icon(Icons.wc),

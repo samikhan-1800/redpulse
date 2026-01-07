@@ -379,7 +379,7 @@ class AvailabilityToggle extends StatelessWidget {
             child: Switch(
               value: isAvailable,
               onChanged: isLoading ? null : onChanged,
-              activeColor: AppColors.success,
+              activeThumbColor: AppColors.success,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),

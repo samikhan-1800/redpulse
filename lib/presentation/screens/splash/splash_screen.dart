@@ -71,16 +71,16 @@ class _SplashScreenState extends State<SplashScreen>
     final screenSize = mediaQuery.size;
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
     final shortestSide = min(screenSize.width, screenSize.height);
-    
+
     // Responsive sizing based on shortest side (consistent across orientations)
     final scaleFactor = (shortestSide / 375).clamp(0.7, 1.3);
-    
+
     final logoSize = (isLandscape ? 50 : 70) * scaleFactor;
     final logoPadding = (isLandscape ? 18 : 28) * scaleFactor;
     final titleSize = (isLandscape ? 26 : 36) * scaleFactor;
     final taglineSize = (isLandscape ? 12 : 14) * scaleFactor;
     final loadingSize = (isLandscape ? 28 : 35) * scaleFactor;
-    
+
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -103,9 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
               return SingleChildScrollView(
                 physics: const NeverScrollableScrollPhysics(),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight,
-                  ),
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   child: Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
@@ -68,9 +69,71 @@ abstract class DatabaseServiceInterface {
 /// Firebase Firestore Service Implementation
 class DatabaseService implements DatabaseServiceInterface {
   final FirebaseFirestore _firestore;
+  static bool _settingsInitialized = false;
 
   DatabaseService({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance {
+    _initializeSettings();
+  }
+
+  /// Initialize Firestore settings (only once)
+  void _initializeSettings() {
+    if (!_settingsInitialized) {
+      try {
+        _firestore.settings = const Settings(
+          persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        );
+        _settingsInitialized = true;
+        print('Firestore offline persistence enabled');
+      } catch (e) {
+        print('Error initializing Firestore settings: $e');
+      }
+    }
+  }
+
+  /// Execute operation with timeout
+  Future<T> _executeWithTimeout<T>(
+    Future<T> Function() operation, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    try {
+      return await operation().timeout(timeout);
+    } on TimeoutException {
+      throw 'Operation timed out. Please check your internet connection and try again.';
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Execute operation with retry logic
+  Future<T> _executeWithRetry<T>(
+    Future<T> Function() operation, {
+    int maxRetries = 3,
+    Duration initialDelay = const Duration(seconds: 1),
+  }) async {
+    int retryCount = 0;
+    Duration delay = initialDelay;
+
+    while (true) {
+      try {
+        return await _executeWithTimeout(operation);
+      } catch (e) {
+        retryCount++;
+        
+        // Don't retry on certain errors
+        if (e.toString().contains('permission-denied') ||
+            e.toString().contains('not-found') ||
+            retryCount >= maxRetries) {
+          rethrow;
+        }
+
+        // Wait before retrying (exponential backoff)
+        await Future.delayed(delay);
+        delay *= 2; // Double the delay for next retry
+      }
+    }
+  }
 
   // Collection references
   CollectionReference<Map<String, dynamic>> get _usersCollection =>
@@ -92,12 +155,16 @@ class DatabaseService implements DatabaseServiceInterface {
 
   @override
   Future<void> createUser(UserModel user) async {
-    await _usersCollection.doc(user.id).set(user.toFirestore());
+    await _executeWithTimeout(
+      () => _usersCollection.doc(user.id).set(user.toFirestore()),
+    );
   }
 
   @override
   Future<UserModel?> getUser(String userId) async {
-    final doc = await _usersCollection.doc(userId).get();
+    final doc = await _executeWithTimeout(
+      () => _usersCollection.doc(userId).get(),
+    );
     if (!doc.exists) return null;
     return UserModel.fromFirestore(doc);
   }
@@ -105,7 +172,9 @@ class DatabaseService implements DatabaseServiceInterface {
   @override
   Future<void> updateUser(String userId, Map<String, dynamic> data) async {
     data['updatedAt'] = Timestamp.now();
-    await _usersCollection.doc(userId).update(data);
+    await _executeWithTimeout(
+      () => _usersCollection.doc(userId).update(data),
+    );
   }
 
   @override
@@ -177,13 +246,17 @@ class DatabaseService implements DatabaseServiceInterface {
 
   @override
   Future<String> createRequest(BloodRequest request) async {
-    final docRef = await _requestsCollection.add(request.toFirestore());
+    final docRef = await _executeWithRetry(
+      () => _requestsCollection.add(request.toFirestore()),
+    );
     return docRef.id;
   }
 
   @override
   Future<BloodRequest?> getRequest(String requestId) async {
-    final doc = await _requestsCollection.doc(requestId).get();
+    final doc = await _executeWithTimeout(
+      () => _requestsCollection.doc(requestId).get(),
+    );
     if (!doc.exists) return null;
     return BloodRequest.fromFirestore(doc);
   }
@@ -194,7 +267,9 @@ class DatabaseService implements DatabaseServiceInterface {
     Map<String, dynamic> data,
   ) async {
     data['updatedAt'] = Timestamp.now();
-    await _requestsCollection.doc(requestId).update(data);
+    await _executeWithTimeout(
+      () => _requestsCollection.doc(requestId).update(data),
+    );
   }
 
   @override
@@ -328,7 +403,9 @@ class DatabaseService implements DatabaseServiceInterface {
 
   @override
   Future<String> createChat(Chat chat) async {
-    final docRef = await _chatsCollection.add(chat.toFirestore());
+    final docRef = await _executeWithTimeout(
+      () => _chatsCollection.add(chat.toFirestore()),
+    );
     return docRef.id;
   }
 

@@ -9,7 +9,6 @@ import '../../../data/providers/donation_provider.dart';
 import '../../../data/providers/user_provider.dart';
 import '../../../data/providers/theme_provider.dart';
 import '../../widgets/cards.dart';
-import '../../widgets/buttons.dart';
 import '../../widgets/common_widgets.dart';
 import '../../widgets/dialogs.dart';
 import '../auth/login_screen.dart';
@@ -118,154 +117,7 @@ class ProfileScreen extends ConsumerWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16.r),
                   ),
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        title: Text(
-                          'Biometric Login',
-                          style: TextStyle(fontSize: 14.sp),
-                        ),
-                        subtitle: Text(
-                          'Use fingerprint or face ID to login',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        secondary: Icon(
-                          Icons.fingerprint,
-                          color: AppColors.primary,
-                        ),
-                        value: user.useBiometric,
-                        onChanged: (value) async {
-                          try {
-                            final biometricService = ref.read(
-                              biometricServiceProvider,
-                            );
-
-                            // Check availability first
-                            final isAvailable = await biometricService
-                                .isBiometricAvailable();
-
-                            if (!isAvailable) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Biometric authentication is not available on this device',
-                                    ),
-                                    backgroundColor: AppColors.error,
-                                  ),
-                                );
-                              }
-                              return;
-                            }
-
-                            if (value) {
-                              // Authenticate before enabling
-                              final result = await biometricService.authenticate(
-                                localizedReason:
-                                    'Authenticate to enable biometric login',
-                              );
-
-                              if (!result.success) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(result.userMessage),
-                                      backgroundColor: AppColors.error,
-                                      duration: const Duration(seconds: 4),
-                                    ),
-                                  );
-                                }
-                                return;
-                              }
-
-                              // Ask user to enter password to save credentials
-                              if (context.mounted) {
-                                final password = await _showPasswordDialog(
-                                  context,
-                                );
-                                if (password == null || password.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Password required to enable biometric login',
-                                      ),
-                                      backgroundColor: AppColors.error,
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                // Save credentials for biometric login
-                                await biometricService.saveCredentials(
-                                  user.email,
-                                  password,
-                                );
-                              }
-                            }
-
-                            // Show loading for database update
-                            if (context.mounted) {
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (context) => const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-
-                            // Update user preference
-                            await ref
-                                .read(userProfileNotifierProvider.notifier)
-                                .updateProfile(useBiometric: value);
-
-                            // Save biometric enabled flag and user email
-                            await biometricService.setBiometricEnabled(value);
-                            if (value) {
-                              // Save user email for future logins
-                              await biometricService.saveUserEmail(user.email);
-                            } else {
-                              // Clear saved credentials when disabling
-                              await biometricService.clearCredentials();
-                            }
-
-                            // Refresh user data to show updated state
-                            ref.invalidate(currentUserProfileProvider);
-
-                            if (context.mounted) {
-                              Navigator.pop(context); // Close loading
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    value
-                                        ? 'Biometric login enabled successfully'
-                                        : 'Biometric login disabled',
-                                  ),
-                                  backgroundColor: AppColors.success,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              // Try to close loading dialog if it's open
-                              Navigator.of(
-                                context,
-                              ).popUntil((route) => route.isFirst);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error: ${e.toString()}'),
-                                  backgroundColor: AppColors.error,
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                    ],
-                  ),
+                  child: Column(children: [_BiometricToggle(user: user)]),
                 ),
                 SizedBox(height: 16.h),
                 // Stats
@@ -388,35 +240,8 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
                 SizedBox(height: 24.h),
-                // Logout button
-                PrimaryButton(
-                  text: AppStrings.logout,
-                  isOutlined: true,
-                  backgroundColor: AppColors.error,
-                  textColor: AppColors.error,
-                  icon: Icons.logout,
-                  onPressed: () async {
-                    final confirmed = await ConfirmationDialog.show(
-                      context,
-                      title: AppStrings.logout,
-                      message: AppStrings.confirmLogout,
-                      confirmText: AppStrings.logout,
-                      isDangerous: true,
-                    );
-
-                    if (confirmed == true) {
-                      await ref.read(authNotifierProvider.notifier).signOut();
-                      if (context.mounted) {
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (_) => const LoginScreen(),
-                          ),
-                          (route) => false,
-                        );
-                      }
-                    }
-                  },
-                ),
+                // Professional Logout Button
+                _buildLogoutButton(context, ref),
                 SizedBox(height: 32.h),
               ],
             ),
@@ -491,7 +316,7 @@ class ProfileScreen extends ConsumerWidget {
       ),
       trailing: Switch(
         value: isDark,
-        activeColor: AppColors.primary,
+        activeThumbColor: AppColors.primary,
         onChanged: (value) {
           ref.read(themeModeProvider.notifier).toggleTheme();
         },
@@ -691,6 +516,306 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLogoutButton(BuildContext context, WidgetRef ref) {
+    return OutlinedButton(
+      onPressed: () async {
+        final confirmed = await ConfirmationDialog.show(
+          context,
+          title: AppStrings.logout,
+          message: AppStrings.confirmLogout,
+          confirmText: AppStrings.logout,
+          isDangerous: true,
+        );
+
+        if (confirmed == true) {
+          await ref.read(authNotifierProvider.notifier).signOut();
+          if (context.mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
+            );
+          }
+        }
+      },
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.error,
+        side: BorderSide(color: AppColors.error.withOpacity(0.5), width: 1.5),
+        padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 24.w),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.logout_rounded, size: 20.sp),
+          SizedBox(width: 8.w),
+          Text(
+            AppStrings.logout,
+            style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Biometric toggle widget with fast and optimized behavior
+class _BiometricToggle extends ConsumerStatefulWidget {
+  final dynamic user;
+
+  const _BiometricToggle({required this.user});
+
+  @override
+  ConsumerState<_BiometricToggle> createState() => _BiometricToggleState();
+}
+
+class _BiometricToggleState extends ConsumerState<_BiometricToggle> {
+  bool _isProcessing = false;
+  late bool _biometricEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _biometricEnabled = widget.user.useBiometric;
+  }
+
+  @override
+  void didUpdateWidget(covariant _BiometricToggle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Sync with user data if changed externally
+    if (oldWidget.user.useBiometric != widget.user.useBiometric &&
+        !_isProcessing) {
+      _biometricEnabled = widget.user.useBiometric;
+    }
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (_isProcessing) return;
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final biometricService = ref.read(biometricServiceProvider);
+
+      // Quick check for availability
+      final isAvailable = await biometricService.isBiometricAvailable();
+      if (!isAvailable) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Biometric not available on this device'),
+              backgroundColor: AppColors.error,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        setState(() => _isProcessing = false);
+        return;
+      }
+
+      if (value) {
+        // First ask for password
+        final password = await _showPasswordDialog(context);
+        if (password == null || password.isEmpty) {
+          setState(() => _isProcessing = false);
+          return;
+        }
+
+        // Verify password by trying to re-authenticate
+        final authProvider = ref.read(authNotifierProvider.notifier);
+        final success = await authProvider.verifyPassword(
+          widget.user.email,
+          password,
+        );
+
+        if (!success) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Incorrect password. Please try again.'),
+                backgroundColor: AppColors.error,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          setState(() => _isProcessing = false);
+          return;
+        }
+
+        // Authenticate with biometric
+        final result = await biometricService.authenticate(
+          localizedReason: 'Authenticate to enable biometric login',
+        );
+
+        if (!result.success) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result.userMessage),
+                backgroundColor: AppColors.error,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+          setState(() => _isProcessing = false);
+          return;
+        }
+
+        // Save credentials
+        await biometricService.saveCredentials(widget.user.email, password);
+      }
+
+      // Update local state immediately for responsive UI
+      setState(() => _biometricEnabled = value);
+
+      // Update biometric setting in database
+      await ref
+          .read(userProfileNotifierProvider.notifier)
+          .updateProfile(useBiometric: value);
+
+      // Update local biometric settings
+      await biometricService.setBiometricEnabled(value);
+
+      if (value) {
+        await biometricService.saveUserEmail(widget.user.email);
+      } else {
+        await biometricService.clearCredentials();
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              value ? 'Biometric login enabled' : 'Biometric login disabled',
+            ),
+            backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      // Revert local state on error
+      setState(() => _biometricEnabled = widget.user.useBiometric);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<String?> _showPasswordDialog(BuildContext context) async {
+    final passwordController = TextEditingController();
+    bool obscureText = true;
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.lock_outline, color: AppColors.primary),
+              SizedBox(width: 8.w),
+              const Text('Enter Password'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Enter your account password to enable biometric login',
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              TextField(
+                controller: passwordController,
+                obscureText: obscureText,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setDialogState(() => obscureText = !obscureText);
+                    },
+                  ),
+                ),
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    Navigator.pop(context, value);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (passwordController.text.isNotEmpty) {
+                  Navigator.pop(context, passwordController.text);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: const Text('Confirm'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      title: Text('Biometric Login', style: TextStyle(fontSize: 14.sp)),
+      subtitle: Text(
+        'Use fingerprint or face ID to login',
+        style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
+      ),
+      secondary: _isProcessing
+          ? SizedBox(
+              width: 24.w,
+              height: 24.h,
+              child: const CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(Icons.fingerprint, color: AppColors.primary),
+      value: _biometricEnabled,
+      onChanged: _isProcessing ? null : _toggleBiometric,
     );
   }
 }

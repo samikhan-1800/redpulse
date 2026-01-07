@@ -535,10 +535,13 @@ class StatsCard extends StatelessWidget {
     final cardColor = color ?? AppColors.primary;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
-    final padding = isLandscape ? EdgeInsets.all(12.w) : EdgeInsets.all(16.w);
-    final iconSize = isLandscape ? 20.sp : 24.sp;
-    final valueSize = isLandscape ? 20.sp : 24.sp;
-    final titleSize = isLandscape ? 10.sp : 12.sp;
+    final padding = isLandscape
+        ? const EdgeInsets.all(10)
+        : const EdgeInsets.all(14);
+    final iconSize = isLandscape ? 18.0 : 22.0;
+    final valueSize = isLandscape ? 18.0 : 22.0;
+    final titleSize = isLandscape ? 9.0 : 11.0;
+    final iconPadding = isLandscape ? 5.0 : 7.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -547,12 +550,12 @@ class StatsCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: cardColor.withOpacity(0.15), width: 1),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(14),
         child: Padding(
           padding: padding,
           child: Column(
@@ -560,14 +563,14 @@ class StatsCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: EdgeInsets.all(isLandscape ? 6.w : 8.w),
+                padding: EdgeInsets.all(iconPadding),
                 decoration: BoxDecoration(
                   color: cardColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: cardColor, size: iconSize),
               ),
-              SizedBox(height: isLandscape ? 8.h : 12.h),
+              SizedBox(height: isLandscape ? 6 : 10),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
@@ -579,7 +582,7 @@ class StatsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 4.h),
+              SizedBox(height: isLandscape ? 2 : 4),
               Text(
                 title,
                 style: TextStyle(

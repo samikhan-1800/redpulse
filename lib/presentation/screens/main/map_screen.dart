@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/providers/location_provider.dart';
 import '../../../data/models/blood_request_model.dart';
@@ -162,10 +165,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
 
     // Add listener to update only emergency markers when animation changes
-    // Throttled to update only every 100ms instead of 60fps for performance
+    // Throttled to update only every 200ms for performance
     _blinkAnimation.addListener(() {
       if (mounted && _markers.isNotEmpty) {
-        // Throttle updates to every 200ms (reduced from 100ms for better performance)
+        // Throttle updates to every 200ms
         final now = DateTime.now();
         if (_lastBlinkUpdateTime != null &&
             now.difference(_lastBlinkUpdateTime!) <
@@ -174,7 +177,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         }
         _lastBlinkUpdateTime = now;
 
-        // Only update if we have emergency markers to avoid unnecessary rebuilds
+        // Only update if we have emergency markers
         final hasEmergencyMarkers =
             _cachedRequests?.any((r) => r.isSOS || r.isEmergency) ?? false;
 
@@ -189,6 +192,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(locationNotifierProvider.notifier).getCurrentLocation();
+      // Force initial data load
+      _forceInitialDataLoad();
+    });
+  }
+
+  /// Force load initial data for markers
+  void _forceInitialDataLoad() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        final requestsAsync = ref.read(allActiveRequestsProvider);
+        final donorsAsync = ref.read(allAvailableDonorsProvider);
+        final mapFilter = ref.read(mapFilterProvider);
+
+        if (requestsAsync.hasValue && donorsAsync.hasValue) {
+          final requests = requestsAsync.value ?? [];
+          final donors = donorsAsync.value ?? [];
+          _cachedRequests = requests;
+          _cachedDonors = donors;
+          _updateMarkers(requests, donors, mapFilter);
+        } else {
+          // Retry if data not yet loaded
+          _forceInitialDataLoad();
+        }
+      }
     });
   }
 
@@ -663,18 +690,26 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void _showDonorOptions(UserModel donor) {
     showModalBottomSheet(
       context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
       builder: (context) => Container(
         padding: EdgeInsets.all(20.w),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header with donor info
             Row(
               children: [
                 CircleAvatar(
                   radius: 30.r,
-                  backgroundColor: Colors.red.shade100,
-                  child: Icon(Icons.person, size: 30.sp, color: Colors.red),
+                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  child: Icon(
+                    Icons.person,
+                    size: 30.sp,
+                    color: AppColors.primary,
+                  ),
                 ),
                 SizedBox(width: 16.w),
                 Expanded(
@@ -691,57 +726,317 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       SizedBox(height: 4.h),
                       Row(
                         children: [
-                          Icon(
-                            Icons.water_drop,
-                            size: 16.sp,
-                            color: Colors.red,
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 2.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.water_drop,
+                                  size: 14.sp,
+                                  color: AppColors.primary,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  donor.bloodGroup,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          SizedBox(width: 4.w),
+                          SizedBox(width: 8.w),
                           Text(
-                            donor.bloodGroup,
+                            '${donor.totalDonations} donations',
                             style: TextStyle(
-                              fontSize: 16.sp,
-                              color: Colors.red,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 12.sp,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        '${donor.totalDonations} ${donor.totalDonations == 1 ? 'donation' : 'donations'}',
-                        style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 24.h),
+
+            // Action buttons
             if (donor.phone.isNotEmpty) ...[
-              ListTile(
-                leading: const Icon(Icons.phone, color: Colors.green),
-                title: const Text('Call Donor'),
-                subtitle: Text(donor.phone),
+              // Call Button
+              _buildActionTile(
+                icon: Icons.phone_rounded,
+                iconColor: Colors.green,
+                title: 'Call Donor',
+                subtitle: donor.phone,
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implement call functionality
+                  _callDonor(donor.phone);
+                },
+              ),
+              SizedBox(height: 8.h),
+              // SMS Button
+              _buildActionTile(
+                icon: Icons.sms_rounded,
+                iconColor: Colors.orange,
+                title: 'Send SMS',
+                subtitle: 'Open messaging app with pre-filled message',
+                onTap: () {
+                  Navigator.pop(context);
+                  _sendSMS(donor);
+                },
+              ),
+              SizedBox(height: 8.h),
+            ] else ...[
+              Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.orange, size: 20.sp),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        'Phone number not available for this donor',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: Colors.orange.shade800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8.h),
+            ],
+            // WhatsApp Button (if phone available)
+            if (donor.phone.isNotEmpty) ...[
+              _buildActionTile(
+                icon: Icons.chat_rounded,
+                iconColor: Color(0xFF25D366),
+                title: 'WhatsApp',
+                subtitle: 'Send message via WhatsApp',
+                onTap: () {
+                  Navigator.pop(context);
+                  _sendWhatsApp(donor);
                 },
               ),
             ],
-            ListTile(
-              leading: const Icon(Icons.chat, color: Colors.blue),
-              title: const Text('Send Message'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Navigate to chat
-              },
-            ),
             SizedBox(height: 16.h),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12.r),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(10.w),
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Icon(icon, color: iconColor, size: 22.sp),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: AppColors.textSecondary,
+                size: 20.sp,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Call donor directly
+  Future<void> _callDonor(String phoneNumber) async {
+    try {
+      final uri = Uri.parse('tel:$phoneNumber');
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Unable to make call: ${e.message ?? "Unknown error"}',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error initiating call: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Send SMS with pre-built message
+  Future<void> _sendSMS(UserModel donor) async {
+    try {
+      // Pre-built message for blood donation request
+      final message = Uri.encodeComponent(
+        'Hello ${donor.name},\n\n'
+        'I found your profile on RedPulse Blood Donation App. '
+        'I am in need of ${donor.bloodGroup} blood.\n\n'
+        'Could you please help me or let me know if you are available for donation?\n\n'
+        'Thank you for being a donor! 🩸\n\n'
+        '- Sent via RedPulse App',
+      );
+
+      final uri = Uri.parse('sms:${donor.phone}?body=$message');
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Unable to open SMS: ${e.message ?? "Unknown error"}',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening messaging app: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Send WhatsApp message with pre-built text
+  Future<void> _sendWhatsApp(UserModel donor) async {
+    try {
+      // Clean phone number (remove spaces, dashes, etc.)
+      String cleanPhone = donor.phone.replaceAll(RegExp(r'[^0-9+]'), '');
+
+      // Add country code if not present (assuming Pakistan +92)
+      if (!cleanPhone.startsWith('+')) {
+        if (cleanPhone.startsWith('0')) {
+          cleanPhone = '+92${cleanPhone.substring(1)}';
+        } else {
+          cleanPhone = '+92$cleanPhone';
+        }
+      }
+
+      // Pre-built message
+      final message = Uri.encodeComponent(
+        'Hello ${donor.name},\n\n'
+        'I found your profile on RedPulse Blood Donation App. '
+        'I am in need of ${donor.bloodGroup} blood.\n\n'
+        'Could you please help me or let me know if you are available for donation?\n\n'
+        'Thank you for being a donor! 🩸',
+      );
+
+      final uri = Uri.parse('https://wa.me/$cleanPhone?text=$message');
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback to SMS if WhatsApp not available
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('WhatsApp not available. Try SMS instead.'),
+              backgroundColor: AppColors.warning,
+              action: SnackBarAction(
+                label: 'SMS',
+                textColor: Colors.white,
+                onPressed: () => _sendSMS(donor),
+              ),
+            ),
+          );
+        }
+      }
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Unable to open WhatsApp: ${e.message ?? "Unknown error"}',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 }
 

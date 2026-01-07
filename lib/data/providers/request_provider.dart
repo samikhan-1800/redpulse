@@ -34,7 +34,13 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
     required DateTime requiredBy,
     String? additionalNotes,
   }) async {
-    if (_userId == null || _currentUser == null) return null;
+    if (_userId == null || _currentUser == null) {
+      state = AsyncValue.error(
+        'Authentication required. Please log in again.',
+        StackTrace.current,
+      );
+      return null;
+    }
 
     state = const AsyncValue.loading();
     try {
@@ -87,7 +93,7 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
       return requestId;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      return null;
+      rethrow; // Ensure error reaches UI
     }
   }
 
@@ -215,7 +221,7 @@ class BloodRequestNotifier extends StateNotifier<AsyncValue<void>> {
         title: '🎉 Request Accepted!',
         body: updatedUnitsAccepted >= request.unitsRequired
             ? '${_currentUser.name} accepted - All ${request.unitsRequired} units fulfilled!'
-            : '${_currentUser.name} accepted - ${updatedUnitsAccepted} of ${request.unitsRequired} units',
+            : '${_currentUser.name} accepted - $updatedUnitsAccepted of ${request.unitsRequired} units',
         data: {
           'type': 'request_accepted',
           'requestId': request.id,

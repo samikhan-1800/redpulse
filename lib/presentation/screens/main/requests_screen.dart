@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../data/providers/auth_provider.dart';
@@ -20,25 +19,35 @@ class RequestsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tabIndex = ref.watch(requestsTabProvider);
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return DefaultTabController(
       length: 2,
       initialIndex: tabIndex,
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: const Text(AppStrings.requests),
-          bottom: TabBar(
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white.withOpacity(0.7),
-            onTap: (index) {
-              ref.read(requestsTabProvider.notifier).state = index;
-            },
-            tabs: const [
-              Tab(text: AppStrings.allRequests),
-              Tab(text: AppStrings.myRequests),
-            ],
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(isLandscape ? 80 : 100),
+          child: AppBar(
+            toolbarHeight: isLandscape ? 40 : 56,
+            title: Text(
+              AppStrings.requests,
+              style: TextStyle(fontSize: isLandscape ? 16 : 20),
+            ),
+            bottom: TabBar(
+              indicatorColor: Colors.white,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white.withOpacity(0.7),
+              labelStyle: TextStyle(fontSize: isLandscape ? 12 : 14),
+              onTap: (index) {
+                ref.read(requestsTabProvider.notifier).state = index;
+              },
+              tabs: const [
+                Tab(text: AppStrings.allRequests),
+                Tab(text: AppStrings.myRequests),
+              ],
+            ),
           ),
         ),
         body: const TabBarView(
@@ -57,13 +66,13 @@ class RequestsScreen extends ConsumerWidget {
           label: Text(
             AppStrings.createRequest,
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: isLandscape ? 12 : 14,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             ),
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
       ),
@@ -119,7 +128,7 @@ class _NearbyRequestsTab extends ConsumerWidget {
             ref.invalidate(nearbyRequestsProvider(params));
           },
           child: ListView.builder(
-            padding: EdgeInsets.only(top: 8.h, bottom: 100.h),
+            padding: const EdgeInsets.only(top: 8, bottom: 100),
             itemCount: requests.length,
             addAutomaticKeepAlives: false,
             addRepaintBoundaries: true,
@@ -186,7 +195,7 @@ class _MyRequestsTab extends ConsumerWidget {
             ref.invalidate(userRequestsProvider);
           },
           child: ListView.builder(
-            padding: EdgeInsets.only(top: 8.h, bottom: 100.h),
+            padding: const EdgeInsets.only(top: 8, bottom: 100),
             itemCount: requests.length,
             addAutomaticKeepAlives: false,
             addRepaintBoundaries: true,
